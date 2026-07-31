@@ -14,17 +14,23 @@ function nextTheme(current: string | undefined): "light" | "dark" | "system" {
 export function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [pendingMode, setPendingMode] = useState<
+    "light" | "dark" | "system" | null
+  >(null)
 
   useEffect(() => setMounted(true), [])
 
-  // Render a size-matched placeholder before mount to avoid layout shift
+  useEffect(() => {
+    setPendingMode(null)
+  }, [theme])
+
   if (!mounted) {
     return <div className="size-9" aria-hidden />
   }
 
-  const mode = theme ?? "system"
+  const mode = pendingMode ?? theme ?? "system"
   const isSystem = mode === "system"
-  const isDark = resolvedTheme === "dark"
+  const isDark = isSystem ? resolvedTheme === "dark" : mode === "dark"
 
   const label =
     mode === "light"
@@ -32,6 +38,12 @@ export function ThemeToggle() {
       : mode === "dark"
         ? "Theme: dark. Switch to system"
         : "Theme: system. Switch to light"
+
+  function handleClick() {
+    const next = nextTheme(mode)
+    setPendingMode(next)
+    setTheme(next)
+  }
 
   return (
     <Button
@@ -45,7 +57,7 @@ export function ThemeToggle() {
             ? "Dark"
             : "System"
       }
-      onClick={() => setTheme(nextTheme(mode))}
+      onClick={handleClick}
       className="relative size-9 text-muted-foreground hover:text-foreground"
     >
       {isSystem ? (
@@ -53,7 +65,7 @@ export function ThemeToggle() {
       ) : (
         <>
           <Sun
-            className="absolute size-4 transition-all duration-200"
+            className="absolute size-4"
             style={{
               opacity: isDark ? 0 : 1,
               transform: isDark
@@ -62,7 +74,7 @@ export function ThemeToggle() {
             }}
           />
           <Moon
-            className="absolute size-4 transition-all duration-200"
+            className="absolute size-4"
             style={{
               opacity: isDark ? 1 : 0,
               transform: isDark

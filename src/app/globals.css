@@ -59,7 +59,6 @@
   --dur-fast: 100ms;
   --dur-base: 150ms;
   --dur-slow: 200ms;
-  --dur-theme: 250ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --brand-gold: #b58a45;
@@ -138,13 +137,6 @@
   html {
     @apply font-sans;
   }
-}
-
-/* Theme transition — only on specific surfaces, never on * */
-html {
-  transition:
-    background-color var(--dur-theme) ease,
-    color var(--dur-theme) ease;
 }
 
 /* Quran reader typography helpers */

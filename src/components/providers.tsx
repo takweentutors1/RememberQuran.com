@@ -30,7 +30,7 @@ export default function Providers({
         attribute="class"
         defaultTheme="system"
         enableSystem
-        disableTransitionOnChange={false}
+        disableTransitionOnChange
       >
         <TooltipProvider delay={150}>
           <ChaptersProvider chapters={chapters}>
