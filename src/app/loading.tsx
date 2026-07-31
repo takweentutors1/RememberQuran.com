@@ -20,7 +20,7 @@ function SurahCardSkeleton() {
 
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="site-shell px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-10 flex flex-col items-center gap-3">
         <Skeleton className="h-14 w-48 sm:h-16" />
         <Skeleton className="h-7 w-40" />

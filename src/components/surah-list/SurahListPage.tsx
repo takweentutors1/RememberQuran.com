@@ -8,7 +8,7 @@ export async function SurahListPage() {
   const chapters = await getChapters()
 
   return (
-    <div className="mx-auto max-w-5xl space-y-10 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="site-shell space-y-10 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <HomeHero />
 
       <ContinuePrompt className="w-full" />

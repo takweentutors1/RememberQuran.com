@@ -316,6 +316,11 @@ html {
   animation: fade-in 0.25s ease-out both;
 }
 
+/* Standard site chrome — navbar, footer, audio bar, and page shells share one width. */
+@utility site-shell {
+  @apply mx-auto w-full max-w-6xl;
+}
+
 /* Smooth scrolling globally */
 @layer base {
   html {

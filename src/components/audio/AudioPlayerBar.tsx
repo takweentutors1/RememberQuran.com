@@ -195,7 +195,7 @@ export function AudioPlayerBar() {
         player.status !== "loading" && (
           <SeekBar durationMs={player.durationMs} onSeek={player.seekToTime} />
         )}
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-1.5 px-3 sm:gap-2 sm:px-4">
+      <div className="site-shell flex h-14 items-center gap-1.5 px-3 sm:gap-2 sm:px-4">
         <div className="min-w-0 flex-1">
           <NowPlayingLabel
             chapterId={player.chapterId}

@@ -18,7 +18,7 @@ export default async function AccountLayout({
     redirect("/login?next=/account")
   }
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 sm:py-10 md:flex-row md:items-start md:gap-10">
+    <div className="site-shell flex flex-col px-4 py-8 sm:px-6 sm:py-10 md:flex-row md:items-start md:gap-10">
       <AccountNav />
       <div className="min-w-0 flex-1">{children}</div>
     </div>

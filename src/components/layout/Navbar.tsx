@@ -140,7 +140,7 @@ export function Navbar() {
           </div>
         </div>
       ) : (
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-3 sm:px-4">
+        <div className="site-shell flex h-14 items-center gap-2 px-3 sm:px-4">
           <LogoLink className="mr-auto" />
           <NavLinks pathname={pathname} />
         </div>
