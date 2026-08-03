@@ -16,11 +16,11 @@ export function TranslationBlock({ translation }: TranslationBlockProps) {
       <p
         dir={dir}
         lang={lang}
-        className="quran-translation max-w-[70ch] text-foreground/85"
+        className="quran-translation max-w-[70ch] text-muted-foreground"
       >
         {translation.text}
       </p>
-      <p className="mt-1 text-[11px] text-muted-foreground/60">— {name}</p>
+      <p className="mt-1 text-[11px] text-subtle">— {name}</p>
     </div>
   )
 }

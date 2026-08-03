@@ -50,21 +50,19 @@ export function QuickAccess() {
           key={href}
           href={href}
           className={cn(
-            "group flex flex-col items-start gap-2.5 rounded-xl border border-border bg-card px-4 py-4",
-            "transition-[background-color,border-color,box-shadow,transform] duration-[150ms] ease-out",
-            "hover:-translate-y-px hover:bg-accent hover:shadow-sm",
-            tone === "gold"
-              ? "hover:border-[var(--brand-gold)]/40"
-              : "hover:border-primary/30",
+            "group lift flex flex-col items-start gap-2.5 rounded-xl border border-border bg-card px-4 py-4",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           )}
         >
           <span
+            aria-hidden
             className={cn(
               "flex size-9 items-center justify-center rounded-lg",
+              "transition-[background-color,color,transform] duration-(--dur-base) ease-(--ease-out)",
+              "group-hover:-rotate-6",
               tone === "gold"
-                ? "bg-[var(--brand-gold)]/12 text-[var(--brand-gold)]"
-                : "bg-accent text-primary",
+                ? "bg-gold-soft text-gold"
+                : "bg-accent text-foreground",
             )}
           >
             <Icon className="size-[18px]" strokeWidth={1.75} />
@@ -73,9 +71,7 @@ export function QuickAccess() {
             <span className="block text-sm font-medium text-foreground">
               {label}
             </span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
-              {hint}
-            </span>
+            <span className="mt-0.5 block text-xs text-subtle">{hint}</span>
           </span>
         </Link>
       ))}

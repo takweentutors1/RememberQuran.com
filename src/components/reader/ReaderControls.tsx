@@ -26,9 +26,8 @@ import { SurahPickerTrigger } from "./SurahPickerTrigger"
 import { cn } from "@/lib/utils"
 
 const iconBtn = cn(
-  "flex size-8 items-center justify-center rounded-md",
-  "text-muted-foreground transition-colors duration-[120ms]",
-  "hover:bg-accent hover:text-foreground",
+  "icon-press flex size-8 items-center justify-center rounded-md",
+  "text-muted-foreground hover:bg-accent hover:text-foreground",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
   "disabled:opacity-30 disabled:pointer-events-none",
 )
@@ -170,7 +169,7 @@ export function ReaderControls() {
               onClick={() => setSettingsOpen(false)}
               className={cn(
                 "w-full rounded-md bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground",
-                "transition-colors duration-[120ms] hover:bg-primary/90",
+                "transition-colors duration-(--dur-base) hover:bg-primary/90",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               )}
             >

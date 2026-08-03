@@ -22,7 +22,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
       {/* Atmosphere: stone wash + soft teal bloom + paper grain */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,color-mix(in_oklch,var(--primary)_14%,transparent),transparent_55%),radial-gradient(ellipse_at_90%_80%,color-mix(in_oklch,var(--primary)_8%,transparent),transparent_50%),var(--background)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,var(--brand-gold-soft),transparent_55%),radial-gradient(ellipse_at_90%_80%,var(--brand-gold-soft),transparent_50%),var(--background)]"
       />
       <div
         aria-hidden

@@ -157,7 +157,7 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
       ) : (
         <div role="list" aria-label="Ayahs" className="divide-y divide-border/40">
           {verses.map((verse) => (
-            <div key={verse.id} role="listitem">
+            <div key={verse.id} role="listitem" className="ayah-cv">
               <AyahBlock
                 verse={verse}
                 displayMode="verse"

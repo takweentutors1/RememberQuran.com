@@ -52,78 +52,142 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
+
+  /* ── Nur extensions exposed as Tailwind utilities ──
+     bg-surface-sunk · text-subtle · text-faint · border-strong
+     text-gold · bg-gold-soft · shadow-{sm,md,lg} */
+  --color-surface-sunk: var(--surface-sunk);
+  --color-subtle: var(--foreground-subtle);
+  --color-faint: var(--foreground-faint);
+  --color-strong: var(--border-strong);
+  --color-gold: var(--brand-gold);
+  --color-gold-strong: var(--brand-gold-strong);
+  --color-gold-soft: var(--brand-gold-soft);
+  --color-reader-ink: var(--reader-ink);
+
+  --shadow-sm: var(--elev-sm);
+  --shadow-md: var(--elev-md);
+  --shadow-lg: var(--elev-lg);
 }
 
-/* Motion duration tokens */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTION TOKENS
+   Ceilings, not suggestions. Nothing interactive exceeds --dur-slow.
+   See docs/DESIGN-SYSTEM.md §4.
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --dur-fast: 100ms;
-  --dur-base: 150ms;
-  --dur-slow: 200ms;
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 260ms;
+  --dur-glacial: 1400ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
-  --brand-gold: #b58a45;
+  --ease-overshoot: cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 
-/* ── Light mode — parchment, ink, and deep jade ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   NUR — LIGHT
+   Ink on ivory with a single amber accent. Deliberately near-monochrome so
+   that gold carries real weight when it appears.
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --background: #f7f3e8;
-  --foreground: #202923;
-  --card: #fffcf5;
-  --card-foreground: #202923;
-  --popover: #fffcf5;
-  --popover-foreground: #202923;
-  --primary: #0e6b57;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: #ebe6d9;
-  --secondary-foreground: #202923;
-  --muted: #ebe6d9;
-  --muted-foreground: #667069;
-  --accent: #dce8df;
-  --accent-foreground: #183b31;
-  --destructive: oklch(0.52 0.14 30);
-  --border: #ddd7ca;
-  --input: #d5cfc1;
-  --ring: #0e6b57;
-  --radius: 0.5rem;
-  --sidebar: #f1ecdf;
-  --sidebar-foreground: #202923;
-  --sidebar-primary: #0e6b57;
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: #dce8df;
-  --sidebar-accent-foreground: #183b31;
-  --sidebar-border: #ddd7ca;
-  --sidebar-ring: #0e6b57;
+  --background: #fbfaf7;
+  --foreground: #15161a;
+  --card: #ffffff;
+  --card-foreground: #15161a;
+  --popover: #ffffff;
+  --popover-foreground: #15161a;
+  --primary: #15161a;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f0ea;
+  --secondary-foreground: #15161a;
+  --muted: #f2f0ea;
+  --muted-foreground: #53565e;
+  --accent: #eeede8;
+  --accent-foreground: #15161a;
+  --destructive: oklch(0.52 0.16 27);
+  --border: #e8e5dd;
+  --input: #d3cfc4;
+  --ring: #b07c22;
+  --radius: 0.625rem;
+
+  --sidebar: #f2f0ea;
+  --sidebar-foreground: #15161a;
+  --sidebar-primary: #15161a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eeede8;
+  --sidebar-accent-foreground: #15161a;
+  --sidebar-border: #e8e5dd;
+  --sidebar-ring: #b07c22;
+
+  /* ── Nur extensions ── */
+  --surface-sunk: #e9e6de;
+  --foreground-subtle: #8a8d95;
+  --foreground-faint: #b4b6bc;
+  --border-strong: #d3cfc4;
+
+  --brand-gold: #b07c22;
+  --brand-gold-strong: #8a5f16;
+  --brand-gold-soft: #faf0dc;
+
+  /* Arabic glyph colour — one step darker than body text so the mushaf
+     always reads as the foremost layer on the page. */
+  --reader-ink: #0d0e11;
+
+  --elev-sm: 0 1px 2px rgb(20 20 25 / 0.05);
+  --elev-md:
+    0 2px 4px rgb(20 20 25 / 0.04), 0 12px 28px -14px rgb(20 20 25 / 0.16);
+  --elev-lg:
+    0 4px 8px rgb(20 20 25 / 0.05), 0 28px 60px -20px rgb(20 20 25 / 0.24);
 }
 
-/* ── Dark mode — near-black charcoal + warm paper ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   NUR — DARK
+   True dark, not inverted grey. #0C0C0E page, warm off-white glyphs.
+   ═══════════════════════════════════════════════════════════════════════════ */
 .dark {
-  --brand-gold: #c9a86e;
-  --background: #0b0d0c;
-  --foreground: #f0ebe3;
-  --card: #141816;
-  --card-foreground: #f0ebe3;
-  --popover: #141816;
-  --popover-foreground: #f0ebe3;
-  --primary: #68b79c;
-  --primary-foreground: #0b0d0c;
-  --secondary: #1a1f1d;
-  --secondary-foreground: #f0ebe3;
-  --muted: #1a1f1d;
-  --muted-foreground: #b0b8b3;
-  --accent: #222826;
-  --accent-foreground: #f0ebe3;
-  --destructive: oklch(0.60 0.14 30);
-  --border: #2a312e;
-  --input: #323936;
-  --ring: #68b79c;
-  --sidebar: #101312;
-  --sidebar-foreground: #f0ebe3;
-  --sidebar-primary: #68b79c;
-  --sidebar-primary-foreground: #0b0d0c;
-  --sidebar-accent: #222826;
-  --sidebar-accent-foreground: #f0ebe3;
-  --sidebar-border: #2a312e;
-  --sidebar-ring: #68b79c;
+  --background: #0c0c0e;
+  --foreground: #f2f1ed;
+  --card: #151618;
+  --card-foreground: #f2f1ed;
+  --popover: #151618;
+  --popover-foreground: #f2f1ed;
+  --primary: #f2f1ed;
+  --primary-foreground: #0c0c0e;
+  --secondary: #1d1e22;
+  --secondary-foreground: #f2f1ed;
+  --muted: #1d1e22;
+  --muted-foreground: #a6a8ae;
+  --accent: #1c1d20;
+  --accent-foreground: #f2f1ed;
+  --destructive: oklch(0.65 0.17 27);
+  --border: #232427;
+  --input: #33353a;
+  --ring: #e0ae55;
+
+  --sidebar: #0a0a0c;
+  --sidebar-foreground: #f2f1ed;
+  --sidebar-primary: #f2f1ed;
+  --sidebar-primary-foreground: #0c0c0e;
+  --sidebar-accent: #1c1d20;
+  --sidebar-accent-foreground: #f2f1ed;
+  --sidebar-border: #232427;
+  --sidebar-ring: #e0ae55;
+
+  --surface-sunk: #08080a;
+  --foreground-subtle: #74767c;
+  --foreground-faint: #54565c;
+  --border-strong: #33353a;
+
+  --brand-gold: #e0ae55;
+  --brand-gold-strong: #f0c378;
+  --brand-gold-soft: #221a0c;
+
+  --reader-ink: #f7f5f0;
+
+  --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
+  --elev-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 28px 60px -20px rgb(0 0 0 / 0.8);
 }
 
 @layer base {
@@ -148,11 +212,15 @@
   font-family: var(--font-amiri-quran), var(--font-amiri), serif;
 }
 
+/* Arabic is the foremost layer on every page — one step darker than body
+   text in light mode, one step brighter in dark. Tajweed spans override
+   `color` on their own children, so this is safe as a base. */
 .quran-arabic {
   font-family: var(--reader-arabic-font, var(--font-uthmani));
   font-size: var(--arabic-font-size, 2.25rem);
   line-height: 2;
   word-spacing: 0.05em;
+  color: var(--reader-ink);
 }
 
 .quran-translation {
@@ -234,6 +302,10 @@
   --tj-slnt:                  oklch(0.55 0.00 0);
   --tj-custom-alef-maksora:   oklch(0.52 0.18 60);
 }
+/* next-themes is configured with `attribute="class"`, so `.dark` is the live
+   selector. `[data-theme="dark"]` is kept for any consumer that sets the
+   attribute directly (e.g. the OG image renderer). */
+.dark,
 [data-theme="dark"] {
   --tj-ham_wasl:              oklch(0.72 0.15 200);
   --tj-laam_shamsiyah:        oklch(0.72 0.15 200);
@@ -301,11 +373,11 @@
 }
 
 @utility animate-fade-up {
-  animation: fade-up 0.35s ease-out both;
+  animation: fade-up var(--dur-slow) var(--ease-out) both;
 }
 
 @utility animate-fade-in {
-  animation: fade-in 0.25s ease-out both;
+  animation: fade-in var(--dur-base) var(--ease-out) both;
 }
 
 /* Standard site chrome — navbar, footer, audio bar, and page shells share one width. */
@@ -313,9 +385,279 @@
   @apply mx-auto w-full max-w-6xl;
 }
 
-/* Smooth scrolling globally */
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTION LAYER
+   The shared vocabulary from docs/DESIGN-SYSTEM.md §4. Every one of these
+   animates only transform / opacity / colour — never a layout property.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Press ripple ──
+   Applied by <Ripple> (src/components/ui/ripple.tsx). The span is positioned
+   at the pointer origin and removes itself on animationend. */
+@keyframes ripple-out {
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@utility ripple-host {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ripple-ink {
+  position: absolute;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.18;
+  transform: scale(0);
+  pointer-events: none;
+  animation: ripple-out 600ms var(--ease-out) forwards;
+}
+
+/* ── Spring ──
+   Bookmark / hifz / note toggles. Icon only; the surrounding row must not
+   move, or the reading position shifts under the user. */
+@keyframes spring-pop {
+  0% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.24);
+  }
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+@utility animate-spring {
+  animation: spring-pop var(--dur-slow) var(--ease-overshoot) forwards;
+}
+
+/* ── Link arrow + growing rule ──
+   Footer and nav lists. The rule stops short of the arrow so it tracks the
+   text width, not the flex box. */
+@utility link-reveal {
+  position: relative;
+  width: fit-content;
+
+  & > [data-arrow] {
+    opacity: 0;
+    transform: translateX(-5px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0.125rem;
+    height: 1px;
+    width: 0;
+    background: var(--brand-gold);
+    transition: width var(--dur-slow) var(--ease-out);
+  }
+
+  &:hover > [data-arrow],
+  &:focus-visible > [data-arrow] {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    width: calc(100% - 1.0625rem);
+  }
+}
+
+/* ── Diamond frame ──
+   Surah number ornament. Rotates 45° → 90° and takes on gold on approach. */
+@utility diamond-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0.125rem;
+    border: 1px solid var(--border-strong);
+    border-radius: calc(var(--radius) * 0.6);
+    transform: rotate(45deg);
+    transition:
+      transform var(--dur-slow) var(--ease-out),
+      border-color var(--dur-slow) var(--ease-out);
+  }
+}
+
+.group:hover .diamond-frame::before,
+.group:focus-visible .diamond-frame::before {
+  transform: rotate(90deg);
+  border-color: var(--brand-gold);
+}
+
+/* ── Lift ──
+   The single hover treatment for every clickable card on the site. */
+@utility lift {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--elev-md);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.99);
+  }
+}
+
+/* ── Icon press ──
+   Shared hover/press feedback for toolbar and per-ayah icon buttons — a
+   smaller sibling of `lift` sized for 28–32px controls, not cards. */
+@utility icon-press {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.94);
+  }
+}
+
+/* ── Ayah actions reveal ──
+   Per-ayah controls fade in on hover/focus for pointer devices (system §7).
+   Touch has no hover state, so they stay visible there — a hidden control
+   nobody can discover is worse than a busier row. */
+.ayah-actions {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .ayah-actions {
+    opacity: 0;
+  }
+
+  .group:hover .ayah-actions,
+  .group:focus-within .ayah-actions {
+    opacity: 1;
+  }
+}
+
+/* ── Ayah content-visibility ──
+   Al-Baqarah alone is 286 rows; skipping layout/paint for off-screen ayahs
+   is what keeps the reader at 60fps (system §9). 220px is a rough estimate
+   for an unopened row — the browser measures and remembers the real size
+   after first layout, so this only affects the very first paint. */
+@utility ayah-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
+
+/* ── Underline grow ──
+   Nav links. Draws left-to-right; sits on a pseudo so it never affects layout. */
+@utility underline-grow {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0.5rem;
+    bottom: 0.25rem;
+    height: 1.5px;
+    border-radius: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  &:hover::after,
+  &[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ── Skeleton shimmer ──
+   Ayah-shaped placeholders in the real layout. Never a spinner. */
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    var(--border) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* ── Attribute-driven list filter ──
+   The 114-surah grid stays fully server-rendered; SurahFilter only writes
+   `data-filter` on the container and these two rules do the work. No client
+   re-render, and DOM order stays stable so find-in-page still works. */
+[data-surah-grid][data-filter="makkah"] [data-place="madinah"],
+[data-surah-grid][data-filter="madinah"] [data-place="makkah"] {
+  display: none;
+}
+
+/* ── Gold particle ──
+   Emitted by the bookmark spring. Positioned and driven from JS via the Web
+   Animations API so no per-particle CSS is generated. */
+.spark-dot {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--brand-gold);
+  pointer-events: none;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Tabular figures everywhere a number can change in place — streak counts,
+     ayah counters, timestamps. Prevents digit jitter during count-up. */
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ── Reduced motion ──
+   One global override. Components must not re-implement this. Scroll
+   behaviour is included: smooth scroll is motion too. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

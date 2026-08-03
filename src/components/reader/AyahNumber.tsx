@@ -9,13 +9,13 @@ interface AyahNumberProps {
 export function AyahNumber({ number, className, isTarget }: AyahNumberProps) {
   return (
     <div
+      data-numeric
       aria-label={`Ayah ${number}`}
       className={cn(
-        "flex size-8 shrink-0 items-center justify-center rounded-full",
-        "border text-xs tabular-nums transition-colors duration-300",
-        isTarget
-          ? "border-primary/40 bg-primary/10 text-primary"
-          : "border-border text-muted-foreground",
+        "diamond-frame size-8 shrink-0 text-xs tabular-nums text-muted-foreground",
+        "transition-colors duration-(--dur-slow) ease-(--ease-out)",
+        "group-hover:text-gold group-focus-within:text-gold",
+        isTarget && "text-gold [&::before]:border-gold",
         className,
       )}
     >

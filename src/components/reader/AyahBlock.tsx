@@ -27,10 +27,8 @@ interface AyahBlockProps {
 }
 
 const metaBtn = cn(
-  "flex size-7 items-center justify-center rounded-md",
-  "text-muted-foreground/40 transition-colors duration-[120ms]",
-  "group-hover:text-muted-foreground/70",
-  "hover:bg-accent hover:text-foreground",
+  "icon-press flex size-7 items-center justify-center rounded-md",
+  "text-muted-foreground/70 hover:bg-accent hover:text-foreground",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
   "disabled:opacity-30 disabled:pointer-events-none",
 )
@@ -108,49 +106,51 @@ export function AyahBlock({
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-1">
           <AyahNumber number={verse.verse_number} isTarget={isTarget} />
-          <PlayAyahButton
-            chapterId={chapterId}
-            verseNumber={verse.verse_number}
-            verseKey={verse.verse_key}
-            className={metaBtn}
-          />
-          <button
-            type="button"
-            title="Tafsir"
-            onClick={() => openTafsir(verse.verse_key)}
-            className={metaBtn}
-          >
-            <BookOpen className="size-3.5" strokeWidth={1.75} />
-          </button>
-          {/* Only covered ayahs show this icon — presence signals availability,
-              so the ~5,800 uncovered ayahs stay uncluttered */}
-          {hasAsbab(verse.verse_key) && (
+          <div className="ayah-actions flex items-center gap-1">
+            <PlayAyahButton
+              chapterId={chapterId}
+              verseNumber={verse.verse_number}
+              verseKey={verse.verse_key}
+              className={metaBtn}
+            />
             <button
               type="button"
-              title="Reason for revelation"
-              onClick={() => openAsbab(verse.verse_key)}
+              title="Tafsir"
+              onClick={() => openTafsir(verse.verse_key)}
               className={metaBtn}
             >
-              <ScrollText className="size-3.5" strokeWidth={1.75} />
+              <BookOpen className="size-3.5" strokeWidth={1.75} />
             </button>
-          )}
-          <BookmarkButton
-            verseKey={verse.verse_key}
-            className={metaBtn}
-            iconClassName="size-3.5"
-          />
-          <NoteButton
-            verseKey={verse.verse_key}
-            className={metaBtn}
-            iconClassName="size-3.5"
-          />
-          <HifzButton
-            verseKey={verse.verse_key}
-            className={metaBtn}
-            iconClassName="size-3.5"
-          />
+            {/* Only covered ayahs show this icon — presence signals availability,
+                so the ~5,800 uncovered ayahs stay uncluttered */}
+            {hasAsbab(verse.verse_key) && (
+              <button
+                type="button"
+                title="Reason for revelation"
+                onClick={() => openAsbab(verse.verse_key)}
+                className={metaBtn}
+              >
+                <ScrollText className="size-3.5" strokeWidth={1.75} />
+              </button>
+            )}
+            <BookmarkButton
+              verseKey={verse.verse_key}
+              className={metaBtn}
+              iconClassName="size-3.5"
+            />
+            <NoteButton
+              verseKey={verse.verse_key}
+              className={metaBtn}
+              iconClassName="size-3.5"
+            />
+            <HifzButton
+              verseKey={verse.verse_key}
+              className={metaBtn}
+              iconClassName="size-3.5"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="ayah-actions flex items-center gap-0.5">
           <button
             type="button"
             title={copied ? "Copied!" : "Copy ayah"}

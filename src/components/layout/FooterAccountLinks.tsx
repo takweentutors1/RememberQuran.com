@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useSession } from "next-auth/react"
+import { ArrowRight } from "lucide-react"
 
 /**
  * Client account links so the root layout Footer does not call `auth()`.
@@ -24,14 +25,20 @@ export function FooterAccountLinks() {
       ]
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-0.5">
       {links.map(({ label, href }) => (
         <li key={href}>
           <Link
             href={href}
-            className="rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="link-reveal inline-flex items-center gap-1.5 rounded-sm py-1 text-sm text-muted-foreground transition-colors duration-(--dur-base) ease-(--ease-out) hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {label}
+            <ArrowRight
+              data-arrow
+              aria-hidden
+              className="size-3 shrink-0"
+              strokeWidth={2.2}
+            />
           </Link>
         </li>
       ))}

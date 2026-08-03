@@ -49,7 +49,7 @@ export function ArabicWord({ word, isHighlighted = false, verseKey }: ArabicWord
   const triggerClass = cn(
     "inline-block cursor-pointer rounded-sm px-0.5 py-1",
     "touch-manipulation",
-    "transition-colors duration-[120ms] ease-out",
+    "transition-colors duration-(--dur-fast) ease-(--ease-out)",
     "hover:bg-accent",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     isHighlighted && "bg-primary/15",

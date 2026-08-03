@@ -60,10 +60,11 @@ function NavLinks({ pathname }: { pathname: string }) {
             aria-label={label}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs transition-colors duration-150",
+              "underline-grow flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs",
+              "transition-colors duration-(--dur-base) ease-(--ease-out)",
               active
-                ? "bg-accent text-primary"
-                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground",
               FOCUS,
             )}
           >
@@ -116,7 +117,7 @@ export function Navbar() {
         "sticky top-0 z-40 w-full bg-background/95 backdrop-blur-md",
         "border-b transition-[border-color,box-shadow] duration-200 ease-out",
         scrolled
-          ? "border-border shadow-[0_1px_0_0_color-mix(in_oklch,var(--brand-gold)_32%,transparent)]"
+          ? "border-border shadow-[0_1px_0_0_color-mix(in_srgb,var(--brand-gold)_28%,transparent)]"
           : "border-border/40",
       )}
     >
