@@ -45,3 +45,6 @@ next-env.d.ts
 
 # keep env template trackable
 !.env.example
+
+# local Claude Code reference (personal, not committed)
+CLAUDE.md
