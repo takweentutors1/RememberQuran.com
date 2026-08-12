@@ -104,6 +104,65 @@ export const RECITERS: Reciter[] = [
     style: "Kids repeat",
     hasWordTiming: true,
   },
+
+  /**
+   * M5 expansion (target 20+ reciters) — verified against
+   * `/audio/reciters/{id}/audio_files` directly: each id below returns a
+   * complete 1–114 chapter set. None appear in the QDC word-timing
+   * roster, and a manual `segments=true` check confirms `verse_timings`
+   * with empty `segments` — so these get ayah-level playback/repeat but
+   * no word-by-word highlight, which is the brief's documented fallback
+   * for reciters without timing files.
+   */
+  {
+    id: 13,
+    name: "Saad Al-Ghamdi",
+    arabicName: "سعد الغامدي",
+    style: "Murattal",
+    hasWordTiming: false,
+  },
+  {
+    id: 65,
+    name: "Maher Al Muaiqly",
+    arabicName: "ماهر المعيقلي",
+    style: "Murattal",
+    hasWordTiming: false,
+  },
+  {
+    id: 170,
+    name: "Khalid Al-Jaleel",
+    arabicName: "خالد الجليل",
+    style: "Murattal",
+    hasWordTiming: false,
+  },
+  {
+    id: 167,
+    name: "Ali Al-Huthaifi",
+    arabicName: "علي الحذيفي",
+    style: "Murattal",
+    hasWordTiming: false,
+  },
+  {
+    id: 163,
+    name: "Abdullah Basfar",
+    arabicName: "عبدالله بصفر",
+    style: "Murattal",
+    hasWordTiming: false,
+  },
+  {
+    id: 91,
+    name: "Mohammad Al-Tablawi",
+    arabicName: "محمد الطبلاوي",
+    style: "Murattal",
+    hasWordTiming: false,
+  },
+  {
+    id: 160,
+    name: "Bandar Baleela",
+    arabicName: "بندر بليلة",
+    style: "Murattal",
+    hasWordTiming: false,
+  },
 ]
 
 export const DEFAULT_RECITER_ID = 7
@@ -117,7 +176,8 @@ export function getReciter(id: number): Reciter {
   )
 }
 
-const WORD_AUDIO_BASE_URL = "https://audio.qurancdn.com/"
+const WORD_AUDIO_BASE_URL =
+  process.env.NEXT_PUBLIC_QURAN_WORD_AUDIO_URL ?? "https://audio.qurancdn.com/"
 const WORD_AUDIO_FILE_RE = /(\d{3}_\d{3}_)\d{3}(\.mp3(?:\?.*)?)$/
 
 export function getWordAudioUrl(word: Word): string | null {

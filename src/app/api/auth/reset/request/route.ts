@@ -2,8 +2,7 @@ import { createHash, randomBytes } from "node:crypto"
 import { Resend } from "resend"
 import { privateJson } from "@/lib/auth/api-response"
 import { validateEmail } from "@/lib/auth/credentials"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { getUserByEmail, setPasswordResetToken, clearPasswordResetToken } from "@/lib/firestore/users"
 
 export const runtime = "nodejs"
 
@@ -37,11 +36,7 @@ export async function POST(request: Request) {
     )
   }
 
-  await connectToDatabase()
-  const user = await User.findOne({ email: parsed.email })
-    .select("+passwordResetRequestedAt")
-    .exec()
-
+  const user = await getUserByEmail(parsed.email)
   if (!user) {
     return privateJson({ ok: true, message: GENERIC_MESSAGE })
   }
@@ -53,12 +48,14 @@ export async function POST(request: Request) {
   }
 
   const rawToken = randomBytes(32).toString("base64url")
-  user.passwordResetToken = createHash("sha256")
-    .update(rawToken)
-    .digest("hex")
-  user.passwordResetExpires = new Date(now + RESET_TTL_MS)
-  user.passwordResetRequestedAt = new Date(now)
-  await user.save()
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex")
+  const expires = new Date(now + RESET_TTL_MS)
+
+  await setPasswordResetToken(user.id, {
+    tokenHash,
+    expires,
+    requestedAt: new Date(now),
+  })
 
   const baseUrl = process.env.AUTH_URL?.trim() || "http://localhost:3000"
   const resetUrl = new URL(`/reset/${rawToken}`, baseUrl).toString()
@@ -91,10 +88,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Reset email failed", error)
-      user.passwordResetToken = null
-      user.passwordResetExpires = null
-      user.passwordResetRequestedAt = null
-      await user.save()
+      await clearPasswordResetToken(user.id)
       return privateJson(
         { error: "Could not send the reset email. Please try again." },
         502,

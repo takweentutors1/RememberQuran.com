@@ -3,8 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import { compare } from "bcryptjs"
 import { authConfig } from "@/auth.config"
 import { validateCredentials } from "@/lib/auth/credentials"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { getUserByEmail } from "@/lib/firestore/users"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -22,13 +21,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         )
         if (!parsed.success) return null
 
-        await connectToDatabase()
+        const user = await getUserByEmail(parsed.data.email)
 
-        const user = await User.findOne({ email: parsed.data.email })
-          .select("+passwordHash")
-          .lean()
-
-        if (!user || user.moderation?.suspended) return null
+        if (!user || user.moderation.suspended) return null
 
         const passwordMatches = await compare(
           parsed.data.password,
@@ -37,10 +32,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!passwordMatches) return null
 
         return {
-          id: user._id.toString(),
+          id: user.id,
           email: user.email,
-          name: user.profile?.displayName || null,
-          roles: Array.isArray(user.roles) ? user.roles : ["user"],
+          name: user.profile.displayName || null,
+          roles: user.roles,
         }
       },
     }),

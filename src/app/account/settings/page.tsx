@@ -2,8 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { SettingsForms } from "@/components/account/SettingsForms"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { getUserById } from "@/lib/firestore/users"
 
 export const metadata: Metadata = {
   title: "Account settings",
@@ -17,10 +16,7 @@ export default async function SettingsPage() {
     redirect("/login?next=/account/settings")
   }
 
-  await connectToDatabase()
-  const user = await User.findById(session.user.id)
-    .select("email profile.displayName")
-    .lean()
+  const user = await getUserById(session.user.id)
 
   if (!user) redirect("/login?next=/account/settings")
 
@@ -39,7 +35,7 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsForms
-        initialDisplayName={user.profile?.displayName ?? ""}
+        initialDisplayName={user.profile.displayName}
         initialEmail={user.email}
       />
     </div>

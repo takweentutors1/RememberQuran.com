@@ -2,8 +2,7 @@ import { compare, hash } from "bcryptjs"
 import { auth } from "@/auth"
 import { privateJson } from "@/lib/auth/api-response"
 import { validatePassword } from "@/lib/auth/credentials"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { getUserById, updatePasswordHash } from "@/lib/firestore/users"
 
 export const runtime = "nodejs"
 
@@ -40,17 +39,10 @@ export async function PATCH(request: Request) {
     return privateJson({ error: "New passwords do not match." }, 400)
   }
 
-  await connectToDatabase()
-  const user = await User.findById(session.user.id)
-    .select("+passwordHash")
-    .exec()
-
+  const user = await getUserById(session.user.id)
   if (!user) return privateJson({ error: "Account not found." }, 404)
 
-  const correctPassword = await compare(
-    body.currentPassword,
-    user.passwordHash,
-  )
+  const correctPassword = await compare(body.currentPassword, user.passwordHash)
   if (!correctPassword) {
     return privateJson({ error: "Current password is incorrect." }, 400)
   }
@@ -63,11 +55,8 @@ export async function PATCH(request: Request) {
     )
   }
 
-  user.passwordHash = await hash(newPassword.password, 12)
-  user.passwordResetToken = null
-  user.passwordResetExpires = null
-  user.passwordResetRequestedAt = null
-  await user.save()
+  const passwordHash = await hash(newPassword.password, 12)
+  await updatePasswordHash(session.user.id, passwordHash)
 
   return privateJson({ ok: true, reauthenticate: true })
 }

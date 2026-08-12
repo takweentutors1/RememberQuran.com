@@ -1,7 +1,6 @@
 import { getSessionUserId } from "@/lib/auth/session"
 import { privateJson } from "@/lib/auth/api-response"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { updateLastPosition } from "@/lib/firestore/users"
 import { parseVerseKey } from "@/lib/quran/verse-key"
 
 export const runtime = "nodejs"
@@ -30,16 +29,10 @@ export async function PATCH(request: Request) {
   const verseKey = `${verse.surahId}:${verse.ayahId}`
   const updatedAt = new Date()
 
-  await connectToDatabase()
-  await User.findByIdAndUpdate(userId, {
-    $set: {
-      lastPosition: {
-        verseKey,
-        surahId: verse.surahId,
-        ayahId: verse.ayahId,
-        updatedAt,
-      },
-    },
+  await updateLastPosition(userId, {
+    verseKey,
+    surahId: verse.surahId,
+    ayahId: verse.ayahId,
   })
 
   return privateJson({

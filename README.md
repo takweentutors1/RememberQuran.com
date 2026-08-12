@@ -20,14 +20,14 @@ A free, distraction-free Quran reading platform built as a public good (sadaqah 
 - Copy or share any ayah with one click
 
 ### Audio (M2)
-- Listen with Alafasy or Sudais (reciter registry ready for M5 expansion)
+- Listen with 21 reciters (Alafasy, Sudais, Saad Al-Ghamdi, Maher Al Muaiqly, and more)
 - Per-ayah, continuous surah, and gapless playback with a persistent mini player
 - Word-by-word highlight sync and click-to-hear word pronunciation
 - Repeat single ayah or a range (including infinite), plus playback speed control
 - Quran Radio at `/radio`
 
 ### Study tools (M3)
-- Tafsir (Ibn Kathir, English) in a shared study panel
+- Tafsir (5 books incl. Ibn Kathir, English) in a shared study panel
 - Tajweed colour coding on Arabic text
 - Keyword search across Arabic and English (`/search`)
 - Word morphology (root, lemma, grammatical form)
@@ -39,6 +39,14 @@ A free, distraction-free Quran reading platform built as a public good (sadaqah 
 - Reading progress tracking, daily goals, and streaks
 - Media Maker — design and export shareable ayah images (`/media-maker`)
 - Reading, audio, and study stay fully usable without an account (soft-gate for personal features)
+
+### Expansion (M5)
+- 21 reciters in the audio player and Quran Radio
+- 10 English/Urdu translations (Saheeh Intl., Clear Quran, Abdel Haleem, Pickthall, Yusuf Ali, Usmani, Hilali-Khan, Maududi, Bridges, Junagarhi)
+- 5 tafsir books (Ibn Kathir, Ma'arif al-Qur'an, Tazkirul Quran, Al-Sa'di, Muyassar)
+- Hide Arabic mode for memorisation testing
+- Hifz progress tracker by surah/juz on `/account/hifz`
+- Range repeat with a pause between repetitions for memorisation drills
 
 ---
 
@@ -53,7 +61,7 @@ A free, distraction-free Quran reading platform built as a public good (sadaqah 
 | Icons | Lucide React |
 | Animation | Motion (Framer Motion) |
 | Auth | Auth.js (NextAuth v5) — credentials + bcrypt |
-| Database | MongoDB Atlas + Mongoose (user data only) |
+| Database | Firebase Firestore (via `firebase-admin`, user data only) |
 | Email | Resend (password-reset) |
 | Media Maker | `html-to-image` + OG image route |
 | Package manager | pnpm |
@@ -67,15 +75,15 @@ A free, distraction-free Quran reading platform built as a public good (sadaqah 
 | Quran.com API v4 (`api.quran.com/api/v4`) | Chapters, verses, words, translations |
 | Quran.com CDN / QDC (`api.qurancdn.com`) | Audio + segments, tafsir, search, tajweed fields |
 | Quran.com audio CDN | Word pronunciation MP3s and chapter recitations |
-| Translation ID 131 — Saheeh International | English translation |
-| Translation ID 57 — The Clear Quran (Dr Mustafa Khattab) | English translation |
-| Tafsir `en-tafisr-ibn-kathir` (Ibn Kathir EN) | Study panel tafsir |
+| 21 reciters via QDC `audio/reciters` (14 with word-timing segments, 7 ayah-level only) | Recitation audio + Quran Radio — see `docs/m5-resource-ids.md` |
+| 10 translations (Saheeh Intl. 20, Clear Quran 131 — CDN, Abdel Haleem 85, Pickthall 19, Yusuf Ali 22, Usmani 84, Hilali-Khan 203, Maududi 95, Bridges 149, Junagarhi/Urdu 54) | English + Urdu translations |
+| 5 tafsir books via QDC (Ibn Kathir `en-tafisr-ibn-kathir`, Ma'arif al-Qur'an, Tazkirul Quran, Al-Sa'di, Muyassar) | Study panel tafsir |
 | spa5k/tafsir_api (Asbab al-Nuzul) | Reasons for revelation |
 | Quranic Arabic Corpus (build-time morphology) | Root / lemma / form data |
 | KFGQPC Uthmanic Hafs font | Primary Arabic script font |
 | Amiri (Google Fonts) | Secondary Arabic font option |
 
-Quran text is always fetched from the APIs — never stored in our database. MongoDB holds **user data only** (accounts, bookmarks, notes, progress, goals). API access is centralised under `src/lib/` (`quranApi.ts`, `audioApi.ts`, `studyApi.ts`, etc.) so sources can change in one place.
+Quran text is always fetched from the APIs — never stored in our database. Firestore holds **user data only** (accounts, bookmarks, notes, progress, goals) — server-only, accessed via `firebase-admin` in Route Handlers, never a client-side SDK. API access is centralised under `src/lib/` (`quranApi.ts`, `audioApi.ts`, `studyApi.ts`, etc.) so sources can change in one place.
 
 ---
 
@@ -104,7 +112,7 @@ src/
 │   ├── auth/ · goals/ · bookmarks/ · media/ · quran/
 │   └── db.ts
 ├── hooks/ · types/
-docs/                                    # Milestone plans and regression checklist
+docs/                                    # Design system notes + M5 resource inventory
 ```
 
 ---
@@ -130,13 +138,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 |---|---|
 | `AUTH_URL` | App URL (e.g. `http://localhost:3000`) |
 | `AUTH_SECRET` | Auth.js secret |
-| `MONGODB_URI` | MongoDB Atlas connection string |
+| `FIREBASE_PROJECT_ID` | Firebase project id |
+| `FIREBASE_CLIENT_EMAIL` | Firestore service account email |
+| `FIREBASE_PRIVATE_KEY` | Firestore service account private key |
+| `FIRESTORE_EMULATOR_HOST` | Local dev only — points at the Firestore emulator instead of production |
 | `RESEND_API_KEY` | Password-reset email |
 | `EMAIL_FROM` | From address for transactional email |
 
 Reading, audio, and study work without MongoDB/auth. Account features need the env vars above.
-
-Optional: `pnpm build:morphology` rebuilds morphology data from the corpus source.
 
 ---
 
@@ -154,10 +163,10 @@ Deployed on Vercel with the custom domain rememberquran.com. Every push to `main
 | M2 | Audio & recitation | Complete |
 | M3 | Study tools (tafsir, tajweed, search, morphology, asbab) | Complete |
 | M4 | User accounts, bookmarks, notes, progress, goals, media maker | Complete |
-| M5 | Expansion (20+ reciters, 10+ translations) | Upcoming |
+| M5 | Expansion (21 reciters, 10 translations, hifz tracker) | Complete |
 | M6 | Final polish & performance | Upcoming |
 
-Detailed plans live in `docs/` (`plan.md`, `m2.md`, `m3-implementation-plan.md`, `m4-*.md`, `m5-implementation-plan.md`, `regression-checklist.md`).
+Status vs. the original brief lives in `plan.md`; the shipped M5 reciter/translation/tafsir registry is in `docs/m5-resource-ids.md`.
 
 ---
 

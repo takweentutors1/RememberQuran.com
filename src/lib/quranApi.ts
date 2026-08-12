@@ -30,13 +30,15 @@ export {
   MAX_ACTIVE_TRANSLATIONS,
 } from "@/lib/translations"
 
-const CHAPTERS_BASE_URL = "https://api.quran.com/api/v4"
+const CHAPTERS_BASE_URL =
+  process.env.NEXT_PUBLIC_QURAN_CHAPTERS_API_URL ?? "https://api.quran.com/api/v4"
 /**
  * QDC — the API quran.com's own reader uses. Unlike the public v4 API it
  * returns word-level qpc_uthmani_hafs, the encoding the KFGQPC UthmanicHafs
  * font is built for (v4 leaves that word field empty).
  */
-const VERSES_BASE_URL = "https://api.qurancdn.com/api/qdc"
+const VERSES_BASE_URL =
+  process.env.NEXT_PUBLIC_QURAN_QDC_API_URL ?? "https://api.qurancdn.com/api/qdc"
 /**
  * Dr Mustafa Khattab's Clear Quran is no longer served by the quran.com API
  * (IDs verified 2026-07 — resource 131 returns nothing and the translation is

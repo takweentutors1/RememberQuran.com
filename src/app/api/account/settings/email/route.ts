@@ -1,10 +1,8 @@
 import { compare } from "bcryptjs"
-import mongoose from "mongoose"
 import { auth } from "@/auth"
 import { privateJson } from "@/lib/auth/api-response"
 import { validateEmail } from "@/lib/auth/credentials"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { getUserById, changeEmail } from "@/lib/firestore/users"
 
 export const runtime = "nodejs"
 
@@ -28,43 +26,34 @@ export async function PATCH(request: Request) {
     return privateJson({ error: "Current password is required." }, 400)
   }
 
+  const user = await getUserById(session.user.id)
+  if (!user) return privateJson({ error: "Account not found." }, 404)
+
+  const correctPassword = await compare(body.currentPassword, user.passwordHash)
+  if (!correctPassword) {
+    return privateJson({ error: "Current password is incorrect." }, 400)
+  }
+
+  if (user.email === email.email) {
+    return privateJson({ ok: true, email: user.email })
+  }
+
   try {
-    await connectToDatabase()
-    const user = await User.findById(session.user.id)
-      .select("+passwordHash")
-      .exec()
-
-    if (!user) return privateJson({ error: "Account not found." }, 404)
-
-    const correctPassword = await compare(
-      body.currentPassword,
-      user.passwordHash,
-    )
-    if (!correctPassword) {
-      return privateJson({ error: "Current password is incorrect." }, 400)
-    }
-
-    if (user.email === email.email) {
-      return privateJson({ ok: true, email: user.email })
-    }
-
-    user.email = email.email
-    user.emailVerified = null
-    await user.save()
-
-    return privateJson({
-      ok: true,
-      email: user.email,
-      reauthenticate: true,
-    })
-  } catch (error) {
-    if (error instanceof mongoose.mongo.MongoServerError && error.code === 11000) {
+    const result = await changeEmail(session.user.id, email.email)
+    if (!result.ok) {
       return privateJson(
         { error: "An account with this email already exists." },
         409,
       )
     }
+  } catch (error) {
     console.error("Change email failed", error)
     return privateJson({ error: "Could not change email. Please try again." }, 500)
   }
+
+  return privateJson({
+    ok: true,
+    email: email.email,
+    reauthenticate: true,
+  })
 }

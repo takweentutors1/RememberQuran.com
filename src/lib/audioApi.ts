@@ -6,7 +6,8 @@ import type { ChapterAudioFile, ChapterAudioResponse } from "@/types/audio"
  * our verses fetch in quranApi.ts. Fetched client-side on demand: audio data
  * is only needed once the user presses play, so it never weighs down SSR.
  */
-const AUDIO_BASE_URL = "https://api.qurancdn.com/api/qdc"
+const AUDIO_BASE_URL =
+  process.env.NEXT_PUBLIC_QURAN_QDC_API_URL ?? "https://api.qurancdn.com/api/qdc"
 
 /** Promise cache keyed by `${reciterId}:${chapterId}` — failed loads are
  * evicted so a retry actually refetches. */

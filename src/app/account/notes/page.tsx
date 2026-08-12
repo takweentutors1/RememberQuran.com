@@ -5,9 +5,8 @@ import {
   NotesView,
   type AccountNoteDto,
 } from "@/components/account/NotesView"
-import { connectToDatabase } from "@/lib/db"
 import { getChapters } from "@/lib/quranApi"
-import { Note } from "@/lib/models/Note"
+import { listNotes } from "@/lib/firestore/notes"
 
 export const metadata: Metadata = {
   title: "Notes",
@@ -22,10 +21,8 @@ export default async function NotesPage() {
   }
   const userId = session.user.id
 
-  await connectToDatabase()
-
   const [notes, chapters] = await Promise.all([
-    Note.find({ userId }).sort({ updatedAt: -1 }).limit(2000).lean(),
+    listNotes(userId),
     getChapters(),
   ])
 
@@ -41,8 +38,8 @@ export default async function NotesPage() {
       text: n.text,
       surahName: chapter?.name_simple ?? `Surah ${surahId}`,
       surahArabic: chapter?.name_arabic ?? "",
-      updatedAt: n.updatedAt?.toISOString?.() ?? String(n.updatedAt ?? ""),
-      createdAt: n.createdAt?.toISOString?.() ?? String(n.createdAt ?? ""),
+      updatedAt: n.updatedAt.toISOString(),
+      createdAt: n.createdAt.toISOString(),
     }
   })
 
