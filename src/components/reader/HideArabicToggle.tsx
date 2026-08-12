@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useReaderSettings } from "@/context/ReaderSettingsContext"
 import { useSurahContent } from "@/context/SurahContentContext"
 import { Switch } from "@/components/ui/switch"
@@ -46,18 +46,25 @@ export function HideArabicToggle({
     hideArabicRange ? String(hideArabicRange.end) : "",
   )
 
-  // Keep local draft in sync when range is cleared (e.g. surah change)
-  useEffect(() => {
+  // Keep local draft in sync when range is cleared (e.g. surah change) —
+  // done during render via a tracked-key comparison rather than an effect,
+  // so there's no extra render+effect round trip.
+  const rangeKey = hideArabicRange
+    ? `${hideArabicRange.start}:${hideArabicRange.end}`
+    : null
+  const [trackedRangeKey, setTrackedRangeKey] = useState(rangeKey)
+  if (rangeKey !== trackedRangeKey) {
+    setTrackedRangeKey(rangeKey)
     if (!hideArabicRange) {
       setScopeMode("all")
       setDraftStart("")
       setDraftEnd("")
-      return
+    } else {
+      setScopeMode("range")
+      setDraftStart(String(hideArabicRange.start))
+      setDraftEnd(String(hideArabicRange.end))
     }
-    setScopeMode("range")
-    setDraftStart(String(hideArabicRange.start))
-    setDraftEnd(String(hideArabicRange.end))
-  }, [hideArabicRange])
+  }
 
   const placeholderStart = targetAyahId ?? 1
   const placeholderEnd = rangeReady
