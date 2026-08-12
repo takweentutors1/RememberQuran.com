@@ -3,6 +3,7 @@ import { Resend } from "resend"
 import { privateJson } from "@/lib/auth/api-response"
 import { validateEmail } from "@/lib/auth/credentials"
 import { getUserByEmail, setPasswordResetToken, clearPasswordResetToken } from "@/lib/firestore/users"
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit"
 
 export const runtime = "nodejs"
 
@@ -11,7 +12,29 @@ const RESEND_COOLDOWN_MS = 60 * 1000
 const GENERIC_MESSAGE =
   "If an account exists for that email, a reset link has been sent."
 
+// The existing per-user 60s cooldown below only kicks in once an account is
+// found — it does nothing to stop someone spraying this endpoint with many
+// different emails (enumeration / mail-bombing an inbox). This IP limit
+// covers that: checked before any account lookup, so it applies regardless
+// of whether the target email exists.
+const RESET_IP_WINDOW_MS = 15 * 60 * 1000
+const RESET_IP_LIMIT = 5
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request)
+  const ipCheck = await checkRateLimit(
+    `reset-request:ip:${ip}`,
+    RESET_IP_LIMIT,
+    RESET_IP_WINDOW_MS,
+  )
+  if (!ipCheck.allowed) {
+    return privateJson(
+      { error: "Too many requests. Please try again later." },
+      429,
+      { "Retry-After": String(ipCheck.retryAfterSeconds) },
+    )
+  }
+
   let body: { email?: unknown }
   try {
     body = (await request.json()) as { email?: unknown }
