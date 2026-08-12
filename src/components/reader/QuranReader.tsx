@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { Chapter, Verse } from "@/types/quran"
 import { useReaderSettings } from "@/context/ReaderSettingsContext"
 import { usePlaybackVerseKey, useVerseScrollRequest } from "@/lib/playbackStore"
@@ -8,6 +8,20 @@ import { BismillahHeader } from "./BismillahHeader"
 import { AyahBlock } from "./AyahBlock"
 import { ReadingModeView } from "./ReadingModeView"
 import { ProgressTracker } from "./ProgressTracker"
+
+function subscribeReduceMotion(callback: () => void) {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
+  mq.addEventListener("change", callback)
+  return () => mq.removeEventListener("change", callback)
+}
+
+function getReduceMotionSnapshot() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
+function getReduceMotionServerSnapshot() {
+  return false
+}
 
 interface QuranReaderProps {
   chapter: Chapter
@@ -57,17 +71,13 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
     translationFontSize,
     arabicFontFamily,
   } = useReaderSettings()
-  const [shouldReduceMotion, setShouldReduceMotion] = useState(false)
+  const shouldReduceMotion = useSyncExternalStore(
+    subscribeReduceMotion,
+    getReduceMotionSnapshot,
+    getReduceMotionServerSnapshot,
+  )
   const [highlightActive, setHighlightActive] = useState(false)
   const clearRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const sync = () => setShouldReduceMotion(mq.matches)
-    sync()
-    mq.addEventListener("change", sync)
-    return () => mq.removeEventListener("change", sync)
-  }, [])
 
   useEffect(() => {
     if (!targetAyahId) return
@@ -80,12 +90,18 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
       block: "start",
     })
 
+    // Deferred a frame so the highlight flash starts after scrollIntoView's
+    // layout work settles, rather than in the same synchronous effect pass.
+    let rafId: number | undefined
     if (!shouldReduceMotion) {
-      setHighlightActive(true)
-      clearRef.current = setTimeout(() => setHighlightActive(false), 1500)
+      rafId = requestAnimationFrame(() => {
+        setHighlightActive(true)
+        clearRef.current = setTimeout(() => setHighlightActive(false), 1500)
+      })
     }
 
     return () => {
+      if (rafId !== undefined) cancelAnimationFrame(rafId)
       if (clearRef.current) clearTimeout(clearRef.current)
     }
   }, [targetAyahId, shouldReduceMotion])
