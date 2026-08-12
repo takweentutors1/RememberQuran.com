@@ -143,7 +143,7 @@ export function SearchPageClient({ initialQuery }: SearchPageClientProps) {
       {status === "done" && results.length > 0 && (
         <p className="mb-4 text-xs text-muted-foreground">
           {totalCount.toLocaleString()} result{totalCount !== 1 ? "s" : ""} for{" "}
-          <span className="font-medium text-foreground">"{query}"</span>
+          <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>
         </p>
       )}
 
