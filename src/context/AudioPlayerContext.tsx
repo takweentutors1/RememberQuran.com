@@ -223,7 +223,9 @@ interface LoadIntent {
 export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const chapters = useChapters()
   const chaptersRef = useRef(chapters)
-  chaptersRef.current = chapters
+  useEffect(() => {
+    chaptersRef.current = chapters
+  }, [chapters])
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
   const [rawPrefs, setRawPrefs] = useLocalStorage<unknown>(
     "rq-audio-settings",
@@ -307,10 +309,14 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     [clearRepeatPause],
   )
   const scheduleRepeatRestartRef = useRef(scheduleRepeatRestart)
-  scheduleRepeatRestartRef.current = scheduleRepeatRestart
+  useEffect(() => {
+    scheduleRepeatRestartRef.current = scheduleRepeatRestart
+  }, [scheduleRepeatRestart])
 
   const clearRepeatPauseRef = useRef(clearRepeatPause)
-  clearRepeatPauseRef.current = clearRepeatPause
+  useEffect(() => {
+    clearRepeatPauseRef.current = clearRepeatPause
+  }, [clearRepeatPause])
 
   const tickBody = useCallback(() => {
     const audio = audioRef.current
