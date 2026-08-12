@@ -1,11 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useSyncExternalStore } from "react"
+
+function subscribe(callback: () => void) {
+  const mql = window.matchMedia("(hover: none)")
+  mql.addEventListener("change", callback)
+  return () => mql.removeEventListener("change", callback)
+}
+
+function getSnapshot() {
+  return window.matchMedia("(hover: none)").matches
+}
+
+function getServerSnapshot() {
+  return false
+}
 
 export function useIsTouch() {
-  const [isTouch, setIsTouch] = useState(false)
-  useEffect(() => {
-    setIsTouch(window.matchMedia("(hover: none)").matches)
-  }, [])
-  return isTouch
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
