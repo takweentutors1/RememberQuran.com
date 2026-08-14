@@ -33,6 +33,11 @@ export interface UserRecord {
   passwordResetToken: string | null
   passwordResetExpires: Date | null
   passwordResetRequestedAt: Date | null
+  /**
+   * Bumped on password change AND email change (any credential-equivalent
+   * update) — sessions issued before this are revoked.
+   */
+  passwordChangedAt: Date
   activeGoal: ActiveGoal | null
   streak: Streak
   viewedSurahs: number[]
@@ -91,6 +96,10 @@ function fromSnapshot(id: string, data: FirebaseFirestore.DocumentData): UserRec
     passwordResetToken: data.passwordResetToken ?? null,
     passwordResetExpires: toDate(data.passwordResetExpires),
     passwordResetRequestedAt: toDate(data.passwordResetRequestedAt),
+    // Accounts created before this field existed fall back to createdAt, so
+    // deploying this doesn't retroactively invalidate every existing session.
+    passwordChangedAt:
+      toDate(data.passwordChangedAt) ?? toDate(data.createdAt) ?? new Date(0),
     activeGoal: data.activeGoal ?? null,
     streak: data.streak
       ? {
@@ -157,6 +166,7 @@ export async function createUser(input: {
       passwordResetToken: null,
       passwordResetExpires: null,
       passwordResetRequestedAt: null,
+      passwordChangedAt: now,
       activeGoal: null,
       streak: DEFAULT_STREAK,
       viewedSurahs: [],
@@ -206,6 +216,11 @@ export async function changeEmail(
     tx.update(userRef, {
       email: newEmail,
       emailVerified: null,
+      // Also stamped here (not just on password change): any credential
+      // change should force stale sessions — including ones still carrying
+      // the old email — to re-fetch identity rather than keep serving cached
+      // JWT claims for up to 30 days.
+      passwordChangedAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     })
     return { ok: true as const }
@@ -232,6 +247,7 @@ export async function updatePasswordHash(
     passwordResetToken: null,
     passwordResetExpires: null,
     passwordResetRequestedAt: null,
+    passwordChangedAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   })
 }

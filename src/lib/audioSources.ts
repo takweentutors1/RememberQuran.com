@@ -90,13 +90,8 @@ export const RECITERS: Reciter[] = [
     style: "Murattal",
     hasWordTiming: true,
   },
-  {
-    id: 8,
-    name: "Mohamed Siddiq al-Minshawi",
-    arabicName: "محمد صديق المنشاوي",
-    style: "Mujawwad",
-    hasWordTiming: true,
-  },
+  // id 8 (Al-Minshawi, Mujawwad) removed 2026-08-14 — upstream QDC/BunnyCDN
+  // audio_url 404s for every chapter (verified live); re-add once fixed.
   {
     id: 168,
     name: "Mohamed Siddiq al-Minshawi",

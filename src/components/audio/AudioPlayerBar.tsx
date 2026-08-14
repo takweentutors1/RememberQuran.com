@@ -259,7 +259,7 @@ export function AudioPlayerBar() {
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <ElapsedTime durationMs={player.durationMs} />
           <SpeedControl />
-          <RepeatControls />
+          {player.mode !== "radio" && <RepeatControls />}
           <ReciterSelector />
           <div className="mx-0.5 hidden h-4 w-px bg-border/50 sm:block" aria-hidden="true" />
           <button

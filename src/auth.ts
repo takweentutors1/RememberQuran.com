@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import { compare } from "bcryptjs"
 import { authConfig } from "@/auth.config"
 import { validateCredentials } from "@/lib/auth/credentials"
-import { getUserByEmail } from "@/lib/firestore/users"
+import { getUserByEmail, getUserById } from "@/lib/firestore/users"
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit"
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000
@@ -12,8 +12,32 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000
 const LOGIN_IP_LIMIT = 20
 const LOGIN_EMAIL_LIMIT = 10
 
+// Re-check the session's password freshness against Firestore at most this
+// often — every request would work too (Firestore reads are cheap) but
+// there's no need to pay that on every single navigation.
+const PASSWORD_REVALIDATE_MS = 5 * 60 * 1000
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt(params) {
+      const token = await authConfig.callbacks!.jwt!(params)
+      if (params.user) return token // just embedded pwChangedAt in the base callback
+
+      if (typeof token.pwChangedAt !== "number" || !token.sub) return token
+      const lastChecked = typeof token.pwCheckedAt === "number" ? token.pwCheckedAt : 0
+      if (Date.now() - lastChecked < PASSWORD_REVALIDATE_MS) return token
+
+      const current = await getUserById(token.sub)
+      if (current && current.passwordChangedAt.getTime() > token.pwChangedAt) {
+        token.error = "PasswordChanged"
+        return token
+      }
+      token.pwCheckedAt = Date.now()
+      return token
+    },
+  },
   providers: [
     Credentials({
       name: "Email and password",
@@ -60,6 +84,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.profile.displayName || null,
           roles: user.roles,
+          passwordChangedAt: user.passwordChangedAt.getTime(),
         }
       },
     }),

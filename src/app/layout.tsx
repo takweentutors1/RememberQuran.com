@@ -3,12 +3,15 @@ import Link from "next/link"
 import { amiri, amiriQuran, sourceSerif4 } from "@/lib/fonts"
 import { getChapters } from "@/lib/quranApi"
 import Providers from "@/components/providers"
-import { AudioPlayerBar } from "@/components/audio/AudioPlayerBar"
+import dynamic from "next/dynamic"
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
-import { SurahSheet } from "@/components/layout/SurahSheet"
-import { SurahCommand } from "@/components/layout/SurahCommand"
+import { TimezoneSync } from "@/components/TimezoneSync"
 import "./globals.css"
+
+const AudioPlayerBar = dynamic(() => import("@/components/audio/AudioPlayerBar").then(mod => mod.AudioPlayerBar))
+const SurahSheet = dynamic(() => import("@/components/layout/SurahSheet").then(mod => mod.SurahSheet))
+const SurahCommand = dynamic(() => import("@/components/layout/SurahCommand").then(mod => mod.SurahCommand))
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rememberquran.com"),
@@ -61,6 +64,15 @@ export default async function RootLayout({
       className={`${amiri.variable} ${amiriQuran.variable} ${sourceSerif4.variable} h-full`}
       suppressHydrationWarning
     >
+      <head>
+        <link
+          rel="preload"
+          href="https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <Link
           href="#main"
@@ -69,6 +81,7 @@ export default async function RootLayout({
           Skip to content
         </Link>
         <Providers chapters={chapters}>
+          <TimezoneSync />
           <Navbar />
           <main id="main" tabIndex={-1} className="min-w-0 outline-none">
             {children}

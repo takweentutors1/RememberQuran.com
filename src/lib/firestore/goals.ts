@@ -2,17 +2,18 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore"
 import { getDb } from "./admin"
 import { sumAyahsForDay } from "./progress"
 import { countInGoalUnits, type GoalType } from "@/lib/goals/constants"
-import { utcDayStart } from "@/lib/progress/date"
+import { localDayStart, shiftLocalDay } from "@/lib/progress/date"
 
-function addUtcDays(day: Date, days: number): Date {
-  const next = new Date(day)
-  next.setUTCDate(next.getUTCDate() + days)
-  return next
-}
-
-function sameUtcDay(a: Date | null | undefined, b: Date): boolean {
+// Reduces `a` to its local-day-start under the *current* timeZone before
+// comparing — the only sane behaviour if a user's timezone ever changes
+// (e.g. travel), and also means a `lastMetDate` written under the old
+// UTC-only scheme gets reinterpreted once under the new one. That one-time
+// reinterpretation can shift a legacy streak's day boundary by at most one
+// day on the first evaluation after this fix ships; it self-corrects from
+// then on since every subsequent write uses the same tz consistently.
+function sameLocalDay(timeZone: string, a: Date | null | undefined, b: Date): boolean {
   if (!a) return false
-  return utcDayStart(a).getTime() === b.getTime()
+  return localDayStart(timeZone, a).getTime() === b.getTime()
 }
 
 export interface GoalSnapshot {
@@ -25,7 +26,7 @@ export interface GoalSnapshot {
     longestStreak: number
     lastMetDate: string | null
   }
-  /** Last 7 UTC days ending today — met status uses the *current* goal, same as before. */
+  /** Last 7 local days ending today — met status uses the *current* goal, same as before. */
   week: Array<{ date: string; met: boolean }>
 }
 
@@ -51,11 +52,15 @@ export async function clearActiveGoal(userId: string): Promise<void> {
  * Safe to call often (idempotent for same day). Goal + streak are both just
  * fields on the user doc now — no separate collections, no upsert dance.
  */
-export async function evaluateGoalAndStreak(userId: string): Promise<GoalSnapshot> {
+export async function evaluateGoalAndStreak(
+  userId: string,
+  timeZone: string,
+): Promise<GoalSnapshot> {
   const db = getDb()
   const userRef = db.collection("users").doc(userId)
-  const today = utcDayStart()
-  const yesterday = addUtcDays(today, -1)
+  const now = new Date()
+  const today = localDayStart(timeZone, now)
+  const yesterday = shiftLocalDay(timeZone, now, -1)
 
   const [userSnap, todayAyahs] = await Promise.all([
     userRef.get(),
@@ -69,7 +74,7 @@ export async function evaluateGoalAndStreak(userId: string): Promise<GoalSnapsho
   let longestStreak: number = streakData.longestStreak ?? 0
   let lastMetDate: Date | null =
     streakData.lastMetDate instanceof Timestamp
-      ? utcDayStart(streakData.lastMetDate.toDate())
+      ? localDayStart(timeZone, streakData.lastMetDate.toDate())
       : null
 
   const todayCount = goal ? countInGoalUnits(todayAyahs, goal.type) : todayAyahs
@@ -79,9 +84,9 @@ export async function evaluateGoalAndStreak(userId: string): Promise<GoalSnapsho
 
   if (goal) {
     if (metToday) {
-      if (sameUtcDay(lastMetDate, today)) {
+      if (sameLocalDay(timeZone, lastMetDate, today)) {
         // already counted today
-      } else if (sameUtcDay(lastMetDate, yesterday)) {
+      } else if (sameLocalDay(timeZone, lastMetDate, yesterday)) {
         currentStreak += 1
         lastMetDate = today
         streakChanged = true
@@ -114,7 +119,7 @@ export async function evaluateGoalAndStreak(userId: string): Promise<GoalSnapsho
     })
   }
 
-  const priorDays = Array.from({ length: 6 }, (_, i) => addUtcDays(today, -(6 - i)))
+  const priorDays = Array.from({ length: 6 }, (_, i) => shiftLocalDay(timeZone, now, -(6 - i)))
   const priorAyahs = await Promise.all(priorDays.map((day) => sumAyahsForDay(userId, day)))
   const weekAyahs = [...priorAyahs, todayAyahs]
   const week = weekAyahs.map((ayahs, i) => {

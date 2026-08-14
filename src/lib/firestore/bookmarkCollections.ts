@@ -16,6 +16,13 @@ function collectionsRef(userId: string) {
   return getDb().collection("users").doc(userId).collection("bookmarkCollections")
 }
 
+/** Exposed so callers can re-verify a collection still exists inside their
+ * own transaction (e.g. bookmarks.ts guarding against a collection being
+ * deleted concurrently between an ownership check and a write). */
+export function collectionDocRef(userId: string, id: string) {
+  return collectionsRef(userId).doc(id)
+}
+
 function fromSnapshot(snap: FirebaseFirestore.QueryDocumentSnapshot): BookmarkCollectionRecord {
   const data = snap.data()
   return {

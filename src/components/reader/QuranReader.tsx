@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { Chapter, Verse } from "@/types/quran"
 import { useReaderSettings } from "@/context/ReaderSettingsContext"
 import { usePlaybackVerseKey, useVerseScrollRequest } from "@/lib/playbackStore"
@@ -78,13 +78,64 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
   )
   const [highlightActive, setHighlightActive] = useState(false)
   const clearRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const articleRef = useRef<HTMLElement>(null)
+  const targetHandledRef = useRef<number | null>(null)
+
+  // Track the topmost visible ayah so a mode switch can re-anchor to it —
+  // verse-by-verse blocks and continuous reading text have very different
+  // per-ayah heights, so keeping the same scrollTop lands on the wrong verse.
+  const visibleAyahRef = useRef<number | null>(null)
+  useEffect(() => {
+    const container = articleRef.current
+    if (!container) return
+
+    function updateVisibleAyah(node: HTMLElement) {
+      const elements = node.querySelectorAll<HTMLElement>('[id^="ayah-"]')
+      for (const candidate of elements) {
+        if (candidate.getBoundingClientRect().bottom > 0) {
+          visibleAyahRef.current = Number(candidate.id.replace(/^ayah-(trans-)?/, ""))
+          return
+        }
+      }
+    }
+
+    let ticking = false
+    function onScroll() {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        updateVisibleAyah(container!)
+        ticking = false
+      })
+    }
+
+    updateVisibleAyah(container!)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const prevDisplayModeRef = useRef(displayMode)
+  useLayoutEffect(() => {
+    if (prevDisplayModeRef.current === displayMode) return
+    prevDisplayModeRef.current = displayMode
+    const anchor = visibleAyahRef.current
+    if (anchor == null) return
+    document.getElementById(`ayah-${anchor}`)?.scrollIntoView({ behavior: "auto", block: "start" })
+  }, [displayMode])
 
   useEffect(() => {
     if (!targetAyahId) return
+    // Already scrolled/flashed for this target — don't re-trigger just
+    // because a later page of verses streamed in.
+    if (targetHandledRef.current === targetAyahId) return
 
     const el = document.getElementById(`ayah-${targetAyahId}`)
+    // Target ayah lives on a page that hasn't loaded yet (surahs stream in
+    // 50-verse pages): bail without marking handled, so this effect retries
+    // once `verses` grows and the element exists.
     if (!el) return
 
+    targetHandledRef.current = targetAyahId
     el.scrollIntoView({
       behavior: shouldReduceMotion ? "auto" : "smooth",
       block: "start",
@@ -104,7 +155,7 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
       if (rafId !== undefined) cancelAnimationFrame(rafId)
       if (clearRef.current) clearTimeout(clearRef.current)
     }
-  }, [targetAyahId, shouldReduceMotion])
+  }, [targetAyahId, shouldReduceMotion, verses])
 
   // Scrubber seeks bring the recited ayah into view even from far away
   const scrollRequest = useVerseScrollRequest()
@@ -130,6 +181,7 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
     <>
       <ProgressTracker surahId={chapter.id} />
       <article
+      ref={articleRef}
       aria-label={`Surah ${chapter.name_simple}`}
       aria-busy={false}
       className="mx-auto max-w-6xl px-6 py-8 sm:px-10 sm:py-10"
@@ -176,7 +228,6 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
             <div key={verse.id} role="listitem" className="ayah-cv">
               <AyahBlock
                 verse={verse}
-                displayMode="verse"
                 activeTranslationIds={activeTranslations}
                 showTranslation={showTranslation}
                 isTarget={highlightActive && targetAyahId === verse.verse_number}

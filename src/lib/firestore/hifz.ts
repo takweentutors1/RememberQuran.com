@@ -61,52 +61,44 @@ export type MarkMemorisedResult =
   | { ok: true; created: boolean; ayah: MemorisedAyahRecord }
   | { ok: false; error: "limit-reached" }
 
+/**
+ * Existence + count-limit check and the write are all in one transaction —
+ * otherwise two concurrent marks for two different new ayahs can both pass
+ * the count check before either commits, bypassing MAX_MEMORISED (same class
+ * of race fixed in bookmarks.ts/notes.ts this pass).
+ */
 export async function markMemorised(
   userId: string,
   verseKey: string,
   surahId: number,
   ayahId: number,
 ): Promise<MarkMemorisedResult> {
-  const ref = hifzRef(userId)
-  const existingSnap = await ref.doc(verseKey).get()
-  if (existingSnap.exists) {
-    return {
-      ok: true,
-      created: false,
-      ayah: fromSnapshot(existingSnap as FirebaseFirestore.QueryDocumentSnapshot<MemorisedAyahDoc>),
+  const db = getDb()
+  const ref = hifzRef(userId).doc(verseKey)
+
+  const outcome = await db.runTransaction(async (tx) => {
+    const existing = await tx.get(ref)
+    if (existing.exists) return { ok: true as const, created: false as const }
+
+    const countSnap = await tx.get(hifzRef(userId).count())
+    if (countSnap.data().count >= MAX_MEMORISED) {
+      return { ok: false as const, error: "limit-reached" as const }
     }
-  }
 
-  const countSnap = await ref.count().get()
-  if (countSnap.data().count >= MAX_MEMORISED) {
-    return { ok: false, error: "limit-reached" }
-  }
-
-  try {
-    await ref.doc(verseKey).create({
+    tx.set(ref, {
       surahId,
       ayahId,
       memorisedAt: FieldValue.serverTimestamp() as unknown as Timestamp,
     })
-  } catch (error) {
-    if (isAlreadyExists(error)) {
-      const raced = await ref.doc(verseKey).get()
-      if (raced.exists) {
-        return {
-          ok: true,
-          created: false,
-          ayah: fromSnapshot(raced as FirebaseFirestore.QueryDocumentSnapshot<MemorisedAyahDoc>),
-        }
-      }
-    }
-    throw error
-  }
+    return { ok: true as const, created: true as const }
+  })
 
-  const createdSnap = await ref.doc(verseKey).get()
+  if (!outcome.ok) return outcome
+  const snap = await ref.get()
   return {
     ok: true,
-    created: true,
-    ayah: fromSnapshot(createdSnap as FirebaseFirestore.QueryDocumentSnapshot<MemorisedAyahDoc>),
+    created: outcome.created,
+    ayah: fromSnapshot(snap as FirebaseFirestore.QueryDocumentSnapshot<MemorisedAyahDoc>),
   }
 }
 
@@ -116,13 +108,4 @@ export async function unmarkMemorised(userId: string, verseKey: string): Promise
   if (!snap.exists) return false
   await ref.delete()
   return true
-}
-
-function isAlreadyExists(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code: unknown }).code === 6
-  )
 }

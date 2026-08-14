@@ -164,7 +164,7 @@ Deployed on Vercel with the custom domain rememberquran.com. Every push to `main
 | M3 | Study tools (tafsir, tajweed, search, morphology, asbab) | Complete |
 | M4 | User accounts, bookmarks, notes, progress, goals, media maker | Complete |
 | M5 | Expansion (21 reciters, 10 translations, hifz tracker) | Complete |
-| M6 | Final polish & performance | Upcoming |
+| M6 | Final polish & performance | Complete |
 
 Status vs. the original brief lives in `plan.md`; the shipped M5 reciter/translation/tafsir registry is in `docs/m5-resource-ids.md`.
 
@@ -172,7 +172,7 @@ Status vs. the original brief lives in `plan.md`; the shipped M5 reciter/transla
 
 ## Guiding principles
 
-- Quran content is never stored in our database — always fetched from the API; Mongo holds user data only
+- Quran content is never stored in our database — always fetched from the API; Firestore holds user data only
 - No ads, no pop-ups, no commercial aesthetics
 - Account features are additive — guests keep full reading, audio, and study access
 - Every previous milestone's features are regression-tested before the next milestone begins

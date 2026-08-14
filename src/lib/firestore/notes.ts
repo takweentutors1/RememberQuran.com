@@ -79,26 +79,36 @@ export async function saveNote(
   verseKey: string,
   text: string,
 ): Promise<SaveNoteResult> {
+  const db = getDb()
   const ref = notesRef(userId).doc(verseKey)
-  const existing = await ref.get()
 
-  if (!existing.exists) {
-    const countSnap = await notesRef(userId).count().get()
-    if (countSnap.data().count >= MAX_NOTES) {
-      return { ok: false, error: "limit-reached" }
+  // Existence + count-limit check and the write are all in one transaction —
+  // otherwise two concurrent saves for two different new ayahs can both pass
+  // the count check before either commits, bypassing MAX_NOTES.
+  const outcome = await db.runTransaction(async (tx) => {
+    const existing = await tx.get(ref)
+
+    if (!existing.exists) {
+      const countSnap = await tx.get(notesRef(userId).count())
+      if (countSnap.data().count >= MAX_NOTES) {
+        return { ok: false as const, error: "limit-reached" as const }
+      }
     }
-  }
 
-  const now = FieldValue.serverTimestamp()
-  await ref.set(
-    {
-      text,
-      updatedAt: now,
-      ...(existing.exists ? {} : { createdAt: now }),
-    },
-    { merge: true },
-  )
+    const now = FieldValue.serverTimestamp()
+    tx.set(
+      ref,
+      {
+        text,
+        updatedAt: now,
+        ...(existing.exists ? {} : { createdAt: now }),
+      },
+      { merge: true },
+    )
+    return { ok: true as const }
+  })
 
+  if (!outcome.ok) return outcome
   const saved = await getNote(userId, verseKey)
   return { ok: true, note: saved! }
 }

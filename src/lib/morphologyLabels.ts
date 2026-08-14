@@ -81,18 +81,44 @@ export const FEATURE_LABELS: Record<string, string> = {
   "3MS": "3rd Person Masculine Singular",
   "3FS": "3rd Person Feminine Singular",
   "2D": "2nd Person Dual",
+  "2MD": "2nd Person Masculine Dual",
+  "2FD": "2nd Person Feminine Dual",
+  "3D": "3rd Person Dual",
   "3MD": "3rd Person Masculine Dual",
   "3FD": "3rd Person Feminine Dual",
   "2MP": "2nd Person Masculine Plural",
   "2FP": "2nd Person Feminine Plural",
   "3MP": "3rd Person Masculine Plural",
   "3FP": "3rd Person Feminine Plural",
+  // Gender+number with no person marker (nouns/adjectives/participles)
+  MS: "Masculine Singular",
+  MP: "Masculine Plural",
+  MD: "Masculine Dual",
+  FS: "Feminine Singular",
+  FP: "Feminine Plural",
+  FD: "Feminine Dual",
+  // Particle functions
+  NEG: "Negative",
+  COND: "Conditional",
+  CERT: "Certainty",
+  INTG: "Interrogative",
+  T: "Time Adverb",
+  NV: "Noun Functioning as Verb",
+  ANS: "Answer Particle",
+  ATT: "Attention Particle",
+  EXL: "Detailing Particle",
+  AVR: "Aversion Particle",
+  SUP: "Supplemental Particle",
+  // Governance groups ("sisters" of a governing particle/verb)
+  "FAM:إِنّ": "Sister of 'inna' (governs like إِنّ)",
+  "FAM:كَان": "Sister of 'kāna' (governs like كَانَ)",
+  "FAM:كَاد": "Sister of 'kāda' (verbs of imminence)",
 }
 
 const VF_LABELS: Record<string, string> = {
   "1": "Form I", "2": "Form II", "3": "Form III", "4": "Form IV",
   "5": "Form V", "6": "Form VI", "7": "Form VII", "8": "Form VIII",
-  "9": "Form IX", "10": "Form X",
+  "9": "Form IX", "10": "Form X", "11": "Form XI",
 }
 
 const MOOD_LABELS: Record<string, string> = {
@@ -109,6 +135,9 @@ export function humanizeFeatures(features: string[]): string[] {
     .map((f) => {
       if (f.startsWith("VF:")) return VF_LABELS[f.slice(3)] ?? f
       if (f.startsWith("MOOD:")) return MOOD_LABELS[f.slice(5)] ?? f.slice(5)
-      return FEATURE_LABELS[f] ?? f
+      // Some feature codes reuse the same particle-role vocabulary as POS
+      // tags (e.g. a word tagged pos:"P" carries features:["RES"] to record
+      // its specific role) — fall back to POS_LABELS before giving up.
+      return FEATURE_LABELS[f] ?? POS_LABELS[f] ?? f
     })
 }

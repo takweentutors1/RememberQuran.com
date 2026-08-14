@@ -1,6 +1,10 @@
 import { FieldPath, FieldValue, Timestamp } from "firebase-admin/firestore"
 import { getDb } from "./admin"
-import { adjustBookmarkCount, getOrCreateFavourites, getCollection } from "./bookmarkCollections"
+import {
+  adjustBookmarkCount,
+  getOrCreateFavourites,
+  collectionDocRef,
+} from "./bookmarkCollections"
 
 export const MAX_BOOKMARKS = 2000
 
@@ -86,34 +90,50 @@ export async function createBookmark(
   const existing = await getBookmark(userId, verseKey)
   if (existing) return { ok: true, created: false, bookmark: existing }
 
-  let targetCollectionId: string
-  if (collectionId) {
-    const owned = await getCollection(userId, collectionId)
-    if (!owned) return { ok: false, error: "collection-not-found" }
-    targetCollectionId = collectionId
-  } else {
-    targetCollectionId = (await getOrCreateFavourites(userId)).id
-  }
+  // Favourites is seeded at registration and protected from deletion
+  // (deleteCollection refuses on isDefault), so resolving it up front is
+  // safe. An explicit custom collection isn't protected — it's re-verified
+  // inside the transaction below, not here, so a concurrent delete between
+  // this call and the write can't leave the bookmark pointing at nothing.
+  const targetCollectionId = collectionId ?? (await getOrCreateFavourites(userId)).id
 
   const ref = bookmarksRef(userId)
-  const countSnap = await ref.count().get()
-  if (countSnap.data().count >= MAX_BOOKMARKS) {
-    return { ok: false, error: "limit-reached" }
-  }
+  const db = getDb()
+  const bookmarkRef = ref.doc(verseKey)
+  const collectionRef = collectionId ? collectionDocRef(userId, collectionId) : null
 
-  try {
-    await ref.doc(verseKey).create({
+  // Existence + count-limit check and the write are all in one transaction —
+  // otherwise two concurrent creates for two different new ayahs can both
+  // pass the count check before either commits, bypassing MAX_BOOKMARKS.
+  const outcome = await db.runTransaction(async (tx) => {
+    if (collectionRef) {
+      const collectionSnap = await tx.get(collectionRef)
+      if (!collectionSnap.exists) {
+        return { ok: false as const, error: "collection-not-found" as const }
+      }
+    }
+    // Concurrent tab may have saved it since the fast-path check above —
+    // idempotent success, same as the Mongo E11000 duplicate-key race
+    // handling this replaces.
+    const bookmarkSnap = await tx.get(bookmarkRef)
+    if (bookmarkSnap.exists) return { ok: true as const, created: false as const }
+
+    const countSnap = await tx.get(ref.count())
+    if (countSnap.data().count >= MAX_BOOKMARKS) {
+      return { ok: false as const, error: "limit-reached" as const }
+    }
+
+    tx.set(bookmarkRef, {
       collectionId: targetCollectionId,
       createdAt: FieldValue.serverTimestamp() as unknown as Timestamp,
     })
-  } catch (error) {
-    // Concurrent tab already saved it — idempotent success, same as the
-    // Mongo E11000 duplicate-key race handling this replaces.
-    if (isAlreadyExists(error)) {
-      const raced = await getBookmark(userId, verseKey)
-      if (raced) return { ok: true, created: false, bookmark: raced }
-    }
-    throw error
+    return { ok: true as const, created: true as const }
+  })
+
+  if (!outcome.ok) return outcome
+  if (!outcome.created) {
+    const raced = await getBookmark(userId, verseKey)
+    return { ok: true, created: false, bookmark: raced! }
   }
 
   await adjustBookmarkCount(userId, targetCollectionId, 1)
@@ -130,19 +150,27 @@ export async function moveBookmark(
   verseKey: string,
   collectionId: string | null,
 ): Promise<MoveBookmarkResult> {
-  let targetCollectionId: string
-  if (collectionId) {
-    const owned = await getCollection(userId, collectionId)
-    if (!owned) return { ok: false, error: "collection-not-found" }
-    targetCollectionId = collectionId
-  } else {
-    targetCollectionId = (await getOrCreateFavourites(userId)).id
-  }
+  // Favourites is delete-protected, so resolving it up front is safe (see
+  // createBookmark). A custom collectionId is re-verified inside the
+  // transaction instead, guarding against a concurrent delete.
+  const favouritesId = collectionId ? null : (await getOrCreateFavourites(userId)).id
 
   const db = getDb()
   const ref = bookmarksRef(userId).doc(verseKey)
+  const collectionRef = collectionId ? collectionDocRef(userId, collectionId) : null
 
   const result = await db.runTransaction(async (tx) => {
+    let targetCollectionId: string
+    if (collectionRef) {
+      const collectionSnap = await tx.get(collectionRef)
+      if (!collectionSnap.exists) {
+        return { ok: false as const, error: "collection-not-found" as const }
+      }
+      targetCollectionId = collectionId!
+    } else {
+      targetCollectionId = favouritesId!
+    }
+
     const snap = await tx.get(ref)
     if (!snap.exists) return { ok: false as const, error: "not-found" as const }
     const previousCollectionId = snap.data()!.collectionId
@@ -151,14 +179,14 @@ export async function moveBookmark(
     }
 
     tx.update(ref, { collectionId: targetCollectionId })
-    return { ok: true as const, moved: true as const, previousCollectionId }
+    return { ok: true as const, moved: true as const, previousCollectionId, targetCollectionId }
   })
 
   if (!result.ok) return result
   if (result.moved) {
     await Promise.all([
       adjustBookmarkCount(userId, result.previousCollectionId, -1),
-      adjustBookmarkCount(userId, targetCollectionId, 1),
+      adjustBookmarkCount(userId, result.targetCollectionId, 1),
     ])
   }
 
@@ -183,13 +211,4 @@ export async function deleteBookmark(
   if (!collectionId) return false
   await adjustBookmarkCount(userId, collectionId, -1)
   return true
-}
-
-function isAlreadyExists(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code: unknown }).code === 6
-  )
 }

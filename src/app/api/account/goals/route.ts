@@ -2,6 +2,7 @@ import { getSessionUserId } from "@/lib/auth/session"
 import { privateJson } from "@/lib/auth/api-response"
 import { isGoalType, validateGoalTarget } from "@/lib/goals/constants"
 import { setActiveGoal, clearActiveGoal, evaluateGoalAndStreak } from "@/lib/firestore/goals"
+import { getRequestTimeZone } from "@/lib/progress/serverTimezone"
 
 export const runtime = "nodejs"
 
@@ -20,7 +21,7 @@ export async function GET() {
   const userId = await getSessionUserId()
   if (!userId) return privateJson({ error: "Unauthorized." }, 401)
 
-  const snapshot = await evaluateGoalAndStreak(userId)
+  const snapshot = await evaluateGoalAndStreak(userId, await getRequestTimeZone())
   return privateJson(snapshot as unknown as Record<string, unknown>)
 }
 
@@ -41,7 +42,7 @@ export async function PUT(request: Request) {
 
   await setActiveGoal(userId, { type, target })
 
-  const snapshot = await evaluateGoalAndStreak(userId)
+  const snapshot = await evaluateGoalAndStreak(userId, await getRequestTimeZone())
   return privateJson({
     ...(snapshot as unknown as Record<string, unknown>),
     goal: { type, target },
@@ -54,6 +55,6 @@ export async function DELETE() {
 
   await clearActiveGoal(userId)
 
-  const snapshot = await evaluateGoalAndStreak(userId)
+  const snapshot = await evaluateGoalAndStreak(userId, await getRequestTimeZone())
   return privateJson(snapshot as unknown as Record<string, unknown>)
 }

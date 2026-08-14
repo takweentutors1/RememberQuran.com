@@ -6,6 +6,7 @@ import {
   type GoalsSnapshot,
 } from "@/components/account/GoalsView"
 import { evaluateGoalAndStreak } from "@/lib/firestore/goals"
+import { getRequestTimeZone } from "@/lib/progress/serverTimezone"
 
 export const metadata: Metadata = {
   title: "Goals & streaks",
@@ -21,6 +22,7 @@ export default async function GoalsPage() {
 
   const snapshot = (await evaluateGoalAndStreak(
     session.user.id,
+    await getRequestTimeZone(),
   )) as GoalsSnapshot
 
   return (

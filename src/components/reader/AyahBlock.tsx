@@ -4,7 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { BookOpen, Copy, Share2, Check, ScrollText, ImageIcon } from "lucide-react"
 import type { Verse } from "@/types/quran"
-import type { DisplayMode } from "@/context/ReaderSettingsContext"
 import { PlayAyahButton } from "@/components/audio/PlayAyahButton"
 import { useStudyPanel } from "@/context/StudyPanelContext"
 import { hasAsbab } from "@/lib/asbabIndex"
@@ -20,7 +19,6 @@ import { cn } from "@/lib/utils"
 
 interface AyahBlockProps {
   verse: Verse
-  displayMode: DisplayMode
   activeTranslationIds: number[]
   showTranslation: boolean
   isTarget?: boolean
@@ -35,12 +33,12 @@ const metaBtn = cn(
 
 export function AyahBlock({
   verse,
-  displayMode,
   activeTranslationIds,
   showTranslation,
   isTarget = false,
 }: AyahBlockProps) {
   const [copied, setCopied] = useState(false)
+  const [shared, setShared] = useState(false)
   const { openTafsir, openAsbab } = useStudyPanel()
   const chapterId = Number(verse.verse_key.split(":")[0])
   // Null for every verse except the one being recited — no re-renders while idle
@@ -50,15 +48,17 @@ export function AyahBlock({
     activeTranslationIds.includes(t.resource_id),
   )
 
-  function copyAyah() {
+  async function copyAyah() {
     const arabic = verse.text_uthmani
     const trans = activeTranslations.map((t) => t.text).join("\n\n")
     const ref = `[${verse.verse_key}]`
-    navigator.clipboard
-      .writeText([arabic, trans, ref].filter(Boolean).join("\n\n"))
-      .catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    try {
+      await navigator.clipboard.writeText(
+        [arabic, trans, ref].filter(Boolean).join("\n\n"),
+      )
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {}
   }
 
   async function shareAyah() {
@@ -66,30 +66,16 @@ export function AyahBlock({
     const url = `${window.location.origin}/${surahId}/${ayahId}`
     if (navigator.share) {
       await navigator.share({ url, title: `Quran ${verse.verse_key}` }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(url).catch(() => {})
+      return
     }
-  }
-
-  /* Reading mode is handled by ReadingModeView — this is verse-by-verse only */
-  if (displayMode === "reading") {
-    return (
-      <div
-        id={`ayah-${verse.verse_number}`}
-        data-verse-key={verse.verse_key}
-        className={cn(
-          "scroll-mt-28 py-1 transition-colors duration-[1500ms]",
-          isTarget && "bg-primary/5",
-        )}
-      >
-        <ArabicLine
-          words={verse.words}
-          showEndGlyph
-          highlightedPosition={highlightedPosition}
-          verseKey={verse.verse_key}
-        />
-      </div>
-    )
+    // No native share sheet (most desktop browsers) — fall back to copying
+    // the link, with the same visual confirmation as the Copy button so the
+    // user isn't left wondering whether the click did anything.
+    try {
+      await navigator.clipboard.writeText(url)
+      setShared(true)
+      setTimeout(() => setShared(false), 1500)
+    } catch {}
   }
 
   return (
@@ -163,8 +149,17 @@ export function AyahBlock({
               <Copy className="size-3.5" strokeWidth={1.75} />
             )}
           </button>
-          <button type="button" title="Share" onClick={shareAyah} className={metaBtn}>
-            <Share2 className="size-3.5" strokeWidth={1.75} />
+          <button
+            type="button"
+            title={shared ? "Link copied!" : "Share"}
+            onClick={shareAyah}
+            className={cn(metaBtn, shared && "text-primary")}
+          >
+            {shared ? (
+              <Check className="size-3.5" strokeWidth={2} />
+            ) : (
+              <Share2 className="size-3.5" strokeWidth={1.75} />
+            )}
           </button>
           <Link
             href={`/media-maker?verse=${encodeURIComponent(verse.verse_key)}`}

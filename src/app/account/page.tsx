@@ -16,6 +16,7 @@ import { countBookmarks } from "@/lib/firestore/bookmarks"
 import { countMemorisedAyahs } from "@/lib/firestore/hifz"
 import { countNotes } from "@/lib/firestore/notes"
 import { getUserById } from "@/lib/firestore/users"
+import { getRequestTimeZone } from "@/lib/progress/serverTimezone"
 
 export const metadata: Metadata = {
   title: "Account",
@@ -34,13 +35,14 @@ export default async function AccountPage() {
     session.user.email?.split("@")[0] ||
     "friend"
 
+  const timeZone = await getRequestTimeZone()
   const [bookmarkCount, noteCount, hifzCount, user, goals] =
     await Promise.all([
       countBookmarks(session.user.id),
       countNotes(session.user.id),
       countMemorisedAyahs(session.user.id),
       getUserById(session.user.id),
-      evaluateGoalAndStreak(session.user.id),
+      evaluateGoalAndStreak(session.user.id, timeZone),
     ])
   const viewedSurahs = user?.viewedSurahs ?? []
 

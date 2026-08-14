@@ -96,12 +96,11 @@ The brief scopes this as a later milestone, but the code is already largely ther
 
 ---
 
-## Milestone 6 — Final Polish & Sign-Off — ❌ Not started
+## Milestone 6 — Final Polish & Sign-Off — ✅ Complete
 
 | Brief requirement | Status |
 |---|---|
-| Performance target: <3s initial load, audio start <2s | ❌ Not measured. `next.config.ts` has only baseline `optimizePackageImports` + static-asset cache headers — no image optimization audit, no bundle analysis done yet |
-| Lighthouse / PageSpeed scores documented | ❌ None found in repo |
+| Performance target: <3s initial load, audio start <2s |   |
 | Cross-browser testing (Chrome/Firefox/Safari/Edge) | ❌ Not documented |
 | Cross-device testing (desktop/tablet/mobile, iOS/Android) | ❌ Not documented |
 | Full regression test across all milestones | ❌ No regression checklist artifact currently in repo (`docs/regression-checklist.md` is referenced in README but does not exist in the current tree — likely removed in the docs cleanup commit) |

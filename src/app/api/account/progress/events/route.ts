@@ -3,6 +3,7 @@ import { privateJson } from "@/lib/auth/api-response"
 import { recordProgressEvent } from "@/lib/firestore/progress"
 import { evaluateGoalAndStreak } from "@/lib/firestore/goals"
 import { getAyahCount } from "@/lib/quran/verse-key"
+import { getRequestTimeZone } from "@/lib/progress/serverTimezone"
 
 export const runtime = "nodejs"
 
@@ -55,9 +56,11 @@ export async function PUT(request: Request) {
   }
 
   // Server owns the calendar day — ignore client date (recordProgressEvent
-  // computes it internally, matching the old ignore-client-date behaviour).
-  const event = await recordProgressEvent(userId, surah, fromAyah, toAyah)
-  void evaluateGoalAndStreak(userId).catch(() => {})
+  // computes it internally, using the user's timezone rather than blindly
+  // trusting a client-supplied date).
+  const timeZone = await getRequestTimeZone()
+  const event = await recordProgressEvent(userId, surah, fromAyah, toAyah, timeZone)
+  void evaluateGoalAndStreak(userId, timeZone).catch(() => {})
 
   return privateJson({ event })
 }
