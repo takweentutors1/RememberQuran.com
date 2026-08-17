@@ -10,6 +10,7 @@ import 'hideable_arabic.dart';
 import '../../controllers/reader_settings_controller.dart';
 import '../../../study/views/widgets/tafsir_sheet.dart';
 import '../../../study/views/widgets/asbab_sheet.dart';
+import 'note_sheet.dart';
 import '../../../../core/models/translation.dart';
 import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_controller.dart';
@@ -76,10 +77,15 @@ class AyahBlock extends StatelessWidget {
                   color: theme.colorScheme.primary,
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedActionButton(
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      AnimatedActionButton(
                     icon: Icon(isPlayingThisVerse ? Icons.pause_circle_outline : Icons.play_circle_outline),
                     onPressed: () async {
                       if (isPlayingThisVerse) {
@@ -108,6 +114,14 @@ class AyahBlock extends StatelessWidget {
                     },
                     iconSize: 20,
                     tooltip: 'Asbab al-Nuzul',
+                  ),
+                  AnimatedActionButton(
+                    icon: const Icon(Icons.edit_note),
+                    onPressed: () async {
+                      NoteSheet.show(context, verse.chapterId, verse.verseNumber);
+                    },
+                    iconSize: 20,
+                    tooltip: 'Add Note',
                   ),
                   AnimatedActionButton(
                     icon: const Icon(Icons.share_outlined),
@@ -160,6 +174,8 @@ class AyahBlock extends StatelessWidget {
                   }),
                 ],
               ),
+            ),
+          ),
             ],
           ),
           const SizedBox(height: 16),

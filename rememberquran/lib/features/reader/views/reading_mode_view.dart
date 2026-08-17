@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../controllers/reader_controller.dart';
 import 'widgets/arabic_word.dart';
+import '../../../shared/widgets/loading_skeleton.dart';
 
 class ReadingModeView extends GetView<ReaderController> {
   const ReadingModeView({Key? key}) : super(key: key);
@@ -19,7 +20,7 @@ class ReadingModeView extends GetView<ReaderController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.verses.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return AppShimmer.ayahList(count: 8);
         }
 
         return ScrollablePositionedList.builder(

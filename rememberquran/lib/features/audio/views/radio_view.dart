@@ -5,6 +5,7 @@ import '../../../core/models/reciter.dart';
 import '../../../data/repositories/quran_repository.dart';
 import '../../../data/datasources/local/quran_db.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/loading_skeleton.dart';
 
 class RadioView extends StatefulWidget {
   const RadioView({super.key});
@@ -149,7 +150,7 @@ class _RadioViewState extends State<RadioView> {
                           width: 96,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isBusy ? Colors.grey : Theme.of(context).colorScheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             boxShadow: [
                               BoxShadow(
                                 color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
@@ -160,7 +161,14 @@ class _RadioViewState extends State<RadioView> {
                           ),
                           child: Center(
                             child: isBusy
-                                ? const CircularProgressIndicator(color: Colors.white)
+                                ? const SizedBox(
+                                    width: 36,
+                                    height: 36,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
                                 : Icon(
                                     (!isRadio || !isPlaying) ? Icons.play_arrow_rounded : Icons.pause_rounded,
                                     color: Colors.white,
@@ -231,7 +239,7 @@ class _RadioViewState extends State<RadioView> {
                   ),
                 )
               else
-                const Center(child: CircularProgressIndicator()),
+                AppShimmer.block(width: double.infinity, height: 48, borderRadius: 12),
                 
               const SizedBox(height: 24),
               

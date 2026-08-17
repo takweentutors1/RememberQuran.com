@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/audio_controller.dart';
+import '../../../core/models/reciter.dart';
 import 'widgets/audio_player_sheet.dart';
 
 class MiniPlayer extends StatelessWidget {
@@ -14,11 +15,15 @@ class MiniPlayer extends StatelessWidget {
       final isPlaying = audioController.rxIsPlaying.value;
       final isRadioMode = audioController.rxIsRadioMode.value;
       final isBusy = audioController.rxIsBusy.value;
+      final hasAudio = audioController.rxHasAudio.value;
       
-      // If nothing is playing and not busy, we might optionally hide it.
-      // For now, let's just always show it if the queue isn't completely empty.
-      // As a simple placeholder, we'll just check if it's busy or playing or if there's an active context.
-      // As a simple placeholder, we'll just check if it's busy or playing or if there's an active context.
+      // Hide completely if nothing has been loaded/started
+      if (!hasAudio) {
+        return const SizedBox.shrink();
+      }
+      
+      final surahName = audioController.rxCurrentSurahName.value;
+      final reciter = getReciter(audioController.rxCurrentReciterId.value);
       
       return GestureDetector(
         onTap: () => AudioPlayerSheet.show(context),
@@ -60,13 +65,14 @@ class MiniPlayer extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isRadioMode ? 'Surah ${audioController.rxCurrentSurahId.value}' : 'Ayah ${audioController.rxCurrentAyahIndex.value}',
+                    isRadioMode ? 'Surah ${surahName.isNotEmpty ? surahName : audioController.rxCurrentSurahId.value}' 
+                                : '${surahName.isNotEmpty ? surahName : ''} - Ayah ${audioController.rxCurrentAyahIndex.value}',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    isRadioMode ? 'Radio Mode' : 'Recitation',
+                    isRadioMode ? 'Radio • ${reciter.name}' : 'Recitation • ${reciter.name}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(context).textTheme.bodySmall?.color,

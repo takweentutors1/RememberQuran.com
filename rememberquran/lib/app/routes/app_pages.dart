@@ -129,7 +129,6 @@ class AppPages {
       page: () => const NotesView(),
       middlewares: [AuthMiddleware()],
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => NotesController());
       }),
     ),
     GetPage(

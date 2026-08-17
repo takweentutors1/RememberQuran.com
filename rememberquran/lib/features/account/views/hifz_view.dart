@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/hifz_controller.dart';
 
+import '../../../shared/widgets/loading_skeleton.dart';
+
 class HifzView extends GetView<HifzController> {
   const HifzView({Key? key}) : super(key: key);
 
@@ -21,7 +23,7 @@ class HifzView extends GetView<HifzController> {
         ),
         body: Obx(() {
           if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
+            return AppShimmer.surahList(count: 6);
           }
 
           return TabBarView(

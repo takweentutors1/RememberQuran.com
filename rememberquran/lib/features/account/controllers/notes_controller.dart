@@ -113,6 +113,45 @@ class NotesController extends GetxController {
     await _loadNotes();
   }
 
+  Future<Note?> getNote(String verseKey) async {
+    final userId = _authController.firebaseUser.value?.uid;
+    if (userId == null) return null;
+    try {
+      return await _notesRepository.getNote(userId, verseKey);
+    } catch (e) {
+      debugPrint('Error getting note: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> saveNote(String verseKey, String text) async {
+    final userId = _authController.firebaseUser.value?.uid;
+    if (userId == null) return {'ok': false, 'error': 'not-logged-in'};
+
+    try {
+      final outcome = await _notesRepository.saveNote(userId, verseKey, text);
+      if (outcome['ok'] == true && outcome['note'] != null) {
+        final Note savedNote = outcome['note'];
+        
+        // Optimistically update UI
+        final existingIndex = allNotes.indexWhere((n) => n.verseKey == verseKey);
+        if (existingIndex != -1) {
+          allNotes[existingIndex] = savedNote;
+        } else {
+          allNotes.add(savedNote);
+        }
+        allNotes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        
+        _loadVerseData(verseKey);
+        _filterNotes(searchController.text);
+      }
+      return outcome;
+    } catch (e) {
+      debugPrint('Error saving note: $e');
+      return {'ok': false, 'error': e.toString()};
+    }
+  }
+
   Future<void> deleteNote(String verseKey) async {
     final userId = _authController.firebaseUser.value?.uid;
     if (userId == null) return;

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/search_controller.dart' as my_search;
 import '../../../core/utils/search_highlight_text.dart';
+import '../../../shared/widgets/loading_skeleton.dart';
 
 class SearchView extends GetView<my_search.SearchController> {
   const SearchView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    Get.put(my_search.SearchController());
     final theme = Theme.of(context);
     
     return Scaffold(
@@ -35,7 +37,12 @@ class SearchView extends GetView<my_search.SearchController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.results.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              AppShimmer.surahList(count: 6),
+            ],
+          );
         }
 
         if (controller.error.isNotEmpty && controller.results.isEmpty) {
@@ -60,16 +67,17 @@ class SearchView extends GetView<my_search.SearchController> {
             if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
               controller.loadMore();
             }
-            return false;
+            return true;
           },
           child: ListView.separated(
+            padding: const EdgeInsets.all(16.0),
             itemCount: controller.results.length + (controller.hasMore.value ? 1 : 0),
             separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
               if (index == controller.results.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(child: CircularProgressIndicator()),
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: AppShimmer.listTile(count: 1),
                 );
               }
 

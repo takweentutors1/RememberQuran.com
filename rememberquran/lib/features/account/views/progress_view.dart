@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../controllers/progress_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/loading_skeleton.dart';
 
 class ProgressView extends GetView<ProgressController> {
   const ProgressView({Key? key}) : super(key: key);
@@ -22,7 +23,24 @@ class ProgressView extends GetView<ProgressController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.last30Days.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView(
+            padding: const EdgeInsets.all(24.0),
+            children: [
+              AppShimmer.block(width: 150, height: 32),
+              const SizedBox(height: 8),
+              AppShimmer.block(width: 100, height: 16),
+              const SizedBox(height: 32),
+              AppShimmer.card(height: 250),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: AppShimmer.card(height: 120)),
+                  const SizedBox(width: 16),
+                  Expanded(child: AppShimmer.card(height: 120)),
+                ],
+              )
+            ],
+          );
         }
 
         return RefreshIndicator(

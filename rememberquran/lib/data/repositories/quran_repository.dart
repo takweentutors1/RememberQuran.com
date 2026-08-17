@@ -136,12 +136,13 @@ class QuranRepository {
       int page = 1;
       int totalPages = 1;
 
-      await localDb.transaction(() async {
-        do {
-          final versesPage = await remoteDs.getVersesPage(chapterId, page: page, translations: bundleTranslationIds);
-          totalPages = versesPage['pagination']['total_pages'];
-          final versesList = versesPage['verses'] as List<dynamic>;
+      do {
+        final versesPage = await remoteDs.getVersesPage(chapterId, page: page, translations: bundleTranslationIds);
+        totalPages = versesPage['pagination']['total_pages'];
+        final versesList = versesPage['verses'] as List<dynamic>;
 
+        // Only wrap inserts in transaction
+        await localDb.transaction(() async {
           for (final verse in versesList) {
             final v = Map<String, dynamic>.from(verse);
             await localDb.into(localDb.verses).insert(VersesCompanion.insert(
@@ -191,9 +192,9 @@ class QuranRepository {
               }
             }
           }
-          page++;
-        } while (page <= totalPages);
-      });
+        });
+        page++;
+      } while (page <= totalPages);
     } catch (e, st) {
       if (!silent) rethrow;
       // Background refresh failed; whatever is already cached keeps showing.

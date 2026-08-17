@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/tafsir_controller.dart';
+import '../../../../shared/widgets/loading_skeleton.dart';
 
 class TafsirSheet extends StatefulWidget {
   final int surahId;
@@ -92,7 +93,19 @@ class _TafsirSheetState extends State<TafsirSheet> {
               Expanded(
                 child: Obx(() {
                   if (_controller.rxIsLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppShimmer.block(width: double.infinity, height: 16),
+                          const SizedBox(height: 8),
+                          AppShimmer.block(width: double.infinity, height: 16),
+                          const SizedBox(height: 8),
+                          AppShimmer.block(width: 200, height: 16),
+                        ],
+                      ),
+                    );
                   }
                   if (_controller.rxError.value != null) {
                     final isNotFound = _controller.rxError.value!.contains('No Tafsir');

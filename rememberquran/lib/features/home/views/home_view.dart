@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../../../app/routes/app_routes.dart';
 import '../widgets/continue_reading_card.dart';
+import '../../../shared/widgets/loading_skeleton.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({Key? key}) : super(key: key);
@@ -20,21 +21,48 @@ class HomeView extends GetView<HomeController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.chapters.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              AppShimmer.card(height: 120), // Continue reading mock
+              const SizedBox(height: 16),
+              AppShimmer.card(height: 180), // Ayah of the day mock
+              const SizedBox(height: 24),
+              AppShimmer.block(width: 100, height: 24), // Title mock
+              const SizedBox(height: 12),
+              AppShimmer.surahList(count: 8),
+            ],
+          );
         }
 
-        return ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            const ContinueReadingCard(),
-            _buildAyahOfTheDayCard(context),
-            const SizedBox(height: 24),
-            const Text(
-              'Surahs',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(16.0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  const ContinueReadingCard(),
+                  _buildAyahOfTheDayCard(context),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Surahs',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                ]),
+              ),
             ),
-            const SizedBox(height: 12),
-            ...controller.chapters.map((chapter) => _buildSurahTile(context, chapter)).toList(),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              sliver: SliverList.builder(
+                itemCount: controller.chapters.length,
+                itemBuilder: (context, index) {
+                  final chapter = controller.chapters[index];
+                  return _buildSurahTile(context, chapter);
+                },
+              ),
+            ),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 16.0)),
           ],
         );
       }),

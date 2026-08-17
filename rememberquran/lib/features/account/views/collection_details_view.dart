@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/bookmarks_controller.dart';
 import '../../../../app/routes/app_routes.dart';
+import '../../../shared/widgets/loading_skeleton.dart';
 
 class CollectionDetailsView extends StatefulWidget {
   const CollectionDetailsView({Key? key}) : super(key: key);
@@ -52,7 +53,12 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
       ),
       body: Obx(() {
         if (_controller.isLoadingBookmarks.value) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: 6,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (_, __) => AppShimmer.listTile(count: 1),
+          );
         }
 
         final bookmarks = _controller.currentCollectionBookmarks;

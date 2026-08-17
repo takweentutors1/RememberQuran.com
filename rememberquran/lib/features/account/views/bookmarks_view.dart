@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/bookmarks_controller.dart';
 import '../../../../app/routes/app_routes.dart';
+import '../../../../shared/widgets/loading_skeleton.dart';
 
 class BookmarksView extends GetView<BookmarksController> {
   const BookmarksView({Key? key}) : super(key: key);
@@ -41,7 +42,7 @@ class BookmarksView extends GetView<BookmarksController> {
   Widget _buildCollectionsTab(BuildContext context) {
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return AppShimmer.listTile(count: 3);
       }
       
       final collections = controller.collections;
@@ -76,7 +77,7 @@ class BookmarksView extends GetView<BookmarksController> {
   Widget _buildNotesTab(BuildContext context) {
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return AppShimmer.listTile(count: 3);
       }
       
       final notes = controller.notes;

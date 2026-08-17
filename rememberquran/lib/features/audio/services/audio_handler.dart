@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 
 Future<QuranAudioHandler> initAudioService() async {
   final session = await AudioSession.instance;
-  await session.configure(const AudioSessionConfiguration.speech());
+  await session.configure(const AudioSessionConfiguration.music());
 
   return await AudioService.init(
     builder: () => QuranAudioHandler(),
@@ -24,6 +25,10 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   /// Fires ~4x/sec during playback — the drive signal for word-by-word sync.
   Stream<Duration> get positionStream => _player.positionStream;
+
+  /// Surfaces load/decode/network failures (bad URL, unreachable CDN,
+  /// unsupported format) that [play] would otherwise fail on silently.
+  Stream<PlayerException> get errorStream => _player.errorStream;
 
   QuranAudioHandler() {
     _init();
@@ -68,7 +73,32 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     });
 
+    // A phone call, another app, or Siri stealing focus should pause us
+    // rather than leaving us "playing" into silence — the classic cause of
+    // "I tapped play and heard nothing" reports.
+    final session = await AudioSession.instance;
+    session.interruptionEventStream.listen((event) {
+      if (event.begin) {
+        _player.pause();
+      }
+    });
+    session.becomingNoisyEventStream.listen((_) => _player.pause());
+
     await _player.setAudioSource(_playlist);
+  }
+
+  /// Resolves once the current source has buffered enough to seek reliably
+  /// (or after [timeout] as a safety net), so callers that need to seek
+  /// right after loading a new track — e.g. "play from this ayah" — don't
+  /// race a seek against a still-loading network source and get ignored.
+  Future<void> waitUntilReady({Duration timeout = const Duration(seconds: 12)}) async {
+    if (_player.processingState == ProcessingState.ready ||
+        _player.processingState == ProcessingState.completed) {
+      return;
+    }
+    await _player.processingStateStream
+        .firstWhere((s) => s == ProcessingState.ready || s == ProcessingState.completed)
+        .timeout(timeout);
   }
 
   @override
@@ -100,9 +130,9 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         tag: item,
       );
     }).toList();
-    
+
     await _playlist.addAll(audioSources);
-    
+
     final newQueue = queue.value..addAll(mediaItems);
     queue.add(newQueue);
   }
@@ -110,17 +140,17 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> updateQueue(List<MediaItem> newQueue) async {
     await _playlist.clear();
-    
+
     final audioSources = newQueue.map((item) {
       return AudioSource.uri(
         Uri.parse(item.id),
         tag: item, // we attach the media item as a tag so we can read it later if needed
       );
     }).toList();
-    
+
     await _playlist.addAll(audioSources);
     queue.add(newQueue);
-    
+
     if (newQueue.isNotEmpty) {
       mediaItem.add(newQueue.first);
     }
@@ -128,7 +158,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> setSpeed(double speed) => _player.setSpeed(speed);
-  
+
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
     switch (repeatMode) {

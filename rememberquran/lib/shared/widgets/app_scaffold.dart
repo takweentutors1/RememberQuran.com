@@ -4,6 +4,8 @@ import '../controllers/app_scaffold_controller.dart';
 import '../../features/audio/views/mini_player.dart';
 import '../../features/home/views/home_view.dart';
 import '../../features/audio/views/radio_view.dart';
+import '../../features/search/views/search_view.dart';
+import '../../features/account/views/account_home_view.dart';
 
 class AppScaffold extends StatelessWidget {
   const AppScaffold({Key? key}) : super(key: key);
@@ -18,6 +20,8 @@ class AppScaffold extends StatelessWidget {
             children: const [
               HomeView(),
               RadioView(),
+              SearchView(),
+              AccountHomeView(),
             ],
           )),
       bottomNavigationBar: Column(
@@ -27,6 +31,7 @@ class AppScaffold extends StatelessWidget {
           const MiniPlayer(),
           
           Obx(() => BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
                 currentIndex: controller.rxSelectedIndex.value,
                 onTap: controller.setTabIndex,
                 selectedItemColor: Theme.of(context).colorScheme.primary,
@@ -39,6 +44,14 @@ class AppScaffold extends StatelessWidget {
                   BottomNavigationBarItem(
                     icon: Icon(Icons.radio_rounded),
                     label: 'Radio',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.search_rounded),
+                    label: 'Search',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person_rounded),
+                    label: 'Account',
                   ),
                 ],
               )),

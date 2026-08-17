@@ -19,6 +19,7 @@ import 'data/datasources/local/quran_db.dart';
 import 'data/repositories/quran_repository.dart';
 import 'data/repositories/audio_repository.dart';
 import 'features/account/controllers/auth_controller.dart';
+import 'features/account/controllers/notes_controller.dart';
 import 'features/notifications/controllers/notifications_controller.dart';
 import 'features/shortcuts/controllers/shortcuts_controller.dart';
 import 'features/reader/controllers/reader_settings_controller.dart';
@@ -70,6 +71,7 @@ Future<void> _runApp() async {
   );
   Get.put<AudioController>(AudioController(), permanent: true);
   Get.put<AuthController>(AuthController(), permanent: true);
+  Get.put<NotesController>(NotesController(), permanent: true);
   Get.put<NotificationsController>(NotificationsController(), permanent: true);
   Get.put<ShortcutsController>(ShortcutsController(), permanent: true);
   Get.put<ReaderSettingsController>(ReaderSettingsController(), permanent: true);

@@ -5,6 +5,7 @@ import '../../../shared/widgets/app_state_views.dart';
 import '../controllers/reader_controller.dart';
 import 'widgets/ayah_block.dart';
 import 'widgets/reader_settings_sheet.dart';
+import 'widgets/quick_jump_sheet.dart';
 
 class SurahReaderView extends GetView<ReaderController> {
   const SurahReaderView({Key? key}) : super(key: key);
@@ -20,6 +21,13 @@ class SurahReaderView extends GetView<ReaderController> {
         }),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => QuickJumpSheet.show(
+              context, 
+              currentChapterId: controller.chapter.value?.id
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => ReaderSettingsSheet.show(context),

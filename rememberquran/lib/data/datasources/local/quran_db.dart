@@ -92,36 +92,42 @@ class QuranDatabase extends _$QuranDatabase {
         },
       );
 
+  Future<Chapter?> getChapter(int chapterId) {
+    return (select(chapters)..where((t) => t.id.equals(chapterId))).getSingleOrNull();
+  }
+
   /// Fetches all 114 chapters and verses from the remote data source and inserts them.
   /// This should only be called once on first launch if the DB is empty.
   Future<void> seedFromFirstSync(QuranRemoteDataSource remoteDs) async {
     final chaptersList = await remoteDs.getChapters();
     
-    await transaction(() async {
-      for (final chapter in chaptersList) {
-        final c = Map<String, dynamic>.from(chapter);
-        await into(chapters).insert(ChaptersCompanion.insert(
-          id: Value(c['id'] as int),
-          revelationPlace: c['revelation_place'] as String,
-          revelationOrder: c['revelation_order'] as int,
-          bismillahPre: (c['bismillah_pre'] ?? false) as bool,
-          nameSimple: c['name_simple'] as String,
-          nameComplex: c['name_complex'] as String,
-          nameArabic: c['name_arabic'] as String,
-          versesCount: c['verses_count'] as int,
-          pages: jsonEncode(c['pages']),
-          translatedName: jsonEncode(c['translated_name']),
-        ), mode: InsertMode.insertOrReplace);
+    for (final chapter in chaptersList) {
+      final c = Map<String, dynamic>.from(chapter);
+      await into(chapters).insert(ChaptersCompanion.insert(
+        id: Value(c['id'] as int),
+        revelationPlace: c['revelation_place'] as String,
+        revelationOrder: c['revelation_order'] as int,
+        bismillahPre: (c['bismillah_pre'] ?? false) as bool,
+        nameSimple: c['name_simple'] as String,
+        nameComplex: c['name_complex'] as String,
+        nameArabic: c['name_arabic'] as String,
+        versesCount: c['verses_count'] as int,
+        pages: jsonEncode(c['pages']),
+        translatedName: jsonEncode(c['translated_name']),
+      ), mode: InsertMode.insertOrReplace);
 
-        int page = 1;
-        int totalPages = 1;
+      int page = 1;
+      int totalPages = 1;
+      
+      do {
+        // IMPORTANT: Fetch from network OUTSIDE the transaction so we don't lock the DB for seconds/minutes
+        final versesPage = await remoteDs.getVersesPage(c['id'], page: page, translations: bundleTranslationIds);
+        totalPages = versesPage['pagination']['total_pages'];
         
-        do {
-          final versesPage = await remoteDs.getVersesPage(c['id'], page: page, translations: bundleTranslationIds);
-          totalPages = versesPage['pagination']['total_pages'];
-          
-          final versesList = versesPage['verses'] as List<dynamic>;
-          
+        final versesList = versesPage['verses'] as List<dynamic>;
+        
+        // Only wrap the inserts in a transaction for atomicity and speed
+        await transaction(() async {
           for (final verse in versesList) {
             final v = Map<String, dynamic>.from(verse);
             await into(verses).insert(VersesCompanion.insert(
@@ -167,10 +173,10 @@ class QuranDatabase extends _$QuranDatabase {
               }
             }
           }
-          page++;
-        } while (page <= totalPages);
-      }
-    });
+        });
+        page++;
+      } while (page <= totalPages);
+    }
   }
 }
 
@@ -178,6 +184,13 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'quran.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase(
+      file,
+      setup: (db) {
+        // Wait up to 5 seconds for locks to clear
+        db.execute('PRAGMA busy_timeout = 5000;');
+        db.execute('PRAGMA journal_mode=WAL;');
+      },
+    );
   });
 }

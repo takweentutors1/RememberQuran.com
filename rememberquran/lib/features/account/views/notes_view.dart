@@ -5,6 +5,8 @@ import '../controllers/notes_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/note.dart';
 
+import '../../../shared/widgets/loading_skeleton.dart';
+
 class NotesView extends GetView<NotesController> {
   const NotesView({Key? key}) : super(key: key);
 
@@ -43,7 +45,12 @@ class NotesView extends GetView<NotesController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.allNotes.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: 4,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, __) => AppShimmer.card(height: 100),
+          );
         }
 
         if (controller.allNotes.isEmpty) {

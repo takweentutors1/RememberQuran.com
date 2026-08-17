@@ -5,6 +5,7 @@ import 'package:rememberquran/core/theme/app_theme.dart';
 import 'package:rememberquran/core/theme/app_colors.dart';
 import 'package:rememberquran/data/models/goal.dart';
 import 'package:rememberquran/features/account/controllers/goals_controller.dart';
+import '../../../../shared/widgets/loading_skeleton.dart';
 
 class GoalsView extends GetView<GoalsController> {
   const GoalsView({super.key});
@@ -18,7 +19,22 @@ class GoalsView extends GetView<GoalsController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView(
+            padding: const EdgeInsets.all(24.0),
+            children: [
+              AppShimmer.card(height: 200),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: AppShimmer.card(height: 100)),
+                  const SizedBox(width: 16),
+                  Expanded(child: AppShimmer.card(height: 100)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              AppShimmer.card(height: 150),
+            ],
+          );
         }
 
         final snapshot = controller.snapshot.value;
