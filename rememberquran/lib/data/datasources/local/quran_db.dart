@@ -1,0 +1,183 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import '../remote/quran_remote_ds.dart';
+import '../../../core/models/translation.dart';
+
+part 'quran_db.g.dart';
+
+class Chapters extends Table {
+  IntColumn get id => integer()();
+  TextColumn get revelationPlace => text()(); // 'makkah', 'madinah'
+  IntColumn get revelationOrder => integer()();
+  BoolColumn get bismillahPre => boolean()();
+  TextColumn get nameSimple => text()();
+  TextColumn get nameComplex => text()();
+  TextColumn get nameArabic => text()();
+  IntColumn get versesCount => integer()();
+  TextColumn get pages => text()(); // JSON array [start, end]
+  TextColumn get translatedName => text()(); // JSON string {language_name, name}
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Verses extends Table {
+  IntColumn get id => integer()();
+  IntColumn get chapterId => integer().references(Chapters, #id)();
+  IntColumn get verseNumber => integer()();
+  TextColumn get verseKey => text()(); // e.g. "1:1"
+  IntColumn get pageNumber => integer()();
+  IntColumn get juzNumber => integer()();
+  IntColumn get hizbNumber => integer()();
+  TextColumn get textUthmani => text()();
+  TextColumn get qpcUthmaniHafs => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Words extends Table {
+  IntColumn get id => integer()();
+  IntColumn get verseId => integer().references(Verses, #id)();
+  IntColumn get position => integer()();
+  TextColumn get audioUrl => text().nullable()();
+  TextColumn get charTypeName => text()();
+  TextColumn get textUthmani => text()();
+  TextColumn get qpcUthmaniHafs => text().nullable()();
+  TextColumn get textUthmaniTajweed => text().nullable()();
+  TextColumn get translation => text()(); // JSON string {text, language_name}
+  TextColumn get transliteration => text().nullable()(); // JSON string {text, language_name}
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class VerseTranslations extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get verseId => integer().references(Verses, #id)();
+  IntColumn get resourceId => integer()();
+  TextColumn get translationText => text().named('text')();
+}
+
+class DownloadedAudio extends Table {
+  IntColumn get reciterId => integer()();
+  IntColumn get chapterId => integer()();
+  TextColumn get localPath => text()();
+  DateTimeColumn get downloadedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {reciterId, chapterId};
+}
+
+@DriftDatabase(tables: [Chapters, Verses, Words, VerseTranslations, DownloadedAudio])
+class QuranDatabase extends _$QuranDatabase {
+  QuranDatabase() : super(_openConnection());
+
+  @override
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (Migrator m) async {
+          await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.createTable(downloadedAudio);
+          }
+        },
+      );
+
+  /// Fetches all 114 chapters and verses from the remote data source and inserts them.
+  /// This should only be called once on first launch if the DB is empty.
+  Future<void> seedFromFirstSync(QuranRemoteDataSource remoteDs) async {
+    final chaptersList = await remoteDs.getChapters();
+    
+    await transaction(() async {
+      for (final chapter in chaptersList) {
+        final c = Map<String, dynamic>.from(chapter);
+        await into(chapters).insert(ChaptersCompanion.insert(
+          id: c['id'],
+          revelationPlace: c['revelation_place'],
+          revelationOrder: c['revelation_order'],
+          bismillahPre: c['bismillah_pre'] ?? false,
+          nameSimple: c['name_simple'],
+          nameComplex: c['name_complex'],
+          nameArabic: c['name_arabic'],
+          versesCount: c['verses_count'],
+          pages: jsonEncode(c['pages']),
+          translatedName: jsonEncode(c['translated_name']),
+        ), mode: InsertMode.insertOrReplace);
+
+        int page = 1;
+        int totalPages = 1;
+        
+        do {
+          final versesPage = await remoteDs.getVersesPage(c['id'], page: page, translations: bundleTranslationIds);
+          totalPages = versesPage['pagination']['total_pages'];
+          
+          final versesList = versesPage['verses'] as List<dynamic>;
+          
+          for (final verse in versesList) {
+            final v = Map<String, dynamic>.from(verse);
+            await into(verses).insert(VersesCompanion.insert(
+              id: v['id'],
+              chapterId: c['id'],
+              verseNumber: v['verse_number'],
+              verseKey: v['verse_key'],
+              pageNumber: v['page_number'],
+              juzNumber: v['juz_number'],
+              hizbNumber: v['hizb_number'],
+              textUthmani: v['text_uthmani'],
+              qpcUthmaniHafs: Value(v['qpc_uthmani_hafs']),
+            ), mode: InsertMode.insertOrReplace);
+
+            if (v['words'] != null) {
+              final wordsList = v['words'] as List<dynamic>;
+              for (final word in wordsList) {
+                final w = Map<String, dynamic>.from(word);
+                await into(words).insert(WordsCompanion.insert(
+                  id: w['id'],
+                  verseId: v['id'],
+                  position: w['position'],
+                  audioUrl: Value(w['audio_url']),
+                  charTypeName: w['char_type_name'],
+                  textUthmani: w['text_uthmani'],
+                  qpcUthmaniHafs: Value(w['qpc_uthmani_hafs']),
+                  textUthmaniTajweed: Value(w['text_uthmani_tajweed']),
+                  translation: jsonEncode(w['translation']),
+                  transliteration: Value(w['transliteration'] != null ? jsonEncode(w['transliteration']) : null),
+                ), mode: InsertMode.insertOrReplace);
+              }
+            }
+
+            if (v['translations'] != null) {
+              final translationsList = v['translations'] as List<dynamic>;
+              for (final trans in translationsList) {
+                final t = Map<String, dynamic>.from(trans);
+                await into(verseTranslations).insert(VerseTranslationsCompanion.insert(
+                  verseId: v['id'],
+                  resourceId: t['resource_id'],
+                  translationText: t['text'],
+                ));
+              }
+            }
+          }
+          page++;
+        } while (page <= totalPages);
+      }
+    });
+  }
+}
+
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'quran.sqlite'));
+    return NativeDatabase.createInBackground(file);
+  });
+}
