@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -6,8 +7,12 @@ class AudioRemoteDataSource {
 
   Future<Map<String, dynamic>> getChapterAudio(int reciterId, int chapterId) async {
     final url = Uri.parse('$_baseUrl/audio/reciters/$reciterId/audio_files?chapter=$chapterId&segments=true');
-    final response = await http.get(url, headers: {'Accept': 'application/json'});
-    
+    // Without a timeout, a stalled request (flaky network, DNS hiccup) leaves
+    // the caller's "loading" state spinning forever instead of failing.
+    final response = await http
+        .get(url, headers: {'Accept': 'application/json'})
+        .timeout(const Duration(seconds: 10));
+
     if (response.statusCode != 200) {
       throw Exception('Audio API error ${response.statusCode} ${response.reasonPhrase}');
     }
