@@ -19,9 +19,12 @@ import 'package:rememberquran/features/account/views/bookmarks_view.dart';
 import 'package:rememberquran/features/account/controllers/bookmarks_controller.dart';
 import 'package:rememberquran/features/account/views/collection_details_view.dart';
 import 'package:rememberquran/features/account/views/goals_view.dart';
+import 'package:rememberquran/features/account/controllers/goals_controller.dart';
 import 'package:rememberquran/features/account/views/hifz_view.dart';
 import 'package:rememberquran/features/account/views/notes_view.dart';
+import 'package:rememberquran/features/account/controllers/notes_controller.dart';
 import 'package:rememberquran/features/account/views/progress_view.dart';
+import 'package:rememberquran/features/account/controllers/progress_controller.dart';
 import 'package:rememberquran/features/account/views/settings_view.dart';
 import 'package:rememberquran/features/account/middlewares/auth_middleware.dart';
 import 'package:rememberquran/features/account/controllers/hifz_controller.dart';
@@ -105,6 +108,9 @@ class AppPages {
       name: Routes.ACCOUNT_NOTES,
       page: () => const NotesView(),
       middlewares: [AuthMiddleware()],
+      binding: BindingsBuilder(() {
+        Get.put(NotesController());
+      }),
     ),
     GetPage(
       name: Routes.ACCOUNT_BOOKMARKS,
@@ -123,11 +129,17 @@ class AppPages {
       name: Routes.ACCOUNT_GOALS,
       page: () => const GoalsView(),
       middlewares: [AuthMiddleware()],
+      binding: BindingsBuilder(() {
+        Get.put(GoalsController());
+      }),
     ),
     GetPage(
       name: Routes.ACCOUNT_PROGRESS,
       page: () => const ProgressView(),
       middlewares: [AuthMiddleware()],
+      binding: BindingsBuilder(() {
+        Get.put(ProgressController());
+      }),
     ),
     GetPage(
       name: Routes.ACCOUNT_HIFZ,

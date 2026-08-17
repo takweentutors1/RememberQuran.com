@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class TajweedText extends StatelessWidget {
   final String htmlText;
@@ -15,16 +16,17 @@ class TajweedText extends StatelessWidget {
     return RichText(
       text: TextSpan(
         style: style,
-        children: _parseTajweed(htmlText),
+        children: _parseTajweed(context, htmlText),
       ),
       textDirection: TextDirection.rtl,
     );
   }
 
-  List<TextSpan> _parseTajweed(String text) {
+  List<TextSpan> _parseTajweed(BuildContext context, String text) {
     final List<TextSpan> spans = [];
     final regex = RegExp(r'<rule class=(.*?)>(.*?)</rule>');
     int lastMatchEnd = 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     for (final match in regex.allMatches(text)) {
       if (match.start > lastMatchEnd) {
@@ -36,7 +38,7 @@ class TajweedText extends StatelessWidget {
       
       spans.add(TextSpan(
         text: innerText,
-        style: TextStyle(color: _getColorForTajweedClass(className)),
+        style: TextStyle(color: _getColorForTajweedClass(className, isDark)),
       ));
       
       lastMatchEnd = match.end;
@@ -49,32 +51,32 @@ class TajweedText extends StatelessWidget {
     return spans;
   }
 
-  Color _getColorForTajweedClass(String className) {
+  Color _getColorForTajweedClass(String className, bool isDark) {
     switch (className) {
       case 'ghunnah':
-        return const Color(0xFFFF7E1E); // Orange
+        return isDark ? AppColors.darkTajweedGhunnah : AppColors.lightTajweedGhunnah;
       case 'ikhafa':
-        return const Color(0xFF9400A8); // Purple
+        return isDark ? AppColors.darkTajweedIkhfa : AppColors.lightTajweedIkhfa;
       case 'madda_normal':
       case 'madda_permissible':
       case 'madda_necesssary':
       case 'madda_obligatory':
-        return const Color(0xFF537FFF); // Blue/Magenta
+        return isDark ? AppColors.darkTajweedMadda : AppColors.lightTajweedMadda;
       case 'idgham_shafawi':
       case 'idgham_with_ghunnah':
       case 'idgham_without_ghunnah':
-        return const Color(0xFF169200); // Green
+        return isDark ? AppColors.darkTajweedIdgham : AppColors.lightTajweedIdgham;
       case 'iqlab':
-        return const Color(0xFF26BFFF); // Light Blue
+        return isDark ? AppColors.darkTajweedIqlab : AppColors.lightTajweedIqlab;
       case 'qalqalah':
-        return const Color(0xFFDD0008); // Red
+        return isDark ? AppColors.darkTajweedQalqalah : AppColors.lightTajweedQalqalah;
       case 'ham_wasl':
       case 'laam_shamsiyah':
       case 'silent':
       case 'madda_drop':
-        return const Color(0xFFAAAAAA); // Grey
+        return isDark ? AppColors.darkTajweedSilent : AppColors.lightTajweedSilent;
       default:
-        return style.color ?? Colors.black; // Fallback
+        return style.color ?? (isDark ? Colors.white : Colors.black); // Fallback
     }
   }
 }

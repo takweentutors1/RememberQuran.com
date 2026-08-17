@@ -27,7 +27,7 @@ class BookmarksView extends GetView<BookmarksController> {
         ],
       ),
       floatingActionButton: Obx(() {
-        if (controller.tabController.index == 0) {
+        if (controller.tabIndex.value == 0) {
           return FloatingActionButton(
             onPressed: () => _showCreateCollectionDialog(context),
             child: const Icon(Icons.create_new_folder),

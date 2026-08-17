@@ -79,20 +79,57 @@ class _AsbabSheetState extends State<AsbabSheet> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (_controller.rxError.value != null) {
+                    final isNotFound = _controller.rxError.value!.contains('No Asbab');
                     return Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text(
-                          _controller.rxError.value!,
-                          style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 16),
-                          textAlign: TextAlign.center,
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isNotFound ? Icons.menu_book_rounded : Icons.error_outline_rounded,
+                              size: 64,
+                              color: isNotFound 
+                                  ? Theme.of(context).colorScheme.onSurface.withOpacity(0.2)
+                                  : Theme.of(context).colorScheme.error.withOpacity(0.8),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              isNotFound ? 'No Record Found' : 'Oops!',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _controller.rxError.value!,
+                              style: TextStyle(
+                                color: isNotFound 
+                                    ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                                    : Theme.of(context).colorScheme.error, 
+                                fontSize: 16,
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
                     );
                   }
                   final data = _controller.rxAsbabData.value;
                   if (data == null) {
-                    return const Center(child: Text('No data found.'));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.hourglass_empty_rounded, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+                          const SizedBox(height: 16),
+                          const Text('No data found.', style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    );
                   }
 
                   // Parse the actual Asbab API response
@@ -100,7 +137,39 @@ class _AsbabSheetState extends State<AsbabSheet> {
                   final asbabs = data['asbabs'] as List<dynamic>? ?? [];
                   
                   if (asbabs.isEmpty) {
-                    return const Center(child: Text('No Asbab al-Nuzul recorded for this verse.'));
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.menu_book_rounded,
+                              size: 64,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'No Record Found',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No Asbab al-Nuzul recorded for this verse.',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), 
+                                fontSize: 16,
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   }
 
                   return ListView.separated(

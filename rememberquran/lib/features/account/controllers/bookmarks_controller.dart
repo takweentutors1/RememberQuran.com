@@ -12,6 +12,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
   late NotesRepository _notesRepo;
 
   late TabController tabController;
+  final RxInt tabIndex = 0.obs;
 
   final RxList<BookmarkCollection> collections = <BookmarkCollection>[].obs;
   final RxList<Note> notes = <Note>[].obs;
@@ -27,6 +28,9 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
   void onInit() {
     super.onInit();
     tabController = TabController(length: 2, vsync: this);
+    tabController.addListener(() {
+      tabIndex.value = tabController.index;
+    });
     _bookmarksRepo = BookmarksRepository();
     _notesRepo = NotesRepository();
     

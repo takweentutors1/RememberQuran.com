@@ -162,9 +162,11 @@ class AccountHomeView extends GetView<AuthController> {
                         textConfirm: 'Yes',
                         textCancel: 'Cancel',
                         confirmTextColor: Colors.white,
+                        cancelTextColor: Theme.of(context).colorScheme.primary,
+                        buttonColor: Theme.of(context).colorScheme.primary,
                         onConfirm: () {
                            Get.back();
-                           // FirebaseAuth.instance.signOut();
+                           controller.logout();
                         },
                       );
                     } finally {

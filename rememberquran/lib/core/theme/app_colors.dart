@@ -51,6 +51,15 @@ class AppColors {
   static const Color darkInput = Color(0xFF33353A);
   static const Color darkRing = Color(0xFFE0AE55);
 
+  // Tajweed Colors - Light
+  static const Color lightTajweedGhunnah = Color(0xFFD97706); // Amber/Orange
+  static const Color lightTajweedIkhfa = Color(0xFF9333EA); // Purple
+  static const Color lightTajweedIdgham = Color(0xFF16A34A); // Green
+  static const Color lightTajweedIqlab = Color(0xFF0284C7); // Light Blue
+  static const Color lightTajweedQalqalah = Color(0xFFDC2626); // Red
+  static const Color lightTajweedMadda = Color(0xFF2563EB); // Blue
+  static const Color lightTajweedSilent = Color(0xFF9CA3AF); // Gray
+
   // Nur extensions (Dark)
   static const Color darkSurfaceSunk = Color(0xFF08080A);
   static const Color darkForegroundSubtle = Color(0xFF74767C);
@@ -60,6 +69,15 @@ class AppColors {
   static const Color darkBrandGoldStrong = Color(0xFFF0C378);
   static const Color darkBrandGoldSoft = Color(0xFF221A0C);
   static const Color darkReaderInk = Color(0xFFF7F5F0);
+
+  // Tajweed Colors - Dark
+  static const Color darkTajweedGhunnah = Color(0xFFF59E0B);
+  static const Color darkTajweedIkhfa = Color(0xFFA855F7);
+  static const Color darkTajweedIdgham = Color(0xFF22C55E);
+  static const Color darkTajweedIqlab = Color(0xFF38BDF8);
+  static const Color darkTajweedQalqalah = Color(0xFFEF4444);
+  static const Color darkTajweedMadda = Color(0xFF3B82F6);
+  static const Color darkTajweedSilent = Color(0xFF6B7280);
 }
 
 class NurColorsExtension extends ThemeExtension<NurColorsExtension> {

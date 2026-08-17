@@ -36,17 +36,17 @@ class GoalsRepository {
   // ===========================================================================
 
   Future<void> setActiveGoal(String userId, ActiveGoal goal) async {
-    await _db.collection('users').doc(userId).update({
+    await _db.collection('users').doc(userId).set({
       'activeGoal': goal.toMap(),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   Future<void> clearActiveGoal(String userId) async {
-    await _db.collection('users').doc(userId).update({
+    await _db.collection('users').doc(userId).set({
       'activeGoal': null,
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   int _countInGoalUnits(int ayahCount, GoalType type) {
@@ -118,14 +118,14 @@ class GoalsRepository {
     }
 
     if (streakChanged) {
-      await userRef.update({
+      await userRef.set({
         'streak': {
           'currentStreak': currentStreak,
           'longestStreak': longestStreak,
           'lastMetDate': lastMetDate != null ? Timestamp.fromDate(lastMetDate) : null,
         },
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     }
 
     final priorDays = List.generate(6, (i) => _shiftLocalDay(now, -(6 - i)));

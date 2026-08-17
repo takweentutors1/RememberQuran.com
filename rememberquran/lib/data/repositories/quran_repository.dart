@@ -124,6 +124,13 @@ class QuranRepository {
     ).get();
   }
 
+  /// Get a single verse from local DB without triggering network refresh.
+  Future<Verse?> getVerse(int chapterId, int verseNumber) async {
+    return await (localDb.select(localDb.verses)
+      ..where((v) => v.chapterId.equals(chapterId) & v.verseNumber.equals(verseNumber))
+    ).getSingleOrNull();
+  }
+
   Future<void> _refreshVerses(int chapterId, {required bool silent}) async {
     try {
       int page = 1;

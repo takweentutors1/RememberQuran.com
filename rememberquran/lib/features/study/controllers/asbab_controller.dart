@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import '../../../../data/datasources/remote/asbab_remote_ds.dart';
 
 class AsbabController extends GetxController {
-  final AsbabRemoteDataSource _asbabRemoteDs = Get.find<AsbabRemoteDataSource>();
+  final AsbabRemoteDataSource _asbabRemoteDs = AsbabRemoteDataSource();
   
   final rxIsLoading = false.obs;
   final rxAsbabData = Rx<Map<String, dynamic>?>(null);

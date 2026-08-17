@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../data/datasources/local/quran_db.dart';
+import '../../../../shared/widgets/animated_action_button.dart';
 import 'arabic_word.dart';
 import 'hideable_arabic.dart';
 import '../../controllers/reader_settings_controller.dart';
@@ -11,6 +12,7 @@ import '../../../study/views/widgets/tafsir_sheet.dart';
 import '../../../study/views/widgets/asbab_sheet.dart';
 import '../../../../core/models/translation.dart';
 import '../../../audio/controllers/audio_controller.dart';
+import '../../controllers/reader_controller.dart';
 
 class AyahBlock extends StatelessWidget {
   final Verse verse;
@@ -77,9 +79,9 @@ class AyahBlock extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
+                  AnimatedActionButton(
                     icon: Icon(isPlayingThisVerse ? Icons.pause_circle_outline : Icons.play_circle_outline),
-                    onPressed: () {
+                    onPressed: () async {
                       if (isPlayingThisVerse) {
                         audioController.pause();
                       } else if (isVerseActive) {
@@ -89,37 +91,36 @@ class AyahBlock extends StatelessWidget {
                       }
                     },
                     iconSize: 20,
-                    color: isVerseActive ? theme.colorScheme.primary : null,
                     tooltip: isPlayingThisVerse ? 'Pause' : 'Play from here',
                   ),
-                  IconButton(
+                  AnimatedActionButton(
                     icon: const Icon(Icons.menu_book_outlined),
-                    onPressed: () {
+                    onPressed: () async {
                       TafsirSheet.show(context, verse.chapterId, verse.verseNumber);
                     },
                     iconSize: 20,
                     tooltip: 'Tafsir',
                   ),
-                  IconButton(
+                  AnimatedActionButton(
                     icon: const Icon(Icons.history_edu),
-                    onPressed: () {
+                    onPressed: () async {
                       AsbabSheet.show(context, verse.chapterId, verse.verseNumber);
                     },
                     iconSize: 20,
                     tooltip: 'Asbab al-Nuzul',
                   ),
-                  IconButton(
+                  AnimatedActionButton(
                     icon: const Icon(Icons.share_outlined),
-                    onPressed: () {
+                    onPressed: () async {
                       final text = '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://remember-quran-com.vercel.app/surah/${verse.chapterId}/${verse.verseNumber})';
-                      Share.share(text);
+                      await Share.share(text);
                     },
                     iconSize: 20,
                     tooltip: 'Share text',
                   ),
-                  IconButton(
+                  AnimatedActionButton(
                     icon: const Icon(Icons.image_outlined),
-                    onPressed: () {
+                    onPressed: () async {
                       Get.toNamed(
                         Routes.SHARE_AYAH,
                         arguments: {
@@ -132,24 +133,31 @@ class AyahBlock extends StatelessWidget {
                     iconSize: 20,
                     tooltip: 'Design & Share Card',
                   ),
-                  IconButton(
+                  AnimatedActionButton(
                     icon: const Icon(Icons.copy_outlined),
-                    onPressed: () {
+                    onPressed: () async {
                       final text = '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey}';
-                      Clipboard.setData(ClipboardData(text: text));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Ayah copied to clipboard')),
-                      );
+                      await Clipboard.setData(ClipboardData(text: text));
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Ayah copied to clipboard')),
+                        );
+                      }
                     },
                     iconSize: 20,
                     tooltip: 'Copy',
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.bookmark_border),
-                    onPressed: () {},
-                    iconSize: 20,
-                    tooltip: 'Bookmark',
-                  ),
+                  Obx(() {
+                    final readerController = Get.find<ReaderController>();
+                    final verseKey = '${verse.chapterId}:${verse.verseNumber}';
+                    final isBookmarked = readerController.bookmarkedVerses.contains(verseKey);
+                    return AnimatedActionButton(
+                      icon: Icon(isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+                      onPressed: () async => await readerController.toggleBookmark(verseKey),
+                      iconSize: 20,
+                      tooltip: isBookmarked ? 'Remove Bookmark' : 'Bookmark',
+                    );
+                  }),
                 ],
               ),
             ],

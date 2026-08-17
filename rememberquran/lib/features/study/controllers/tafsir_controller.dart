@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import '../../../../data/datasources/remote/tafsir_remote_ds.dart';
 
 class TafsirController extends GetxController {
-  final TafsirRemoteDataSource _tafsirRemoteDs = Get.find<TafsirRemoteDataSource>();
+  final TafsirRemoteDataSource _tafsirRemoteDs = TafsirRemoteDataSource();
   
   final rxIsLoading = false.obs;
   final rxTafsirData = Rx<Map<String, dynamic>?>(null);

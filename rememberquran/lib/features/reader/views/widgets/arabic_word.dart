@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../data/datasources/local/quran_db.dart';
 import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_settings_controller.dart';
@@ -64,13 +65,16 @@ class ArabicWord extends StatelessWidget {
     });
   }
 
-  Color? _getColor(ThemeData theme, String charType) {
+  Color _getColor(ThemeData theme, String charType) {
     if (charType == 'end') {
       return theme.colorScheme.primary;
     }
     if (charType == 'pause' || charType == 'sajdah' || charType == 'rubel_hizb') {
-      return theme.colorScheme.secondary;
+      final nurColors = theme.extension<NurColorsExtension>();
+      return nurColors?.brandGold ?? theme.colorScheme.secondary;
     }
-    return null; // Default text color
+    
+    final nurColors = theme.extension<NurColorsExtension>();
+    return nurColors?.readerInk ?? theme.colorScheme.onSurface;
   }
 }

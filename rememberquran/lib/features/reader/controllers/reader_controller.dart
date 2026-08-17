@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../data/repositories/quran_repository.dart';
 import '../../../data/repositories/goals_repository.dart';
+import '../../../data/repositories/bookmarks_repository.dart';
 import '../../../data/datasources/local/quran_db.dart';
 import '../../../shared/widgets/app_feedback.dart';
 import '../../account/controllers/auth_controller.dart';
@@ -14,6 +15,7 @@ import 'reader_settings_controller.dart';
 class ReaderController extends GetxController {
   final QuranRepository repository;
   final GoalsRepository _goalsRepository = GoalsRepository();
+  final BookmarksRepository _bookmarksRepo = BookmarksRepository();
   
   ReaderController({required this.repository});
 
@@ -23,6 +25,8 @@ class ReaderController extends GetxController {
   final verseWords = <int, List<Word>>{}.obs;
   final verseTranslations = <int, List<VerseTranslation>>{}.obs;
   
+  final RxSet<String> bookmarkedVerses = <String>{}.obs;
+
   final isLoading = true.obs;
   final hasError = false.obs;
 
@@ -208,6 +212,13 @@ class ReaderController extends GetxController {
       verseWords.assignAll(wMap);
       verseTranslations.assignAll(tMap);
 
+      // Load bookmarks for this chapter
+      final user = Get.find<AuthController>().firebaseUser.value;
+      if (user != null) {
+        final bList = await _bookmarksRepo.listBookmarks(user.uid, surahPrefix: chapterId);
+        bookmarkedVerses.assignAll(bList.map((e) => e.verseKey));
+      }
+
       if (recoveringFromError) {
         AppFeedback.showSuccess("You're back — the surah loaded fine.", title: 'Reconnected');
       }
@@ -216,6 +227,35 @@ class ReaderController extends GetxController {
       FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> toggleBookmark(String verseKey) async {
+    final user = Get.find<AuthController>().firebaseUser.value;
+    if (user == null) {
+      AppFeedback.showError('Please sign in to save bookmarks');
+      return;
+    }
+    
+    final isBookmarked = bookmarkedVerses.contains(verseKey);
+    if (isBookmarked) {
+      bookmarkedVerses.remove(verseKey);
+      final success = await _bookmarksRepo.deleteBookmark(user.uid, verseKey);
+      if (success) {
+        AppFeedback.showSuccess('Bookmark removed');
+      } else {
+        bookmarkedVerses.add(verseKey); // Rollback
+        AppFeedback.showError('Failed to remove bookmark');
+      }
+    } else {
+      bookmarkedVerses.add(verseKey);
+      final res = await _bookmarksRepo.createBookmark(user.uid, verseKey, null);
+      if (res['ok'] == true) {
+        AppFeedback.showSuccess('Bookmark added');
+      } else {
+        bookmarkedVerses.remove(verseKey); // Rollback
+        AppFeedback.showError('Failed to add bookmark');
+      }
     }
   }
 

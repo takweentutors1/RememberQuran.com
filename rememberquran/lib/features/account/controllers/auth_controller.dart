@@ -39,6 +39,9 @@ class AuthController extends GetxController {
             lastPosition.value = null;
           }
         }
+      }, onError: (_) {
+        // Firestore permission-denied or network errors — ignore gracefully.
+        // The user doc listener will be re-established on next sign-in.
       });
     } else {
       lastPosition.value = null;
