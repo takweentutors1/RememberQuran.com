@@ -22,61 +22,101 @@ class TajweedText extends StatelessWidget {
     );
   }
 
+  static const String _openPrefix = '<rule class=';
+  static const String _closeTag = '</rule>';
+
+  /// Stack-based parser so nested `<rule>` tags (e.g. `custom-alef-maksora`
+  /// nested inside `madda_normal`) are consumed correctly instead of being
+  /// left as literal text by a non-greedy regex.
   List<TextSpan> _parseTajweed(BuildContext context, String text) {
     final List<TextSpan> spans = [];
-    final regex = RegExp(r'<rule class=(.*?)>(.*?)</rule>');
-    int lastMatchEnd = 0;
+    final List<String> stack = [];
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    for (final match in regex.allMatches(text)) {
-      if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(text: text.substring(lastMatchEnd, match.start)));
-      }
-      
-      final className = match.group(1)?.replaceAll('"', '').replaceAll("'", '') ?? '';
-      final innerText = match.group(2) ?? '';
-      
-      spans.add(TextSpan(
-        text: innerText,
-        style: TextStyle(color: _getColorForTajweedClass(className, isDark)),
-      ));
-      
-      lastMatchEnd = match.end;
+    void emit(String chunk) {
+      if (chunk.isEmpty) return;
+      final color = _colorForStack(stack, isDark);
+      spans.add(TextSpan(text: chunk, style: color != null ? TextStyle(color: color) : null));
     }
 
-    if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastMatchEnd)));
+    int i = 0;
+    while (i < text.length) {
+      if (text.startsWith(_openPrefix, i)) {
+        final gt = text.indexOf('>', i + _openPrefix.length);
+        if (gt == -1) {
+          emit(text.substring(i));
+          break;
+        }
+        var className = text.substring(i + _openPrefix.length, gt).trim();
+        if ((className.startsWith('"') && className.endsWith('"')) ||
+            (className.startsWith("'") && className.endsWith("'"))) {
+          className = className.substring(1, className.length - 1);
+        }
+        stack.add(className);
+        i = gt + 1;
+        continue;
+      }
+
+      if (text.startsWith(_closeTag, i)) {
+        if (stack.isNotEmpty) stack.removeLast();
+        i += _closeTag.length;
+        continue;
+      }
+
+      int nextOpen = text.indexOf(_openPrefix, i);
+      int nextClose = text.indexOf(_closeTag, i);
+      int next = text.length;
+      if (nextOpen != -1 && nextOpen < next) next = nextOpen;
+      if (nextClose != -1 && nextClose < next) next = nextClose;
+
+      emit(text.substring(i, next));
+      i = next;
     }
 
     return spans;
   }
 
-  Color _getColorForTajweedClass(String className, bool isDark) {
+  /// Walks the active tag stack from innermost to outermost so a nested
+  /// but unmapped rule (e.g. `custom-alef-maksora`) inherits its parent's
+  /// colour instead of falling back to the default text colour.
+  Color? _colorForStack(List<String> stack, bool isDark) {
+    for (int i = stack.length - 1; i >= 0; i--) {
+      final color = _getColorForTajweedClass(stack[i], isDark);
+      if (color != null) return color;
+    }
+    return null;
+  }
+
+  Color? _getColorForTajweedClass(String className, bool isDark) {
     switch (className) {
       case 'ghunnah':
         return isDark ? AppColors.darkTajweedGhunnah : AppColors.lightTajweedGhunnah;
       case 'ikhafa':
+      case 'ikhafa_shafawi':
         return isDark ? AppColors.darkTajweedIkhfa : AppColors.lightTajweedIkhfa;
       case 'madda_normal':
       case 'madda_permissible':
-      case 'madda_necesssary':
-      case 'madda_obligatory':
+      case 'madda_necessary':
+      case 'madda_obligatory_monfasel':
+      case 'madda_obligatory_mottasel':
+      case 'custom-alef-maksora':
         return isDark ? AppColors.darkTajweedMadda : AppColors.lightTajweedMadda;
       case 'idgham_shafawi':
-      case 'idgham_with_ghunnah':
-      case 'idgham_without_ghunnah':
+      case 'idgham_ghunnah':
+      case 'idgham_wo_ghunnah':
+      case 'idgham_mutajanisayn':
+      case 'idgham_mutaqaribayn':
         return isDark ? AppColors.darkTajweedIdgham : AppColors.lightTajweedIdgham;
       case 'iqlab':
         return isDark ? AppColors.darkTajweedIqlab : AppColors.lightTajweedIqlab;
-      case 'qalqalah':
+      case 'qalaqah':
         return isDark ? AppColors.darkTajweedQalqalah : AppColors.lightTajweedQalqalah;
       case 'ham_wasl':
       case 'laam_shamsiyah':
-      case 'silent':
-      case 'madda_drop':
+      case 'slnt':
         return isDark ? AppColors.darkTajweedSilent : AppColors.lightTajweedSilent;
       default:
-        return style.color ?? (isDark ? Colors.white : Colors.black); // Fallback
+        return null; // Unrecognised class: inherit the surrounding TextSpan's style.
     }
   }
 }
