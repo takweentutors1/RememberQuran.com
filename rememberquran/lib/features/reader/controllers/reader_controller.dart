@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../data/repositories/quran_repository.dart';
 import '../../../data/repositories/goals_repository.dart';
 import '../../../data/datasources/local/quran_db.dart';
+import '../../../shared/widgets/app_feedback.dart';
 import '../../account/controllers/auth_controller.dart';
 import 'reader_settings_controller.dart';
 
@@ -22,6 +24,9 @@ class ReaderController extends GetxController {
   final verseTranslations = <int, List<VerseTranslation>>{}.obs;
   
   final isLoading = true.obs;
+  final hasError = false.obs;
+
+  int? _lastChapterId;
 
   final ItemScrollController itemScrollController = ItemScrollController();
   final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
@@ -179,28 +184,46 @@ class ReaderController extends GetxController {
   }
 
   Future<void> loadChapter(int chapterId) async {
+    _lastChapterId = chapterId;
+    final recoveringFromError = hasError.value;
     isLoading.value = true;
+    hasError.value = false;
     try {
       if (Get.isRegistered<ReaderSettingsController>()) {
         Get.find<ReaderSettingsController>().clearRevealedAyahs();
       }
-      
+
       chapter.value = await repository.getChapter(chapterId);
       final fetchedVerses = await repository.getVerses(chapterId);
       verses.value = fetchedVerses;
-      
+
       final Map<int, List<Word>> wMap = {};
       final Map<int, List<VerseTranslation>> tMap = {};
-      
+
       for (final v in fetchedVerses) {
         wMap[v.id] = await repository.getVerseWords(v.id);
         tMap[v.id] = await repository.getVerseTranslations(v.id);
       }
-      
+
       verseWords.assignAll(wMap);
       verseTranslations.assignAll(tMap);
+
+      if (recoveringFromError) {
+        AppFeedback.showSuccess("You're back — the surah loaded fine.", title: 'Reconnected');
+      }
+    } catch (e, st) {
+      hasError.value = true;
+      FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Re-runs the last chapter load — used by the reader's error state retry button.
+  void retryLoadChapter() {
+    final chapterId = _lastChapterId;
+    if (chapterId != null) {
+      loadChapter(chapterId);
     }
   }
 

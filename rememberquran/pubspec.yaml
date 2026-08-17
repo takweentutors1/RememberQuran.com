@@ -58,6 +58,7 @@ dependencies:
   intl: ^0.20.3
   http: ^1.6.0
   timeago: ^3.7.1
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -89,6 +90,7 @@ flutter:
     - assets/data/asbab-index.json
     - assets/data/morphology/
     - assets/icon/
+    - assets/illustrations/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

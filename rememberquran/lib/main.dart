@@ -56,7 +56,9 @@ Future<void> _runApp() async {
 
   // Pre-seed the offline Quran text database on first launch; the app remains
   // usable via the per-surah cache-first fetches if this fails (e.g. no network).
-  unawaited(quranRepository.seedIfEmpty().catchError((_) {}));
+  unawaited(quranRepository.seedIfEmpty().catchError((Object e, StackTrace st) {
+    FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+  }));
 
   final audioHandler = await initAudioService();
   final audioRemoteDs = AudioRemoteDataSource();

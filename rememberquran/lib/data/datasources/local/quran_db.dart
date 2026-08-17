@@ -101,14 +101,14 @@ class QuranDatabase extends _$QuranDatabase {
       for (final chapter in chaptersList) {
         final c = Map<String, dynamic>.from(chapter);
         await into(chapters).insert(ChaptersCompanion.insert(
-          id: c['id'],
-          revelationPlace: c['revelation_place'],
-          revelationOrder: c['revelation_order'],
-          bismillahPre: c['bismillah_pre'] ?? false,
-          nameSimple: c['name_simple'],
-          nameComplex: c['name_complex'],
-          nameArabic: c['name_arabic'],
-          versesCount: c['verses_count'],
+          id: Value(c['id'] as int),
+          revelationPlace: c['revelation_place'] as String,
+          revelationOrder: c['revelation_order'] as int,
+          bismillahPre: (c['bismillah_pre'] ?? false) as bool,
+          nameSimple: c['name_simple'] as String,
+          nameComplex: c['name_complex'] as String,
+          nameArabic: c['name_arabic'] as String,
+          versesCount: c['verses_count'] as int,
           pages: jsonEncode(c['pages']),
           translatedName: jsonEncode(c['translated_name']),
         ), mode: InsertMode.insertOrReplace);
@@ -125,15 +125,15 @@ class QuranDatabase extends _$QuranDatabase {
           for (final verse in versesList) {
             final v = Map<String, dynamic>.from(verse);
             await into(verses).insert(VersesCompanion.insert(
-              id: v['id'],
-              chapterId: c['id'],
-              verseNumber: v['verse_number'],
-              verseKey: v['verse_key'],
-              pageNumber: v['page_number'],
-              juzNumber: v['juz_number'],
-              hizbNumber: v['hizb_number'],
-              textUthmani: v['text_uthmani'],
-              qpcUthmaniHafs: Value(v['qpc_uthmani_hafs']),
+              id: Value(v['id'] as int),
+              chapterId: c['id'] as int,
+              verseNumber: v['verse_number'] as int,
+              verseKey: v['verse_key'] as String,
+              pageNumber: v['page_number'] as int,
+              juzNumber: v['juz_number'] as int,
+              hizbNumber: v['hizb_number'] as int,
+              textUthmani: (v['text_uthmani'] ?? '') as String,
+              qpcUthmaniHafs: Value(v['qpc_uthmani_hafs'] as String?),
             ), mode: InsertMode.insertOrReplace);
 
             if (v['words'] != null) {
@@ -141,14 +141,14 @@ class QuranDatabase extends _$QuranDatabase {
               for (final word in wordsList) {
                 final w = Map<String, dynamic>.from(word);
                 await into(words).insert(WordsCompanion.insert(
-                  id: w['id'],
-                  verseId: v['id'],
-                  position: w['position'],
-                  audioUrl: Value(w['audio_url']),
-                  charTypeName: w['char_type_name'],
-                  textUthmani: w['text_uthmani'],
-                  qpcUthmaniHafs: Value(w['qpc_uthmani_hafs']),
-                  textUthmaniTajweed: Value(w['text_uthmani_tajweed']),
+                  id: Value(w['id'] as int),
+                  verseId: v['id'] as int,
+                  position: w['position'] as int,
+                  audioUrl: Value(w['audio_url'] as String?),
+                  charTypeName: (w['char_type_name'] ?? '') as String,
+                  textUthmani: (w['text_uthmani'] ?? '') as String,
+                  qpcUthmaniHafs: Value(w['qpc_uthmani_hafs'] as String?),
+                  textUthmaniTajweed: Value(w['text_uthmani_tajweed'] as String?),
                   translation: jsonEncode(w['translation']),
                   transliteration: Value(w['transliteration'] != null ? jsonEncode(w['transliteration']) : null),
                 ), mode: InsertMode.insertOrReplace);
@@ -160,9 +160,9 @@ class QuranDatabase extends _$QuranDatabase {
               for (final trans in translationsList) {
                 final t = Map<String, dynamic>.from(trans);
                 await into(verseTranslations).insert(VerseTranslationsCompanion.insert(
-                  verseId: v['id'],
-                  resourceId: t['resource_id'],
-                  translationText: t['text'],
+                  verseId: v['id'] as int,
+                  resourceId: t['resource_id'] as int,
+                  translationText: t['text'] as String,
                 ));
               }
             }
