@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:get/get.dart';
+import 'package:just_audio/just_audio.dart' show PlayerException;
 import '../services/audio_handler.dart';
+import '../../../data/datasources/local/quran_db.dart';
 import '../../../data/datasources/remote/audio_remote_ds.dart';
 import '../../../data/repositories/audio_repository.dart';
 import '../../../core/models/reciter.dart';
 import '../../../core/utils/word_sync.dart';
+import '../../../shared/widgets/app_feedback.dart';
 
 enum RepeatMode { none, ayah, range }
 
@@ -29,6 +33,7 @@ class AudioController extends GetxController {
   final QuranAudioHandler _audioHandler = Get.find<QuranAudioHandler>();
   final AudioRemoteDataSource _audioRemoteDs = Get.find<AudioRemoteDataSource>();
   final AudioRepository _audioRepository = Get.find<AudioRepository>();
+  final QuranDatabase _db = Get.find<QuranDatabase>();
 
   final rxIsPlaying = false.obs;
   final rxCurrentAyahIndex = 0.obs;
@@ -40,6 +45,9 @@ class AudioController extends GetxController {
   final rxRadioFailStreak = 0.obs;
   final rxCurrentReciterId = 7.obs;
   final rxCurrentSurahId = 1.obs;
+  final rxCurrentSurahName = ''.obs;
+  final rxCurrentSurahNameArabic = ''.obs;
+  final rxHasAudio = false.obs;
   final rxIsBusy = false.obs;
 
   // Offline download state, keyed by "reciterId_chapterId"
@@ -54,7 +62,8 @@ class AudioController extends GetxController {
   bool _hasWordTiming = false;
   int _lastVerseIdx = -1;
   int? _lastWordPos;
-  StreamSubscription<Duration>? _positionSub;
+  Timer? _highlightTimer;
+  int? _lastSurahId;
 
   int _currentRepeat = 0;
   Timer? _pauseTimer;
@@ -96,6 +105,21 @@ class AudioController extends GetxController {
 
     refreshDownloadedKeys();
 
+    // Surface load/decode/network failures instead of leaving the user with
+    // silent audio and no explanation — this is what used to just print to
+    // a console nobody reads.
+    _audioHandler.errorStream.listen((PlayerException e) {
+      // Radio mode already recovers from a broken track by silently
+      // skipping to the next surah (see _loadAndPlayChapter) — surfacing an
+      // error here too would just be noise on top of that.
+      if (rxIsRadioMode.value) return;
+      AppFeedback.showError(
+        'Audio failed to load. Check your connection and try again.',
+        title: 'Playback error',
+        onRetry: _lastSurahId == null ? null : () => _loadAndPlayChapter(_lastSurahId!),
+      );
+    });
+
     // Listen to media item changes (Queue index progression)
     _audioHandler.mediaItem.listen((item) {
       if (item != null) {
@@ -111,21 +135,52 @@ class AudioController extends GetxController {
       }
     });
 
+    ever(rxCurrentSurahId, _updateSurahMetadata);
+
     // Listen to playback state to determine playing status and completion
     _audioHandler.playbackState.listen((state) {
-      rxIsPlaying.value = state.playing;
+      if (state.processingState == AudioProcessingState.completed) {
+        rxIsPlaying.value = false;
+      } else {
+        rxIsPlaying.value = state.playing;
+      }
+
+      if (state.playing) {
+        _startHighlightTimer();
+      } else {
+        _stopHighlightTimer();
+        // Fire one last tick for exact pause location
+        _onPositionTick(state.position);
+      }
 
       if (state.processingState == AudioProcessingState.completed) {
         _onPlaybackCompleted();
       }
     });
+  }
 
-    _positionSub = _audioHandler.positionStream.listen(_onPositionTick);
+  void _startHighlightTimer() {
+    _highlightTimer?.cancel();
+    _highlightTimer = Timer.periodic(const Duration(milliseconds: 32), (_) {
+      final state = _audioHandler.playbackState.value;
+      if (!state.playing) return;
+      
+      // Interpolate current position based on update time and speed
+      final elapsed = DateTime.now().difference(state.updateTime);
+      final currentPosition = state.position + (elapsed * state.speed);
+      
+      _onPositionTick(currentPosition);
+    });
+  }
+
+  void _stopHighlightTimer() {
+    _highlightTimer?.cancel();
+    _highlightTimer = null;
   }
 
   @override
   void onClose() {
-    _positionSub?.cancel();
+    _stopHighlightTimer();
     super.onClose();
   }
 
@@ -264,13 +319,24 @@ class AudioController extends GetxController {
     _currentRepeat = 0;
     _pauseTimer?.cancel();
     await _audioHandler.skipToQueueItem(index);
-    await _audioHandler.play();
+    unawaited(_audioHandler.play());
   }
 
   // Interruption Fix 2: Manual play/pause or scrubbing kills pending pause timer
   Future<void> play() async {
     _pauseTimer?.cancel();
-    await _audioHandler.play();
+    if (_audioHandler.playbackState.value.processingState == AudioProcessingState.completed) {
+      final activeVerseParts = rxActiveVerseKey.value?.split(':') ?? const <String>[];
+      if (activeVerseParts.length == 2) {
+        final timing = _findTiming(int.tryParse(activeVerseParts[1]) ?? 1);
+        if (timing != null) {
+          await _audioHandler.seek(Duration(milliseconds: timing.from));
+        }
+      } else {
+        await _audioHandler.seek(Duration.zero);
+      }
+    }
+    unawaited(_audioHandler.play());
   }
 
   Future<void> pause() async {
@@ -306,8 +372,18 @@ class AudioController extends GetxController {
   /// Loads a chapter's audio (+ verse timings for word-sync) and plays it.
   /// Shared by Radio mode and [playVerse] — only Radio mode auto-advances
   /// past a broken chapter on failure.
+
+  Future<void> _updateSurahMetadata(int surahId) async {
+    final chapter = await _db.getChapter(surahId);
+    if (chapter != null) {
+      rxCurrentSurahName.value = chapter.nameSimple;
+      rxCurrentSurahNameArabic.value = chapter.nameArabic;
+    }
+  }
+
   Future<void> _loadAndPlayChapter(int surahId) async {
     rxIsBusy.value = true;
+    _lastSurahId = surahId;
     try {
       final reciterId = rxCurrentReciterId.value;
       final localPath = await _audioRepository.getLocalPath(reciterId, surahId);
@@ -329,7 +405,20 @@ class AudioController extends GetxController {
       );
 
       await _audioHandler.updateQueue([mediaItem]);
-      await _audioHandler.play();
+      rxHasAudio.value = true;
+      
+      // Do not await play() itself — it only completes when playback ends —
+      // but any *immediate* failure (bad URL, unsupported format) still
+      // needs to be logged, not silently dropped.
+      unawaited(_audioHandler.play().catchError((Object e, StackTrace st) {
+        FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+      }));
+      // Block here until the player has actually buffered the new source.
+      // Without this, a caller that seeks right after (playVerse, "play
+      // from this ayah") races a still-loading network source — the seek
+      // is silently ignored on iOS and playback starts from 0:00 instead
+      // of the requested ayah.
+      await _audioHandler.waitUntilReady();
       rxRadioFailStreak.value = 0;
     } catch (e) {
       rxRadioFailStreak.value += 1;
@@ -338,6 +427,21 @@ class AudioController extends GetxController {
         final nextSurah = (surahId % 114) + 1;
         rxCurrentSurahId.value = nextSurah;
         await _loadAndPlayChapter(nextSurah);
+      } else if (rxIsRadioMode.value) {
+        // Retry budget exhausted — stop instead of leaving Radio mode stuck
+        // "on" with nothing loaded and no feedback.
+        rxIsRadioMode.value = false;
+        AppFeedback.showError(
+          'Could not reach the audio server. Check your connection and try again.',
+          title: 'Playback error',
+          onRetry: () => startRadio(surahId),
+        );
+      } else {
+        AppFeedback.showError(
+          'Could not play this surah. Check your connection and try again.',
+          title: 'Playback error',
+          onRetry: () => _loadAndPlayChapter(surahId),
+        );
       }
     } finally {
       rxIsBusy.value = false;
@@ -363,8 +467,6 @@ class AudioController extends GetxController {
     if (!alreadyLoaded) {
       rxCurrentSurahId.value = chapterId;
       await _loadAndPlayChapter(chapterId);
-    } else if (!rxIsPlaying.value) {
-      await _audioHandler.play();
     }
 
     final timing = _findTiming(verseNumber);
@@ -375,5 +477,8 @@ class AudioController extends GetxController {
       rxActiveVerseKey.value = timing.verseKey;
       rxActiveWordPosition.value = null;
     }
+    
+    // Ensure we start playing if paused or completed
+    unawaited(_audioHandler.play());
   }
 }
