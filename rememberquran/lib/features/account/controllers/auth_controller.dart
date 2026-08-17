@@ -59,11 +59,24 @@ class AuthController extends GetxController {
       isLoading.value = true;
       error.value = '';
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-      Get.offAllNamed(Routes.HOME);
+      _navigateAfterAuth();
     } on FirebaseAuthException catch (e) {
       error.value = e.message ?? 'An error occurred during login';
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// After a successful login/registration, returns to whatever protected
+  /// route the user was originally trying to reach (carried via
+  /// [AuthMiddleware] as the LOGIN route's arguments), falling back to HOME.
+  void _navigateAfterAuth() {
+    final redirectTo = Get.arguments;
+    const authRoutes = {Routes.LOGIN, Routes.REGISTER, Routes.RESET_PASSWORD};
+    if (redirectTo is String && redirectTo.isNotEmpty && !authRoutes.contains(redirectTo)) {
+      Get.offAllNamed(redirectTo);
+    } else {
+      Get.offAllNamed(Routes.HOME);
     }
   }
 
@@ -79,8 +92,8 @@ class AuthController extends GetxController {
           'email': email,
         });
       }
-      
-      Get.offAllNamed(Routes.HOME);
+
+      _navigateAfterAuth();
     } on FirebaseAuthException catch (e) {
       error.value = e.message ?? 'An error occurred during registration';
     } finally {

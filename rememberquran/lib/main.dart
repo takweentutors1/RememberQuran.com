@@ -117,6 +117,7 @@ class _RememberQuranAppState extends State<RememberQuranApp> with WidgetsBinding
       title: 'RememberQuran',
       initialRoute: widget.initialRoute,
       getPages: AppPages.routes,
+      unknownRoute: AppPages.unknownRoute,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

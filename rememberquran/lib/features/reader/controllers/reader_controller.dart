@@ -77,6 +77,20 @@ class ReaderController extends GetxController {
     itemPositionsListener.itemPositions.addListener(_onScrollPositionsChanged);
   }
 
+  /// Re-reads the route's `ayahId` param and scrolls to it. Used when this
+  /// controller instance is reused across a SURAH -> SURAH_AYAH navigation
+  /// for the same chapter (see AppPages), since onInit() won't rerun.
+  void jumpToRouteAyah() {
+    final targetAyahStr = Get.parameters['ayahId'];
+    if (targetAyahStr == null || verses.isEmpty) return;
+    final targetAyah = int.tryParse(targetAyahStr);
+    if (targetAyah == null) return;
+    final index = verses.indexWhere((v) => v.verseNumber == targetAyah);
+    if (index != -1) {
+      _scrollToIndex(index);
+    }
+  }
+
   void _scrollToIndex(int index) {
     if (itemScrollController.isAttached) {
       _hasScrolledToAyah = true;

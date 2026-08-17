@@ -7,15 +7,17 @@ class AuthMiddleware extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) {
     if (!Get.isRegistered<AuthController>()) {
-      return const RouteSettings(name: Routes.LOGIN);
+      return RouteSettings(name: Routes.LOGIN, arguments: route);
     }
-    
+
     final authController = Get.find<AuthController>();
-    
+
     if (authController.firebaseUser.value == null) {
-      return const RouteSettings(name: Routes.LOGIN);
+      // Carry the originally-requested route so a successful login can
+      // return the user there instead of always landing on HOME.
+      return RouteSettings(name: Routes.LOGIN, arguments: route);
     }
-    
+
     return null;
   }
 }

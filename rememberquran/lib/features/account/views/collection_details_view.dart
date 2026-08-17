@@ -12,15 +12,21 @@ class CollectionDetailsView extends StatefulWidget {
 
 class _CollectionDetailsViewState extends State<CollectionDetailsView> {
   final BookmarksController _controller = Get.find<BookmarksController>();
-  late String _collectionId;
 
   @override
   void initState() {
     super.initState();
-    _collectionId = Get.arguments as String;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.loadBookmarksForCollection(_collectionId);
-    });
+    final args = Get.arguments;
+    if (args is String) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _controller.loadBookmarksForCollection(args);
+      });
+    } else {
+      // No/invalid collection id (e.g. a direct deep link) — bail back to the list.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.offNamed(Routes.ACCOUNT_BOOKMARKS);
+      });
+    }
   }
 
   @override
