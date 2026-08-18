@@ -96,9 +96,42 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         _player.processingState == ProcessingState.completed) {
       return;
     }
-    await _player.processingStateStream
-        .firstWhere((s) => s == ProcessingState.ready || s == ProcessingState.completed)
-        .timeout(timeout);
+    
+    final completer = Completer<void>();
+    StreamSubscription? stateSub;
+    StreamSubscription? errSub;
+    Timer? timer;
+
+    void cleanup() {
+      stateSub?.cancel();
+      errSub?.cancel();
+      timer?.cancel();
+    }
+
+    stateSub = _player.processingStateStream.listen((s) {
+      if (s == ProcessingState.ready || s == ProcessingState.completed) {
+        if (!completer.isCompleted) {
+          completer.complete();
+          cleanup();
+        }
+      }
+    });
+
+    errSub = _player.errorStream.listen((err) {
+      if (!completer.isCompleted) {
+        completer.completeError(err);
+        cleanup();
+      }
+    });
+
+    timer = Timer(timeout, () {
+      if (!completer.isCompleted) {
+        completer.completeError(TimeoutException('Audio loading timed out'));
+        cleanup();
+      }
+    });
+
+    return completer.future;
   }
 
   @override

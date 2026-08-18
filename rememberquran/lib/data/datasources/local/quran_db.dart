@@ -96,6 +96,10 @@ class QuranDatabase extends _$QuranDatabase {
     return (select(chapters)..where((t) => t.id.equals(chapterId))).getSingleOrNull();
   }
 
+  Future<List<Verse>> getVersesByChapter(int chapterId) {
+    return (select(verses)..where((tbl) => tbl.chapterId.equals(chapterId))).get();
+  }
+
   /// Fetches all 114 chapters and verses from the remote data source and inserts them.
   /// This should only be called once on first launch if the DB is empty.
   Future<void> seedFromFirstSync(QuranRemoteDataSource remoteDs) async {

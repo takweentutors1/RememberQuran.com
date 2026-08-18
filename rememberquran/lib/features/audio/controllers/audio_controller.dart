@@ -47,6 +47,11 @@ class AudioController extends GetxController {
   final rxCurrentSurahId = 1.obs;
   final rxCurrentSurahName = ''.obs;
   final rxCurrentSurahNameArabic = ''.obs;
+  final rxCurrentSurahRevelationPlace = ''.obs;
+  final rxCurrentSurahRevelationOrder = 0.obs;
+  final rxCurrentSurahVersesCount = 0.obs;
+  final rxCurrentSurahPages = ''.obs;
+  final rxCurrentSurahFirstJuz = 1.obs;
   final rxHasAudio = false.obs;
   final rxIsBusy = false.obs;
 
@@ -378,6 +383,16 @@ class AudioController extends GetxController {
     if (chapter != null) {
       rxCurrentSurahName.value = chapter.nameSimple;
       rxCurrentSurahNameArabic.value = chapter.nameArabic;
+      rxCurrentSurahRevelationPlace.value = chapter.revelationPlace;
+      rxCurrentSurahRevelationOrder.value = chapter.revelationOrder;
+      rxCurrentSurahVersesCount.value = chapter.versesCount;
+      rxCurrentSurahPages.value = chapter.pages;
+      
+      // Attempt to get the first Juz for this Surah
+      final verses = await _db.getVersesByChapter(surahId);
+      if (verses.isNotEmpty) {
+        rxCurrentSurahFirstJuz.value = verses.first.juzNumber;
+      }
     }
   }
 
@@ -431,6 +446,7 @@ class AudioController extends GetxController {
         // Retry budget exhausted — stop instead of leaving Radio mode stuck
         // "on" with nothing loaded and no feedback.
         rxIsRadioMode.value = false;
+        rxHasAudio.value = false;
         AppFeedback.showError(
           'Could not reach the audio server. Check your connection and try again.',
           title: 'Playback error',
