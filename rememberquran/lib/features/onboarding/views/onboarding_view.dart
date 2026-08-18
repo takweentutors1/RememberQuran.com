@@ -46,40 +46,49 @@ class OnboardingView extends StatelessWidget {
       );
     }
 
-    return IntroductionScreen(
-      globalBackgroundColor: theme.scaffoldBackgroundColor,
-      pages: [
-        page(
-          icon: Icons.auto_stories_outlined,
-          title: 'Read anytime, anywhere',
-          body: "The full Qur'an with word-by-word translation, cached on your "
-              'device so it works offline.',
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: IntroductionScreen(
+            globalBackgroundColor: Colors.transparent, // Use scaffold background
+            pages: [
+              page(
+                icon: Icons.auto_stories_outlined,
+                title: 'Read anytime, anywhere',
+                body: "The full Qur'an with word-by-word translation, cached on your "
+                    'device so it works offline.',
+              ),
+              page(
+                icon: Icons.headphones_outlined,
+                title: 'Listen & follow along',
+                body: 'Choose from 20 reciters, download surahs for offline listening, '
+                    "and watch each word highlight in sync as it's recited.",
+              ),
+              page(
+                icon: Icons.local_fire_department_outlined,
+                title: 'Build a daily habit',
+                body: 'Set a reading goal, track your streak, and get a gentle '
+                    'reminder if you\'re about to lose it.',
+              ),
+            ],
+            onDone: () => _finish(),
+            onSkip: () => _finish(),
+            showSkipButton: true,
+            skip: const Text('Skip'),
+            next: const Icon(Icons.arrow_forward),
+            done: const Text('Get Started', style: TextStyle(fontWeight: FontWeight.bold)),
+            dotsDecorator: DotsDecorator(
+              activeColor: theme.colorScheme.primary,
+              color: theme.colorScheme.primary.withOpacity(0.25),
+              size: const Size(8, 8),
+              activeSize: const Size(20, 8),
+              activeShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            ),
+          ),
         ),
-        page(
-          icon: Icons.headphones_outlined,
-          title: 'Listen & follow along',
-          body: 'Choose from 20 reciters, download surahs for offline listening, '
-              "and watch each word highlight in sync as it's recited.",
-        ),
-        page(
-          icon: Icons.local_fire_department_outlined,
-          title: 'Build a daily habit',
-          body: 'Set a reading goal, track your streak, and get a gentle '
-              'reminder if you\'re about to lose it.',
-        ),
-      ],
-      onDone: () => _finish(),
-      onSkip: () => _finish(),
-      showSkipButton: true,
-      skip: const Text('Skip'),
-      next: const Icon(Icons.arrow_forward),
-      done: const Text('Get Started', style: TextStyle(fontWeight: FontWeight.bold)),
-      dotsDecorator: DotsDecorator(
-        activeColor: theme.colorScheme.primary,
-        color: theme.colorScheme.primary.withOpacity(0.25),
-        size: const Size(8, 8),
-        activeSize: const Size(20, 8),
-        activeShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
     );
   }

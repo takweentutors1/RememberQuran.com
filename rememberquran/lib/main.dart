@@ -27,61 +27,17 @@ import 'features/reader/controllers/reader_settings_controller.dart';
 void main() {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
-
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-
-    // Crash reporting: only report crashes from real installs, not local dev.
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(!kDebugMode);
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
-
-    await _runApp();
+    runApp(const RememberQuranApp(
+      initialRoute: Routes.SPLASH,
+    ));
   }, (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    // If Firebase isn't initialized yet, this will fail safely.
+    if (Firebase.apps.isNotEmpty) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    } else {
+      debugPrint('Fatal error before Firebase initialized: $error');
+    }
   });
-}
-
-Future<void> _runApp() async {
-  final dio = Dio();
-  final quranRemoteDs = QuranRemoteDataSource(dio: dio);
-  final quranDb = QuranDatabase();
-  Get.put<QuranRemoteDataSource>(quranRemoteDs, permanent: true);
-  Get.put<QuranDatabase>(quranDb, permanent: true);
-  final quranRepository = QuranRepository(localDb: quranDb, remoteDs: quranRemoteDs);
-  Get.put<QuranRepository>(quranRepository, permanent: true);
-
-  // Pre-seed the offline Quran text database on first launch; the app remains
-  // usable via the per-surah cache-first fetches if this fails (e.g. no network).
-  unawaited(quranRepository.seedIfEmpty().catchError((Object e, StackTrace st) {
-    FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
-  }));
-
-  final audioHandler = await initAudioService();
-  final audioRemoteDs = AudioRemoteDataSource();
-  Get.put<QuranAudioHandler>(audioHandler, permanent: true);
-  Get.put<AudioRemoteDataSource>(audioRemoteDs, permanent: true);
-  Get.put<AudioRepository>(
-    AudioRepository(localDb: quranDb, remoteDs: audioRemoteDs),
-    permanent: true,
-  );
-  Get.put<AudioController>(AudioController(), permanent: true);
-  Get.put<AuthController>(AuthController(), permanent: true);
-  Get.put<NotesController>(NotesController(), permanent: true);
-  Get.put<NotificationsController>(NotificationsController(), permanent: true);
-  Get.put<ShortcutsController>(ShortcutsController(), permanent: true);
-  Get.put<ReaderSettingsController>(ReaderSettingsController(), permanent: true);
-
-  final prefs = await SharedPreferences.getInstance();
-  final hasSeenOnboarding = prefs.getBool(OnboardingView.prefsKey) ?? false;
-
-  runApp(RememberQuranApp(
-    initialRoute: hasSeenOnboarding ? Routes.HOME : Routes.ONBOARDING,
-  ));
 }
 
 class RememberQuranApp extends StatefulWidget {

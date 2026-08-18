@@ -12,84 +12,90 @@ class SettingsView extends GetView<AuthController> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          const Text(
-            'Notifications',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Obx(() => SwitchListTile(
-            title: const Text('Daily Reading Reminder'),
-            subtitle: Text(
-              notifications.enabled.value
-                  ? 'Reminds you at ${_formatTime(notifications.reminderHour.value, notifications.reminderMinute.value)}'
-                  : 'Get a nudge to read each day',
-            ),
-            value: notifications.enabled.value,
-            onChanged: (val) => notifications.setEnabled(val),
-            contentPadding: EdgeInsets.zero,
-          )),
-          Obx(() {
-            if (notifications.permissionDenied.value) {
-              return const Padding(
-                padding: EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  "Notifications are turned off in your device settings — enable them there first.",
-                  style: TextStyle(color: Colors.red, fontSize: 12),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              const Text(
+                'Notifications',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Obx(() => SwitchListTile(
+                title: const Text('Daily Reading Reminder'),
+                subtitle: Text(
+                  notifications.enabled.value
+                      ? 'Reminds you at ${_formatTime(notifications.reminderHour.value, notifications.reminderMinute.value)}'
+                      : 'Get a nudge to read each day',
                 ),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
-          Obx(() {
-            if (!notifications.enabled.value) return const SizedBox.shrink();
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.schedule_outlined),
-              title: const Text('Reminder Time'),
-              trailing: Text(_formatTime(notifications.reminderHour.value, notifications.reminderMinute.value)),
-              onTap: () async {
-                final picked = await showTimePicker(
-                  context: context,
-                  initialTime: TimeOfDay(
-                    hour: notifications.reminderHour.value,
-                    minute: notifications.reminderMinute.value,
-                  ),
-                );
-                if (picked != null) {
-                  notifications.setReminderTime(picked.hour, picked.minute);
+                value: notifications.enabled.value,
+                onChanged: (val) => notifications.setEnabled(val),
+                contentPadding: EdgeInsets.zero,
+              )),
+              Obx(() {
+                if (notifications.permissionDenied.value) {
+                  return const Padding(
+                    padding: EdgeInsets.only(bottom: 8.0),
+                    child: Text(
+                      "Notifications are turned off in your device settings — enable them there first.",
+                      style: TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  );
                 }
-              },
-            );
-          }),
-          const SizedBox(height: 32),
+                return const SizedBox.shrink();
+              }),
+              Obx(() {
+                if (!notifications.enabled.value) return const SizedBox.shrink();
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.schedule_outlined),
+                  title: const Text('Reminder Time'),
+                  trailing: Text(_formatTime(notifications.reminderHour.value, notifications.reminderMinute.value)),
+                  onTap: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(
+                        hour: notifications.reminderHour.value,
+                        minute: notifications.reminderMinute.value,
+                      ),
+                    );
+                    if (picked != null) {
+                      notifications.setReminderTime(picked.hour, picked.minute);
+                    }
+                  },
+                );
+              }),
+              const SizedBox(height: 32),
 
-          const Text(
-            'Account Settings',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              const Text(
+                'Account Settings',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.lock_outline),
+                title: const Text('Change Password'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showChangePasswordDialog(context),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+                trailing: const Icon(Icons.chevron_right, color: Colors.red),
+                onTap: () => _showDeleteAccountDialog(context),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () => controller.logout(),
+                child: const Text('Log Out'),
+              )
+            ],
           ),
-          const SizedBox(height: 16),
-          ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: const Text('Change Password'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showChangePasswordDialog(context),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: Colors.red),
-            title: const Text('Delete Account', style: TextStyle(color: Colors.red)),
-            trailing: const Icon(Icons.chevron_right, color: Colors.red),
-            onTap: () => _showDeleteAccountDialog(context),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () => controller.logout(),
-            child: const Text('Log Out'),
-          )
-        ],
+        ),
       ),
     );
   }

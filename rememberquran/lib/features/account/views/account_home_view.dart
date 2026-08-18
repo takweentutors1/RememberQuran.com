@@ -14,78 +14,84 @@ class AccountHomeView extends GetView<AuthController> {
         title: const Text('My Account', style: TextStyle(fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: _buildAuthHeader(context),
-            ),
-          ),
-          const SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            sliver: SliverToBoxAdapter(
-              child: Text(
-                'Dashboard',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  child: _buildAuthHeader(context),
                 ),
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.4,
+              const SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'Dashboard',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
               ),
-              delegate: SliverChildListDelegate([
-                _buildDashboardCard(
-                  context,
-                  title: 'Bookmarks',
-                  icon: Icons.bookmark_rounded,
-                  onTap: () => Get.toNamed(Routes.ACCOUNT_BOOKMARKS),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 300,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.4,
+                  ),
+                  delegate: SliverChildListDelegate([
+                    _buildDashboardCard(
+                      context,
+                      title: 'Bookmarks',
+                      icon: Icons.bookmark_rounded,
+                      onTap: () => Get.toNamed(Routes.ACCOUNT_BOOKMARKS),
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: 'Notes',
+                      icon: Icons.edit_note_rounded,
+                      onTap: () => Get.toNamed(Routes.ACCOUNT_NOTES),
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: 'Hifz',
+                      icon: Icons.auto_awesome_rounded,
+                      onTap: () => Get.toNamed(Routes.ACCOUNT_HIFZ),
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: 'Goals',
+                      icon: Icons.flag_rounded,
+                      onTap: () => Get.toNamed(Routes.ACCOUNT_GOALS),
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: 'Progress',
+                      icon: Icons.show_chart_rounded,
+                      onTap: () => Get.toNamed(Routes.ACCOUNT_PROGRESS),
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: 'Settings',
+                      icon: Icons.settings_rounded,
+                      onTap: () => Get.toNamed(Routes.ACCOUNT_SETTINGS),
+                    ),
+                  ]),
                 ),
-                _buildDashboardCard(
-                  context,
-                  title: 'Notes',
-                  icon: Icons.edit_note_rounded,
-                  onTap: () => Get.toNamed(Routes.ACCOUNT_NOTES),
-                ),
-                _buildDashboardCard(
-                  context,
-                  title: 'Hifz',
-                  icon: Icons.auto_awesome_rounded,
-                  onTap: () => Get.toNamed(Routes.ACCOUNT_HIFZ),
-                ),
-                _buildDashboardCard(
-                  context,
-                  title: 'Goals',
-                  icon: Icons.flag_rounded,
-                  onTap: () => Get.toNamed(Routes.ACCOUNT_GOALS),
-                ),
-                _buildDashboardCard(
-                  context,
-                  title: 'Progress',
-                  icon: Icons.show_chart_rounded,
-                  onTap: () => Get.toNamed(Routes.ACCOUNT_PROGRESS),
-                ),
-                _buildDashboardCard(
-                  context,
-                  title: 'Settings',
-                  icon: Icons.settings_rounded,
-                  onTap: () => Get.toNamed(Routes.ACCOUNT_SETTINGS),
-                ),
-              ]),
-            ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
-        ],
+        ),
       ),
     );
   }

@@ -51,78 +51,84 @@ class BookmarksView extends GetView<BookmarksController> {
         return const Center(child: Text('No collections yet.'));
       }
 
-      return ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: collections.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final collection = collections[index];
-          final theme = Theme.of(context);
-          final nurColors = theme.extension<NurColorsExtension>();
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                Get.toNamed(Routes.ACCOUNT_COLLECTION_DETAILS, arguments: collection.id);
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: collections.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final collection = collections[index];
+              final theme = Theme.of(context);
+              final nurColors = theme.extension<NurColorsExtension>();
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Get.toNamed(Routes.ACCOUNT_COLLECTION_DETAILS, arguments: collection.id);
+                  },
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: collection.isDefault 
+                                ? Colors.red.withValues(alpha: 0.1) 
+                                : theme.colorScheme.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            collection.isDefault ? Icons.favorite : Icons.folder,
+                            color: collection.isDefault ? Colors.red : theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                collection.name,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${collection.count} bookmarks',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: nurColors?.foregroundSubtle,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!collection.isDefault)
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                            tooltip: 'Delete Collection',
+                            onPressed: () => _confirmDeleteCollection(context, collection.id),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: collection.isDefault 
-                            ? Colors.red.withValues(alpha: 0.1) 
-                            : theme.colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        collection.isDefault ? Icons.favorite : Icons.folder,
-                        color: collection.isDefault ? Colors.red : theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            collection.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${collection.count} bookmarks',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: nurColors?.foregroundSubtle,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!collection.isDefault)
-                      IconButton(
-                        icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                        tooltip: 'Delete Collection',
-                        onPressed: () => _confirmDeleteCollection(context, collection.id),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       );
     });
   }
@@ -138,66 +144,72 @@ class BookmarksView extends GetView<BookmarksController> {
         return const Center(child: Text('No notes yet.'));
       }
 
-      return ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: notes.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final note = notes[index];
-          final theme = Theme.of(context);
-          final nurColors = theme.extension<NurColorsExtension>();
-          return Container(
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: ListView.separated(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.1),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.note, color: theme.colorScheme.primary),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        note.verseKey,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        note.text,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: nurColors?.foregroundSubtle,
-                        ),
-                      ),
-                    ],
+            itemCount: notes.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final note = notes[index];
+              final theme = Theme.of(context);
+              final nurColors = theme.extension<NurColorsExtension>();
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                  tooltip: 'Delete Note',
-                  onPressed: () => _confirmDeleteNote(context, note.verseKey),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.note, color: theme.colorScheme.primary),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            note.verseKey,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            note.text,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: nurColors?.foregroundSubtle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                      tooltip: 'Delete Note',
+                      onPressed: () => _confirmDeleteNote(context, note.verseKey),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       );
     });
   }

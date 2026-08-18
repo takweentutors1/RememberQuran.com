@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import '../controllers/ayah_card_designer_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 
+import '../../../../core/utils/responsive_layout.dart';
+
 class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
   const AyahCardDesignerView({Key? key}) : super(key: key);
 
@@ -19,33 +21,72 @@ class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
-          Center(
-            child: RepaintBoundary(
-              key: controller.repaintKey,
-              child: _buildCard(context),
-            ),
+      body: ResponsiveLayout(
+        mobile: _buildMobileLayout(context),
+        desktop: _buildDesktopLayout(context),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 40),
+        Center(
+          child: RepaintBoundary(
+            key: controller.repaintKey,
+            child: _buildCard(context),
           ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: FilledButton.icon(
-              onPressed: controller.shareCard,
-              icon: const Icon(Icons.ios_share_rounded),
-              label: const Text('Share Ayah'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(56),
-                backgroundColor: Theme.of(context).extension<NurColorsExtension>()?.brandGold,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+        ),
+        const Spacer(),
+        _buildControls(context),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: RepaintBoundary(
+                key: controller.repaintKey,
+                child: _buildCard(context),
               ),
             ),
-          )
-        ],
+          ),
+        ),
+        const VerticalDivider(width: 1),
+        Expanded(
+          flex: 1,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 40),
+            child: _buildControls(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildControls(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: FilledButton.icon(
+        onPressed: controller.shareCard,
+        icon: const Icon(Icons.ios_share_rounded),
+        label: const Text('Share Ayah'),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+          backgroundColor: Theme.of(context).extension<NurColorsExtension>()?.brandGold,
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
       ),
     );
   }

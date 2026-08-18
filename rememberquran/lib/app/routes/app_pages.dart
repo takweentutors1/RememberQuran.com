@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rememberquran/app/routes/app_routes.dart';
+import 'package:rememberquran/features/splash/views/splash_loading_view.dart';
+import 'package:rememberquran/features/splash/controllers/splash_controller.dart';
 import 'package:rememberquran/shared/widgets/app_state_views.dart';
 import 'package:rememberquran/features/home/views/home_view.dart';
 import 'package:rememberquran/features/home/controllers/home_controller.dart';
@@ -57,9 +59,16 @@ void _bindReaderController() {
 }
 
 class AppPages {
-  static const INITIAL = Routes.HOME;
+  static const INITIAL = Routes.SPLASH;
 
   static final routes = [
+    GetPage(
+      name: Routes.SPLASH,
+      page: () => const SplashLoadingView(),
+      binding: BindingsBuilder(() {
+        Get.put(SplashController());
+      }),
+    ),
     GetPage(
       name: Routes.ONBOARDING,
       page: () => const OnboardingView(),

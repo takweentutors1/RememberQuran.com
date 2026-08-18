@@ -27,6 +27,7 @@ class RadioArtCard extends StatefulWidget {
 class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _glowController;
+  late AnimationController _rotationController;
   
   @override
   void initState() {
@@ -40,12 +41,32 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 24), // Slow, elegant rotation
+    );
+    
+    if (widget.isPlaying) {
+      _rotationController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(RadioArtCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isPlaying && !oldWidget.isPlaying) {
+      _rotationController.repeat();
+    } else if (!widget.isPlaying && oldWidget.isPlaying) {
+      _rotationController.stop();
+    }
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _glowController.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
@@ -61,7 +82,7 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
     final cardColor = theme.cardColor;
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_pulseController, _glowController]),
+      animation: Listenable.merge([_pulseController, _glowController, _rotationController]),
       builder: (context, child) {
         final glowOpacity = widget.isPlaying ? (0.1 + _glowController.value * 0.35) : 0.05;
         
@@ -74,56 +95,60 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
             return Transform.scale(
               scale: scale,
               child: Container(
-                width: double.infinity,
+                width: 280,
                 height: 280,
-                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                margin: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
                   color: cardColor,
-                  borderRadius: BorderRadius.circular(24),
+                  shape: BoxShape.circle, // Circular shape for the "record"
                   boxShadow: [
                     BoxShadow(
                       color: brandGold.withOpacity(glowOpacity),
-                      blurRadius: 30,
-                      spreadRadius: 2,
+                      blurRadius: 40,
+                      spreadRadius: widget.isPlaying ? 8 : 2,
                     ),
                     BoxShadow(
-                      color: theme.shadowColor.withOpacity(isDark ? 0.3 : 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: theme.shadowColor.withOpacity(isDark ? 0.4 : 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
                     )
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
+                child: ClipOval(
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
                       // Gradient Background
                       Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                          shape: BoxShape.circle,
+                          gradient: SweepGradient(
+                            center: Alignment.center,
                             colors: [
+                              brandGoldSoft.withOpacity(0.1),
                               brandGoldSoft.withOpacity(0.3),
                               cardColor,
-                              cardColor,
+                              brandGoldSoft.withOpacity(0.3),
                               brandGoldSoft.withOpacity(0.1),
                             ],
+                            transform: GradientRotation(_rotationController.value * 2 * 3.14159),
                           ),
                         ),
                       ),
                       
-                      // Arabesque Pattern
-                      Opacity(
-                        opacity: widget.hasError ? 0.02 : 0.08,
-                        child: CustomPaint(
-                          size: const Size.square(280),
-                          painter: ArabesquePainter(color: brandGold),
+                      // Rotating Arabesque Pattern
+                      Transform.rotate(
+                        angle: _rotationController.value * 2 * 3.14159,
+                        child: Opacity(
+                          opacity: widget.hasError ? 0.02 : 0.12,
+                          child: CustomPaint(
+                            size: const Size.square(280),
+                            painter: ArabesquePainter(color: brandGold),
+                          ),
                         ),
                       ),
                       
-                      // Content
+                      // Stationary Content
                       if (widget.hasError)
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -131,13 +156,13 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                             Icon(Icons.wifi_off_rounded, size: 48, color: theme.colorScheme.error),
                             const SizedBox(height: 16),
                             Text(
-                              'Could not reach server',
+                              'Connection Error',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 color: theme.colorScheme.error,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             ElevatedButton.icon(
                               onPressed: widget.onRetry,
                               icon: const Icon(Icons.refresh_rounded),
@@ -145,6 +170,7 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: brandGold,
                                 foregroundColor: theme.colorScheme.onPrimary,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
                             ),
                           ],
@@ -159,14 +185,14 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                                 widget.surahNameArabic,
                                 style: TextStyle(
                                   fontFamily: 'UthmanicHafs',
-                                  fontSize: 64,
+                                  fontSize: 72,
                                   color: brandGold,
                                   height: 1.2,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
                               if (widget.isBusy) ...[
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 16),
                                 SizedBox(
                                   width: 24,
                                   height: 24,

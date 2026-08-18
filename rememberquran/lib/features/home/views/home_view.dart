@@ -56,13 +56,34 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0).copyWith(bottom: 16.0),
-                itemCount: controller.chapters.length,
-                itemBuilder: (context, index) {
-                  final chapter = controller.chapters[index];
-                  return _buildSurahTile(context, chapter);
-                },
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth >= 600) {
+                    final crossAxisCount = constraints.maxWidth >= 900 ? 3 : 2;
+                    return GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0).copyWith(bottom: 16.0),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        mainAxisExtent: 80,
+                      ),
+                      itemCount: controller.chapters.length,
+                      itemBuilder: (context, index) {
+                        final chapter = controller.chapters[index];
+                        return _buildSurahTile(context, chapter);
+                      },
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0).copyWith(bottom: 16.0),
+                    itemCount: controller.chapters.length,
+                    itemBuilder: (context, index) {
+                      final chapter = controller.chapters[index];
+                      return _buildSurahTile(context, chapter);
+                    },
+                  );
+                }
               ),
             ),
           ],

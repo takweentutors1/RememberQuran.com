@@ -82,30 +82,81 @@ class SearchView extends GetView<my_search.SearchController> {
                 );
               }
 
-              return NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification scrollInfo) {
-                  if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
-                    controller.loadMore();
+                              return NotificationListener<ScrollNotification>(
+                                onNotification: (ScrollNotification scrollInfo) {
+                                  if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+                                    controller.loadMore();
+                                  }
+                                  return true;
+                                },
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final bool isDesktop = constraints.maxWidth >= 900;
+                                    final bool isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 900;
+                                    final int crossAxisCount = isDesktop ? 3 : (isTablet ? 2 : 1);
+                                    
+                                    if (crossAxisCount == 1) {
+                                      return ListView.separated(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                        itemCount: controller.results.length + (controller.hasMore.value ? 1 : 0),
+                                        separatorBuilder: (context, index) => const Divider(),
+                                        itemBuilder: (context, index) {
+                                          if (index == controller.results.length) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(16.0),
+                                              child: AppShimmer.listTile(count: 1),
+                                            );
+                                          }
+                                          return _buildResultItem(context, index, theme, nurColors);
+                                        },
+                                      );
+                                    } else {
+                                      return GridView.builder(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: 16.0,
+                                          mainAxisSpacing: 16.0,
+                                          childAspectRatio: 0.8, // Adjust based on content height
+                                        ),
+                                        itemCount: controller.results.length + (controller.hasMore.value ? 1 : 0),
+                                        itemBuilder: (context, index) {
+                                          if (index == controller.results.length) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(16.0),
+                                              child: AppShimmer.listTile(count: 1),
+                                            );
+                                          }
+                                          return Card(
+                                            elevation: 0,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.5)),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: _buildResultItem(context, index, theme, nurColors),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    }
+                                  },
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    );
                   }
-                  return true;
-                },
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  itemCount: controller.results.length + (controller.hasMore.value ? 1 : 0),
-                  separatorBuilder: (context, index) => const Divider(),
-                  itemBuilder: (context, index) {
-                    if (index == controller.results.length) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: AppShimmer.listTile(count: 1),
-                      );
-                    }
 
+                  Widget _buildResultItem(BuildContext context, int index, ThemeData theme, NurColorsExtension? nurColors) {
                     final result = controller.results[index];
                     return InkWell(
                       onTap: () => controller.onResultTapped(result),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -168,13 +219,5 @@ class SearchView extends GetView<my_search.SearchController> {
                         ),
                       ),
                     );
-                  },
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-}
+                  }
+                }
