@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/theme/app_colors.dart';
 
 class LoginView extends GetView<AuthController> {
   const LoginView({Key? key}) : super(key: key);
@@ -11,6 +12,7 @@ class LoginView extends GetView<AuthController> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
@@ -21,7 +23,7 @@ class LoginView extends GetView<AuthController> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.lock_outline, size: 64, color: theme.colorScheme.primary),
+              Icon(Icons.lock_outline, size: 64, color: nurColors?.brandGold ?? theme.colorScheme.primary),
               const SizedBox(height: 32),
               Obx(() => controller.error.value.isNotEmpty
                   ? Container(
@@ -39,20 +41,38 @@ class LoginView extends GetView<AuthController> {
                   : const SizedBox.shrink()),
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  filled: true,
+                  fillColor: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.password_outlined),
+                  prefixIcon: const Icon(Icons.password_outlined),
+                  filled: true,
+                  fillColor: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  ),
                 ),
                 obscureText: true,
               ),
@@ -68,6 +88,11 @@ class LoginView extends GetView<AuthController> {
               Obx(() => ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: nurColors?.brandGold ?? theme.colorScheme.primary,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: controller.isLoading.value
                         ? null

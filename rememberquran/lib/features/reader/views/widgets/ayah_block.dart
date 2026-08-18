@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:get/get.dart';
@@ -37,6 +39,7 @@ class AyahBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     final settings = Get.find<ReaderSettingsController>();
     final audioController = Get.find<AudioController>();
 
@@ -58,10 +61,10 @@ class AyahBlock extends StatelessWidget {
           activeTranslationRows.isNotEmpty ? activeTranslationRows.first.translationText : '';
 
       return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
       decoration: BoxDecoration(
-        color: isVerseActive ? theme.colorScheme.primary.withOpacity(0.04) : null,
-        border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.2))),
+        color: isVerseActive ? (nurColors?.brandGoldSoft ?? theme.colorScheme.primary.withOpacity(0.05)) : null,
+        border: Border(bottom: BorderSide(color: nurColors?.borderStrong ?? theme.dividerColor.withOpacity(0.1))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,13 +72,35 @@ class AyahBlock extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                verse.verseKey,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: nurColors?.surfaceSunk ?? theme.colorScheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                child: Text(
+                  verse.verseKey,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: nurColors?.brandGoldStrong ?? theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              AnimatedActionButton(
+                icon: Icon(isPlayingThisVerse ? Icons.pause_circle_outline : Icons.play_circle_outline),
+                onPressed: () async {
+                  if (isPlayingThisVerse) {
+                    audioController.pause();
+                  } else if (isVerseActive) {
+                    audioController.play();
+                  } else {
+                    audioController.playVerse(verse.chapterId, verse.verseNumber);
+                  }
+                },
+                iconSize: 20,
+                tooltip: isPlayingThisVerse ? 'Pause' : 'Play from here',
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -85,20 +110,6 @@ class AyahBlock extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      AnimatedActionButton(
-                    icon: Icon(isPlayingThisVerse ? Icons.pause_circle_outline : Icons.play_circle_outline),
-                    onPressed: () async {
-                      if (isPlayingThisVerse) {
-                        audioController.pause();
-                      } else if (isVerseActive) {
-                        audioController.play();
-                      } else {
-                        audioController.playVerse(verse.chapterId, verse.verseNumber);
-                      }
-                    },
-                    iconSize: 20,
-                    tooltip: isPlayingThisVerse ? 'Pause' : 'Play from here',
-                  ),
                   AnimatedActionButton(
                     icon: const Icon(Icons.menu_book_outlined),
                     onPressed: () async {
@@ -193,11 +204,11 @@ class AyahBlock extends StatelessWidget {
           if (activeTranslationRows.isNotEmpty) const SizedBox(height: 24),
           for (final t in activeTranslationRows)
             Padding(
-              padding: const EdgeInsets.only(top: 12.0),
+              padding: const EdgeInsets.only(top: 16.0),
               child: Container(
-                padding: const EdgeInsets.only(left: 12.0),
+                padding: const EdgeInsets.only(left: 16.0),
                 decoration: BoxDecoration(
-                  border: Border(left: BorderSide(color: theme.dividerColor.withOpacity(0.4), width: 2)),
+                  border: Border(left: BorderSide(color: nurColors?.brandGoldSoft ?? theme.dividerColor, width: 3)),
                 ),
                 child: Directionality(
                   textDirection: (getTranslationResource(t.resourceId)?.isRtl ?? false)
@@ -211,15 +222,16 @@ class AyahBlock extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           height: 1.6,
-                          color: theme.textTheme.bodyLarge?.color?.withOpacity(0.9),
+                          color: nurColors?.foregroundSubtle ?? theme.textTheme.bodyLarge?.color?.withOpacity(0.9),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         '— ${getTranslationName(t.resourceId)}',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: theme.textTheme.bodySmall?.color,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: nurColors?.foregroundFaint ?? theme.textTheme.bodySmall?.color,
                         ),
                       ),
                     ],

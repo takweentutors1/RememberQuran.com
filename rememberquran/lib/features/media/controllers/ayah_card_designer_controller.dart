@@ -28,7 +28,7 @@ class AyahCardDesignerController extends GetxController {
       
       await Share.shareXFiles([xFile], text: 'Shared via RememberQuran');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to share Ayah card: $e');
+      Get.snackbar('Error', 'Unable to share the Ayah card at this moment. Please try again.');
     }
   }
 }

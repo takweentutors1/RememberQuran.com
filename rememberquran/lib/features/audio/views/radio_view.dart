@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/audio_controller.dart';
 import '../../../core/models/reciter.dart';
@@ -27,6 +28,7 @@ class _RadioViewState extends State<RadioView> {
   
   late Timer _factsTimer;
   final RxInt _currentFactIndex = 0.obs;
+  bool _isPlayPressed = false;
 
   @override
   void initState() {
@@ -54,6 +56,7 @@ class _RadioViewState extends State<RadioView> {
   }
 
   void _handleMainButton() {
+    HapticFeedback.lightImpact();
     final isRadio = _audioController.rxIsRadioMode.value;
     final isPlaying = _audioController.rxIsPlaying.value;
     final hasAudio = _audioController.rxHasAudio.value;
@@ -71,6 +74,7 @@ class _RadioViewState extends State<RadioView> {
   }
 
   void _handleSurahChange(int id) {
+    HapticFeedback.lightImpact();
     setState(() => _selectedSurahId = id);
     if (_audioController.rxIsRadioMode.value) {
       _audioController.startRadio(id);
@@ -78,6 +82,7 @@ class _RadioViewState extends State<RadioView> {
   }
 
   void _handleReciterChange(int id) {
+    HapticFeedback.lightImpact();
     setState(() {
       _selectedReciterId = id;
       _audioController.rxCurrentReciterId.value = id;
@@ -152,6 +157,7 @@ class _RadioViewState extends State<RadioView> {
           child: CircularProgressIndicator(
             value: progress > 0 ? progress : null,
             strokeWidth: 2,
+            color: Theme.of(context).extension<NurColorsExtension>()?.brandGold ?? Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -162,6 +168,7 @@ class _RadioViewState extends State<RadioView> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
+            HapticFeedback.lightImpact();
             if (downloaded) {
               _audioController.deleteDownload(reciterId, surahId);
             } else {
@@ -212,8 +219,10 @@ class _RadioViewState extends State<RadioView> {
     );
   }
 
-  Widget _buildAnimatedBanner() {
+  Widget _buildAnimatedBanner(BuildContext context) {
     return Obx(() {
+      final theme = Theme.of(context);
+      final nurColors = theme.extension<NurColorsExtension>();
       final nameEn = _audioController.rxCurrentSurahName.value;
       final nameAr = _audioController.rxCurrentSurahNameArabic.value;
       final isRadio = _audioController.rxIsRadioMode.value;
@@ -257,7 +266,7 @@ class _RadioViewState extends State<RadioView> {
               ),
               Text(
                 nameAr,
-                style: TextStyle(fontSize: 14, fontFamily: 'UthmanicHafs', color: nurColors?.foregroundSubtle ?? theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
+                style: TextStyle(fontSize: 18, fontFamily: 'UthmanicHafs', color: nurColors?.foregroundSubtle ?? theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
               ),
             ],
           ),
@@ -329,6 +338,7 @@ class _RadioViewState extends State<RadioView> {
 
   Widget _buildFactsPanel(BuildContext context) {
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     final isDark = theme.brightness == Brightness.dark;
     
     return Container(
@@ -370,13 +380,16 @@ class _RadioViewState extends State<RadioView> {
     );
   }
 
-  Widget _buildPlayControls() {
+  Widget _buildPlayControls(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
           icon: const Icon(Icons.skip_previous_rounded, size: 32),
+          tooltip: 'Previous Surah',
           onPressed: () {
+            HapticFeedback.lightImpact();
             final prev = _selectedSurahId > 1 ? _selectedSurahId - 1 : 114;
             _handleSurahChange(prev);
           },
@@ -388,17 +401,25 @@ class _RadioViewState extends State<RadioView> {
           final isBusy = _audioController.rxIsBusy.value;
           
           return GestureDetector(
-            onTap: isBusy ? null : _handleMainButton,
-            child: AnimatedContainer(
+            onTapDown: isBusy ? null : (_) => setState(() => _isPlayPressed = true),
+            onTapUp: isBusy ? null : (_) {
+              setState(() => _isPlayPressed = false);
+              _handleMainButton();
+            },
+            onTapCancel: isBusy ? null : () => setState(() => _isPlayPressed = false),
+            child: AnimatedScale(
+              scale: _isPlayPressed ? 0.9 : 1.0,
+              duration: const Duration(milliseconds: 100),
+              child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               height: 72,
               width: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Theme.of(context).colorScheme.primary,
+                color: theme.colorScheme.primary,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -406,7 +427,7 @@ class _RadioViewState extends State<RadioView> {
               ),
               child: Center(
                 child: isBusy
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 28,
                         height: 28,
                         child: CircularProgressIndicator(
@@ -426,12 +447,15 @@ class _RadioViewState extends State<RadioView> {
                       ),
               ),
             ),
+            ),
           );
         }),
         const SizedBox(width: 24),
         IconButton(
           icon: const Icon(Icons.skip_next_rounded, size: 32),
+          tooltip: 'Next Surah',
           onPressed: () {
+            HapticFeedback.lightImpact();
             final next = _selectedSurahId < 114 ? _selectedSurahId + 1 : 1;
             _handleSurahChange(next);
           },
@@ -458,7 +482,7 @@ class _RadioViewState extends State<RadioView> {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 64,
+          height: 80,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -486,7 +510,7 @@ class _RadioViewState extends State<RadioView> {
                       Text(
                         r.name,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 18,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                           color: isSelected ? brandGold : null,
                         ),
@@ -495,7 +519,7 @@ class _RadioViewState extends State<RadioView> {
                       Text(
                         'Riwaya: ${r.style}',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 12,
                           color: isSelected ? brandGold.withOpacity(0.8) : (nurColors?.foregroundSubtle ?? theme.colorScheme.outline),
                         ),
                       ),
@@ -545,7 +569,7 @@ class _RadioViewState extends State<RadioView> {
                       children: [
                         Text(
                           '${_selectedSurahId}. ${_chapters.firstWhere((c) => c.id == _selectedSurahId, orElse: () => _chapters.first).nameSimple}',
-                          style: const TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 18),
                         ),
                         const Icon(Icons.arrow_drop_down),
                       ],
@@ -566,11 +590,12 @@ class _RadioViewState extends State<RadioView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildTopBar(context),
-              Obx(() {
+        child: Column(
+          children: [
+            _buildTopBar(context),
+            Expanded(
+              flex: 3,
+              child: Obx(() {
                 final isBusy = _audioController.rxIsBusy.value;
                 final isPlaying = _audioController.rxIsPlaying.value;
                 final hasError = _audioController.rxRadioFailStreak.value >= 2;
@@ -586,20 +611,28 @@ class _RadioViewState extends State<RadioView> {
                   onRetry: () => _audioController.startRadio(_selectedSurahId),
                 );
               }),
-              _buildContextChips(context),
-              const SizedBox(height: 16),
-              _buildAnimatedBanner(),
-              const SizedBox(height: 16),
-              _buildPlayControls(),
-              const SizedBox(height: 24),
-              _buildFactsPanel(context),
-              const SizedBox(height: 24),
-              _buildReciterSelector(),
-              const SizedBox(height: 24),
-              _buildSurahSelector(),
-              const SizedBox(height: 48),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              fit: FlexFit.loose,
+              child: _buildContextChips(context),
+            ),
+            const SizedBox(height: 8),
+            _buildAnimatedBanner(context),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 80,
+              child: _buildPlayControls(context),
+            ),
+            Flexible(
+              fit: FlexFit.loose,
+              child: _buildFactsPanel(context),
+            ),
+            _buildReciterSelector(),
+            const SizedBox(height: 16),
+            _buildSurahSelector(),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );

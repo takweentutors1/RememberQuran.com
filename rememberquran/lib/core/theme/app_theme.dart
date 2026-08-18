@@ -18,6 +18,9 @@ class AppTheme {
       outline: AppColors.lightBorder,
     ),
     dividerColor: AppColors.lightBorder,
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.lightBrandGold,
+    ),
     extensions: const <ThemeExtension<dynamic>>[
       NurColorsExtension(
         surfaceSunk: AppColors.lightSurfaceSunk,
@@ -48,6 +51,9 @@ class AppTheme {
       outline: AppColors.darkBorder,
     ),
     dividerColor: AppColors.darkBorder,
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.darkBrandGold,
+    ),
     extensions: const <ThemeExtension<dynamic>>[
       NurColorsExtension(
         surfaceSunk: AppColors.darkSurfaceSunk,

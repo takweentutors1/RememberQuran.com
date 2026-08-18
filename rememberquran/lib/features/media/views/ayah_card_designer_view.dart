@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/ayah_card_designer_controller.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
   const AyahCardDesignerView({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
         actions: [
           IconButton(
             icon: const Icon(Icons.share_rounded),
+            tooltip: 'Share Card',
             onPressed: controller.shareCard,
           ),
         ],
@@ -35,6 +37,8 @@ class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
               label: const Text('Share Ayah'),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(56),
+                backgroundColor: Theme.of(context).extension<NurColorsExtension>()?.brandGold,
+                foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -48,13 +52,14 @@ class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
 
   Widget _buildCard(BuildContext context) {
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     return Container(
       width: 350,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        border: Border.all(color: nurColors?.borderStrong ?? theme.colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),

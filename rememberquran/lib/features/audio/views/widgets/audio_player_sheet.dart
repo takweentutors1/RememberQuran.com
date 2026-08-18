@@ -192,6 +192,7 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.skip_previous),
+                  tooltip: 'Previous',
                   iconSize: 48,
                   onPressed: _audioController.skipToPrevious,
                 ),
@@ -200,6 +201,7 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
                   final isPlaying = _audioController.rxIsPlaying.value;
                   return IconButton(
                     icon: Icon(isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
+                    tooltip: isPlaying ? 'Pause' : 'Play',
                     iconSize: 64,
                     color: Theme.of(context).colorScheme.primary,
                     onPressed: () {
@@ -214,6 +216,7 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
                 const SizedBox(width: 24),
                 IconButton(
                   icon: const Icon(Icons.skip_next),
+                  tooltip: 'Next',
                   iconSize: 48,
                   onPressed: _audioController.skipToNext,
                 ),

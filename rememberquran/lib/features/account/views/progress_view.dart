@@ -88,12 +88,16 @@ class ProgressView extends GetView<ProgressController> {
   }
 
   Widget _buildChartCard(ThemeData theme, bool isDark) {
+    final nurColors = theme.extension<NurColorsExtension>();
     return Container(
       width: double.infinity,
       height: 220,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
@@ -193,10 +197,14 @@ class ProgressView extends GetView<ProgressController> {
   }
 
   Widget _buildStatCard(ThemeData theme, bool isDark, String title, Widget valueWidget, IconData icon) {
+    final nurColors = theme.extension<NurColorsExtension>();
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),

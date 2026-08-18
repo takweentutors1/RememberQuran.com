@@ -27,8 +27,9 @@ class SearchController extends GetxController {
 
   void onSearchChanged(String query) {
     currentQuery.value = query;
-    if (query.length > 2) {
-      _performSearch(query, isLoadMore: false);
+    final trimmed = query.trim();
+    if (trimmed.length > 2) {
+      _performSearch(trimmed, isLoadMore: false);
     } else {
       results.clear();
       hasMore.value = false;
@@ -38,7 +39,7 @@ class SearchController extends GetxController {
 
   void loadMore() {
     if (hasMore.value && !isLoading.value) {
-      _performSearch(currentQuery.value, isLoadMore: true);
+      _performSearch(currentQuery.value.trim(), isLoadMore: true);
     }
   }
 

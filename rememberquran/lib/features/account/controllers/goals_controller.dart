@@ -53,7 +53,7 @@ class GoalsController extends GetxController {
       await _goalsRepo.setActiveGoal(userId, goal);
       await loadGoalData();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to set goal');
+      Get.snackbar('Error', 'We couldn\'t save your daily goal. Please try again.');
     }
   }
 
@@ -65,7 +65,7 @@ class GoalsController extends GetxController {
       await _goalsRepo.clearActiveGoal(userId);
       await loadGoalData();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to clear goal');
+      Get.snackbar('Error', 'We couldn\'t remove your daily goal. Please try again.');
     }
   }
 }

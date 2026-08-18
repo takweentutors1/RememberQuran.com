@@ -69,6 +69,8 @@ class AudioController extends GetxController {
   int? _lastWordPos;
   Timer? _highlightTimer;
   int? _lastSurahId;
+  bool _hasPrefetchedNextSurah = false;
+  Future<void>? _timingFetchFuture;
 
   int _currentRepeat = 0;
   Timer? _pauseTimer;
@@ -213,6 +215,23 @@ class AudioController extends GetxController {
 
     rxActiveVerseKey.value = timing.verseKey;
     rxActiveWordPosition.value = _lastWordPos;
+
+    // Prefetch next Surah if we reached 90% in Radio mode
+    if (!_hasPrefetchedNextSurah && rxIsRadioMode.value) {
+      final duration = _audioHandler.mediaItem.value?.duration;
+      if (duration != null && duration.inMilliseconds > 0) {
+        if (position.inMilliseconds >= duration.inMilliseconds * 0.9) {
+          _hasPrefetchedNextSurah = true;
+          _prefetchNextSurah();
+        }
+      } else if (_timings.isNotEmpty) {
+        final totalDurationMs = _timings.last.to;
+        if (totalDurationMs > 0 && position.inMilliseconds >= totalDurationMs * 0.9) {
+          _hasPrefetchedNextSurah = true;
+          _prefetchNextSurah();
+        }
+      }
+    }
   }
 
   void _applyTimings(Map<String, dynamic> audioFile) {
@@ -229,18 +248,24 @@ class AudioController extends GetxController {
   /// Best-effort timings fetch for locally downloaded chapters — the mp3 is
   /// already available, so a failure here (e.g. offline) just means no
   /// highlight, not a playback failure.
-  Future<void> _loadTimings(int reciterId, int chapterId) async {
-    try {
-      final audioFile = await _audioRemoteDs.getChapterAudio(reciterId, chapterId);
-      _applyTimings(audioFile);
-    } catch (_) {
-      _timings = [];
-      _hasWordTiming = false;
-      _lastVerseIdx = -1;
-      _lastWordPos = null;
-      rxActiveVerseKey.value = null;
-      rxActiveWordPosition.value = null;
-    }
+  Future<void> _fetchTimingsInBackground(int reciterId, int chapterId) {
+    _timingFetchFuture = () async {
+      try {
+        final audioFile = await _audioRemoteDs.getChapterAudio(reciterId, chapterId);
+        // Only apply if we haven't skipped to another Surah in the meantime
+        if (_lastSurahId == chapterId) {
+          _applyTimings(audioFile);
+        }
+      } catch (_) {
+        _timings = [];
+        _hasWordTiming = false;
+        _lastVerseIdx = -1;
+        _lastWordPos = null;
+        rxActiveVerseKey.value = null;
+        rxActiveWordPosition.value = null;
+      }
+    }();
+    return _timingFetchFuture!;
   }
 
   CleanVerseTiming? _findTiming(int verseNumber) {
@@ -399,19 +424,21 @@ class AudioController extends GetxController {
   Future<void> _loadAndPlayChapter(int surahId) async {
     rxIsBusy.value = true;
     _lastSurahId = surahId;
+    _hasPrefetchedNextSurah = false;
     try {
       final reciterId = rxCurrentReciterId.value;
+      final reciter = getReciter(reciterId);
       final localPath = await _audioRepository.getLocalPath(reciterId, surahId);
 
       final String audioSource;
       if (localPath != null) {
         audioSource = Uri.file(localPath).toString();
-        await _loadTimings(reciterId, surahId);
       } else {
-        final audioFile = await _audioRemoteDs.getChapterAudio(reciterId, surahId);
-        audioSource = audioFile['audio_url'] as String;
-        _applyTimings(audioFile);
+        audioSource = '${reciter.baseUrl}${surahId.toString().padLeft(3, '0')}.mp3';
       }
+
+      // Fire-and-forget the word timings fetch so it NEVER blocks playback
+      unawaited(_fetchTimingsInBackground(reciterId, surahId));
 
       final mediaItem = MediaItem(
         id: audioSource,
@@ -471,6 +498,26 @@ class AudioController extends GetxController {
     await _loadAndPlayChapter(nextSurah);
   }
 
+  Future<void> _prefetchNextSurah() async {
+    final nextSurahId = (rxCurrentSurahId.value % 114) + 1;
+    final reciterId = rxCurrentReciterId.value;
+    
+    // Skip if already fully downloaded offline
+    if (isDownloaded(reciterId, nextSurahId)) return;
+    
+    final reciter = getReciter(reciterId);
+    final audioSource = '${reciter.baseUrl}${nextSurahId.toString().padLeft(3, '0')}.mp3';
+    
+    final nextMediaItem = MediaItem(
+      id: audioSource,
+      album: 'Surah $nextSurahId',
+      title: 'Surah $nextSurahId',
+    );
+    
+    // Delegate to the audio handler's detached prefetch player
+    unawaited(_audioHandler.prefetchItem(nextMediaItem));
+  }
+
   /// Plays a chapter starting from a specific verse — the reader's
   /// "play from here" trigger. Leaves Radio mode; loads the chapter's audio
   /// only if it isn't already the one loaded.
@@ -483,6 +530,11 @@ class AudioController extends GetxController {
     if (!alreadyLoaded) {
       rxCurrentSurahId.value = chapterId;
       await _loadAndPlayChapter(chapterId);
+      
+      // Wait for the background timing fetch to finish so we can actually find the timestamp!
+      if (_timingFetchFuture != null) {
+        await _timingFetchFuture;
+      }
     }
 
     final timing = _findTiming(verseNumber);

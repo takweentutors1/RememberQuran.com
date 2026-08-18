@@ -247,7 +247,7 @@ class ReaderController extends GetxController {
   Future<void> toggleBookmark(String verseKey) async {
     final user = Get.find<AuthController>().firebaseUser.value;
     if (user == null) {
-      AppFeedback.showError('Please sign in to save bookmarks');
+      AppFeedback.showError('Please sign in to save your bookmarks.');
       return;
     }
     
@@ -256,19 +256,19 @@ class ReaderController extends GetxController {
       bookmarkedVerses.remove(verseKey);
       final success = await _bookmarksRepo.deleteBookmark(user.uid, verseKey);
       if (success) {
-        AppFeedback.showSuccess('Bookmark removed');
+        AppFeedback.showSuccess('Bookmark successfully removed.');
       } else {
         bookmarkedVerses.add(verseKey); // Rollback
-        AppFeedback.showError('Failed to remove bookmark');
+        AppFeedback.showError('We couldn\'t remove this bookmark. Please try again.');
       }
     } else {
       bookmarkedVerses.add(verseKey);
       final res = await _bookmarksRepo.createBookmark(user.uid, verseKey, null);
       if (res['ok'] == true) {
-        AppFeedback.showSuccess('Bookmark added');
+        AppFeedback.showSuccess('Ayah successfully bookmarked!');
       } else {
         bookmarkedVerses.remove(verseKey); // Rollback
-        AppFeedback.showError('Failed to add bookmark');
+        AppFeedback.showError('Unable to save this bookmark. Please try again.');
       }
     }
   }

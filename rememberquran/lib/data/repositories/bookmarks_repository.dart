@@ -299,18 +299,25 @@ class BookmarksRepository {
   }
 
   Future<bool> deleteBookmark(String userId, String verseKey) async {
-    final ref = _bookmarksRef(userId).doc(verseKey);
+    try {
+      final ref = _bookmarksRef(userId).doc(verseKey);
 
-    final collectionId = await _db.runTransaction((tx) async {
-      final snap = await tx.get(ref);
-      if (!snap.exists) return null;
-      tx.delete(ref);
-      final data = snap.data() as Map<String, dynamic>;
-      return data['collectionId'] as String?;
-    });
+      final collectionId = await _db.runTransaction((tx) async {
+        final snap = await tx.get(ref);
+        if (!snap.exists) return null;
+        
+        tx.delete(ref);
+        final data = snap.data() as Map<String, dynamic>?;
+        return data?['collectionId'] as String?;
+      });
 
-    if (collectionId == null) return false;
-    await _adjustBookmarkCount(userId, collectionId, -1);
-    return true;
+      if (collectionId != null) {
+        await _adjustBookmarkCount(userId, collectionId, -1);
+      }
+      return true;
+    } catch (e) {
+      print('Error deleting bookmark: $e');
+      return false;
+    }
   }
 }

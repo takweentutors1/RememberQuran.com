@@ -2,13 +2,21 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 Future<QuranAudioHandler> initAudioService() async {
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
 
+  final tempDir = await getTemporaryDirectory();
+  final cacheDir = Directory('${tempDir.path}/quran_audio_cache');
+  if (!await cacheDir.exists()) {
+    await cacheDir.create(recursive: true);
+  }
+
   return await AudioService.init(
-    builder: () => QuranAudioHandler(),
+    builder: () => QuranAudioHandler(cacheDirPath: cacheDir.path),
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.rememberquran.audio',
       androidNotificationChannelName: 'Quran Recitation',
@@ -20,7 +28,9 @@ Future<QuranAudioHandler> initAudioService() async {
 }
 
 class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
+  final String cacheDirPath;
   final _player = AudioPlayer();
+  final _prefetchPlayer = AudioPlayer();
   final _playlist = ConcatenatingAudioSource(children: []);
 
   /// Fires ~4x/sec during playback — the drive signal for word-by-word sync.
@@ -30,7 +40,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   /// unsupported format) that [play] would otherwise fail on silently.
   Stream<PlayerException> get errorStream => _player.errorStream;
 
-  QuranAudioHandler() {
+  QuranAudioHandler({required this.cacheDirPath}) {
     _init();
   }
 
@@ -83,6 +93,12 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     });
     session.becomingNoisyEventStream.listen((_) => _player.pause());
+
+    _player.durationStream.listen((duration) {
+      if (duration != null && mediaItem.value != null) {
+        mediaItem.add(mediaItem.value!.copyWith(duration: duration));
+      }
+    });
 
     await _player.setAudioSource(_playlist);
   }
@@ -157,11 +173,15 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
+    _enforceCacheLimit();
     final audioSources = mediaItems.map((item) {
-      return AudioSource.uri(
-        Uri.parse(item.id),
-        tag: item,
-      );
+      final uri = Uri.parse(item.id);
+      if (uri.scheme == 'http' || uri.scheme == 'https') {
+        final safeName = item.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+        final cacheFile = File('$cacheDirPath/$safeName.mp3');
+        return LockCachingAudioSource(uri, tag: item, cacheFile: cacheFile);
+      }
+      return AudioSource.uri(uri, tag: item);
     }).toList();
 
     await _playlist.addAll(audioSources);
@@ -172,13 +192,17 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> updateQueue(List<MediaItem> newQueue) async {
+    _enforceCacheLimit();
     await _playlist.clear();
 
     final audioSources = newQueue.map((item) {
-      return AudioSource.uri(
-        Uri.parse(item.id),
-        tag: item, // we attach the media item as a tag so we can read it later if needed
-      );
+      final uri = Uri.parse(item.id);
+      if (uri.scheme == 'http' || uri.scheme == 'https') {
+        final safeName = item.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+        final cacheFile = File('$cacheDirPath/$safeName.mp3');
+        return LockCachingAudioSource(uri, tag: item, cacheFile: cacheFile);
+      }
+      return AudioSource.uri(uri, tag: item);
     }).toList();
 
     await _playlist.addAll(audioSources);
@@ -186,6 +210,48 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
     if (newQueue.isNotEmpty) {
       mediaItem.add(newQueue.first);
+    }
+  }
+
+  Future<void> _enforceCacheLimit() async {
+    try {
+      final dir = Directory(cacheDirPath);
+      if (!await dir.exists()) return;
+
+      int totalSize = 0;
+      final List<FileSystemEntity> entities = await dir.list().toList();
+      final List<File> files = entities.whereType<File>().toList();
+
+      final fileStats = <File, FileStat>{};
+      for (var file in files) {
+        final stat = await file.stat();
+        fileStats[file] = stat;
+        totalSize += stat.size;
+      }
+
+      // 500 MB limit
+      const int maxBytes = 500 * 1024 * 1024;
+      if (totalSize <= maxBytes) return;
+
+      // Sort by last modified, oldest first
+      files.sort((a, b) {
+        final statA = fileStats[a]!;
+        final statB = fileStats[b]!;
+        return statA.modified.compareTo(statB.modified);
+      });
+
+      for (var file in files) {
+        // Delete until we hit 400 MB to give some headroom
+        if (totalSize <= 400 * 1024 * 1024) break;
+        try {
+          await file.delete();
+          totalSize -= fileStats[file]!.size;
+        } catch (_) {
+          // File might be currently locked or playing
+        }
+      }
+    } catch (e) {
+      // Silently fail if we can't clean up right now
     }
   }
 
@@ -205,6 +271,23 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       case AudioServiceRepeatMode.group:
         await _player.setLoopMode(LoopMode.all);
         break;
+    }
+  }
+
+  /// Silently downloads/caches the given item without interrupting active playback.
+  Future<void> prefetchItem(MediaItem item) async {
+    final uri = Uri.parse(item.id);
+    if (uri.scheme == 'http' || uri.scheme == 'https') {
+      final safeName = item.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+      final cacheFile = File('$cacheDirPath/$safeName.mp3');
+      if (await cacheFile.exists()) return; // Already cached
+      
+      final source = LockCachingAudioSource(uri, tag: item, cacheFile: cacheFile);
+      try {
+        await _prefetchPlayer.setAudioSource(source);
+      } catch (_) {
+        // Ignore prefetch failures
+      }
     }
   }
 }

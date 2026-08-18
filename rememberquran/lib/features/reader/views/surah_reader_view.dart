@@ -23,6 +23,7 @@ class SurahReaderView extends GetView<ReaderController> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
+            tooltip: 'Quick Jump',
             onPressed: () => QuickJumpSheet.show(
               context, 
               currentChapterId: controller.chapter.value?.id
@@ -30,6 +31,7 @@ class SurahReaderView extends GetView<ReaderController> {
           ),
           IconButton(
             icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
             onPressed: () => ReaderSettingsSheet.show(context),
           ),
         ],

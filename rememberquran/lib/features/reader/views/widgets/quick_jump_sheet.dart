@@ -153,6 +153,7 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
                 if (_step == 1)
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
+                    tooltip: 'Back',
                     onPressed: () {
                       setState(() {
                         _step = 0;
@@ -168,6 +169,7 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
+                  tooltip: 'Close',
                   onPressed: () => Get.back(),
                 ),
               ],

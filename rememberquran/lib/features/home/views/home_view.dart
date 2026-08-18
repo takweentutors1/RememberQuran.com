@@ -4,6 +4,7 @@ import '../controllers/home_controller.dart';
 import '../../../app/routes/app_routes.dart';
 import '../widgets/continue_reading_card.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
+import '../../../core/theme/app_colors.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({Key? key}) : super(key: key);
@@ -15,8 +16,8 @@ class HomeView extends GetView<HomeController> {
         title: const Text('RememberQuran', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: false,
         actions: [
-          IconButton(icon: const Icon(Icons.search), onPressed: () => Get.toNamed(Routes.SEARCH)),
-          IconButton(icon: const Icon(Icons.settings), onPressed: () => Get.toNamed(Routes.ACCOUNT_HOME)),
+          IconButton(icon: const Icon(Icons.search), tooltip: 'Search', onPressed: () => Get.toNamed(Routes.SEARCH)),
+          IconButton(icon: const Icon(Icons.settings), tooltip: 'Settings', onPressed: () => Get.toNamed(Routes.ACCOUNT_HOME)),
         ],
       ),
       body: Obx(() {
@@ -35,26 +36,28 @@ class HomeView extends GetView<HomeController> {
           );
         }
 
-        return CustomScrollView(
-          slivers: [
-            SliverPadding(
+        return Column(
+          children: [
+            Padding(
               padding: const EdgeInsets.all(16.0),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   const ContinueReadingCard(),
+                  const SizedBox(height: 16),
                   _buildAyahOfTheDayCard(context),
                   const SizedBox(height: 24),
                   const Text(
                     'Surahs',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
-                ]),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              sliver: SliverList.builder(
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0).copyWith(bottom: 16.0),
                 itemCount: controller.chapters.length,
                 itemBuilder: (context, index) {
                   final chapter = controller.chapters[index];
@@ -62,7 +65,6 @@ class HomeView extends GetView<HomeController> {
                 },
               ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 16.0)),
           ],
         );
       }),
@@ -72,20 +74,21 @@ class HomeView extends GetView<HomeController> {
   Widget _buildAyahOfTheDayCard(BuildContext context) {
     final ayah = controller.ayahOfTheDay;
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+        color: nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+        border: Border.all(color: (nurColors?.brandGold ?? theme.colorScheme.primary).withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Icon(Icons.wb_sunny_rounded, size: 16, color: theme.colorScheme.primary),
+              Icon(Icons.wb_sunny_rounded, size: 16, color: nurColors?.brandGold ?? theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 'AYAH OF THE DAY',
@@ -93,7 +96,7 @@ class HomeView extends GetView<HomeController> {
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
-                  color: theme.colorScheme.primary,
+                  color: nurColors?.brandGold ?? theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -113,7 +116,7 @@ class HomeView extends GetView<HomeController> {
             ayah.translation,
             style: TextStyle(
               fontSize: 16,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.9),
+              color: nurColors?.foregroundSubtle ?? theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.9),
               height: 1.5,
             ),
           ),
@@ -123,7 +126,7 @@ class HomeView extends GetView<HomeController> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: theme.colorScheme.primary,
+              color: nurColors?.brandGold ?? theme.colorScheme.primary,
             ),
           ),
         ],
@@ -133,12 +136,13 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildSurahTile(BuildContext context, chapter) {
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.dividerColor.withOpacity(0.5)),
+        side: BorderSide(color: nurColors?.borderStrong ?? theme.dividerColor.withValues(alpha: 0.5)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -152,7 +156,7 @@ class HomeView extends GetView<HomeController> {
                 height: 40,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
+                  color: nurColors?.surfaceSunk ?? theme.colorScheme.surfaceContainerHighest,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
@@ -180,7 +184,7 @@ class HomeView extends GetView<HomeController> {
                       '${chapter.revelationPlace.toUpperCase()} • ${chapter.versesCount} VERSES',
                       style: TextStyle(
                         fontSize: 12,
-                        color: theme.textTheme.bodySmall?.color,
+                        color: nurColors?.foregroundSubtle ?? theme.textTheme.bodySmall?.color,
                         letterSpacing: 0.5,
                       ),
                     ),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
 import '../../../account/controllers/notes_controller.dart';
 import '../../../../data/models/note.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class NoteSheet extends StatefulWidget {
   final int chapterId;
@@ -84,14 +85,15 @@ class _NoteSheetState extends State<NoteSheet> {
       if (outcome['ok'] == true) {
         Get.back();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Note saved successfully.')),
+          const SnackBar(content: Text('Your reflection has been safely stored.')),
         );
       } else {
         final error = outcome['error'] == 'limit-reached' 
             ? 'Note limit reached. Please delete some notes before adding more.'
             : 'Failed to save note. Please try again.';
+        final displayError = error.contains('limit') ? error : 'We couldn\'t save your reflection. Please check your connection and try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error), backgroundColor: Colors.red),
+          SnackBar(content: Text(displayError), backgroundColor: Colors.red),
         );
       }
     }
@@ -100,10 +102,11 @@ class _NoteSheetState extends State<NoteSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     
     return Container(
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: nurColors?.surfaceSunk ?? theme.scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(
@@ -128,6 +131,7 @@ class _NoteSheetState extends State<NoteSheet> {
               ),
               IconButton(
                 icon: const Icon(Icons.close),
+                tooltip: 'Close',
                 onPressed: () => Get.back(),
               ),
             ],
@@ -153,10 +157,14 @@ class _NoteSheetState extends State<NoteSheet> {
               decoration: InputDecoration(
                 hintText: 'Type your reflections or notes here...',
                 filled: true,
-                fillColor: theme.cardColor,
+                fillColor: theme.colorScheme.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                 ),
               ),
             ),
@@ -167,8 +175,10 @@ class _NoteSheetState extends State<NoteSheet> {
             onPressed: _isSaving ? null : _saveNote,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: nurColors?.brandGold ?? theme.colorScheme.primary,
+              foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: _isSaving 

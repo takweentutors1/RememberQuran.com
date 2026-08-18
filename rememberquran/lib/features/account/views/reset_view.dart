@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../../../core/theme/app_colors.dart';
 
 class ResetView extends GetView<AuthController> {
   const ResetView({Key? key}) : super(key: key);
@@ -9,6 +10,7 @@ class ResetView extends GetView<AuthController> {
   Widget build(BuildContext context) {
     final emailController = TextEditingController();
     final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Reset Password')),
@@ -19,7 +21,7 @@ class ResetView extends GetView<AuthController> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.lock_reset, size: 64, color: theme.colorScheme.primary),
+              Icon(Icons.lock_reset, size: 64, color: nurColors?.brandGold ?? theme.colorScheme.primary),
               const SizedBox(height: 32),
               const Text(
                 'Enter your email address and we will send you instructions to reset your password.',
@@ -42,10 +44,19 @@ class ResetView extends GetView<AuthController> {
                   : const SizedBox.shrink()),
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  filled: true,
+                  fillColor: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -53,6 +64,11 @@ class ResetView extends GetView<AuthController> {
               Obx(() => ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: nurColors?.brandGold ?? theme.colorScheme.primary,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: controller.isLoading.value
                         ? null

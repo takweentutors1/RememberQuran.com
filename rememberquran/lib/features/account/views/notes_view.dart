@@ -32,10 +32,18 @@ class NotesView extends GetView<NotesController> {
                 hintText: 'Search notes...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
-                fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+                fillColor: theme.extension<NurColorsExtension>()?.surfaceSunk ?? (isDark ? AppColors.darkCard : AppColors.lightCard),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                  ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
@@ -134,7 +142,7 @@ class NotesView extends GetView<NotesController> {
       background: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.red.shade400,
+          color: theme.colorScheme.error,
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.centerRight,
@@ -145,8 +153,11 @@ class NotesView extends GetView<NotesController> {
         margin: const EdgeInsets.only(bottom: 16),
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          color: theme.extension<NurColorsExtension>()?.surfaceSunk ?? theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),

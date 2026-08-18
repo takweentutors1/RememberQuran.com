@@ -120,27 +120,32 @@ class GoalsView extends GetView<GoalsController> {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Clear Goal'),
-                  content: const Text('Are you sure you want to remove your daily goal?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    FilledButton(
-                      onPressed: () {
-                        controller.clearGoal();
-                        Navigator.pop(context);
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.error,
-                        foregroundColor: Theme.of(context).colorScheme.onError,
+                builder: (context) {
+                  final nurColors = Theme.of(context).extension<NurColorsExtension>();
+                  return AlertDialog(
+                    backgroundColor: nurColors?.surfaceSunk ?? Theme.of(context).colorScheme.surface,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    title: const Text('Clear Goal'),
+                    content: const Text('Are you sure you want to remove your daily goal?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
                       ),
-                      child: const Text('Clear'),
-                    ),
-                  ],
-                ),
+                      FilledButton(
+                        onPressed: () {
+                          controller.clearGoal();
+                          Navigator.pop(context);
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                          foregroundColor: Theme.of(context).colorScheme.onError,
+                        ),
+                        child: const Text('Clear'),
+                      ),
+                    ],
+                  );
+                }
               );
             },
             child: Text(
@@ -157,10 +162,10 @@ class GoalsView extends GetView<GoalsController> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
+        color: Theme.of(context).extension<NurColorsExtension>()?.surfaceSunk ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Row(
@@ -216,10 +221,10 @@ class GoalsView extends GetView<GoalsController> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: nurColors.surfaceSunk,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
         boxShadow: [
           BoxShadow(
@@ -308,10 +313,10 @@ class GoalsView extends GetView<GoalsController> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: nurColors.surfaceSunk,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -338,7 +343,7 @@ class GoalsView extends GetView<GoalsController> {
                       shape: BoxShape.circle,
                       color: daily.met
                           ? nurColors.brandGold
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                       border: isToday
                           ? Border.all(
                               color: Theme.of(context).colorScheme.primary,
@@ -402,9 +407,12 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
+    
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.only(
@@ -422,7 +430,7 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -430,7 +438,7 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
           const SizedBox(height: 24),
           Text(
             'Set Daily Goal',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
             textAlign: TextAlign.center,
@@ -440,10 +448,25 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
             spacing: 12,
             runSpacing: 12,
             children: _presets.map((preset) {
+              final isSelected = _selectedType == preset['type'] && _customTarget == preset['target'];
               return ChoiceChip(
                 label: Text(preset['label'] as String),
-                selected: _selectedType == preset['type'] &&
-                    _customTarget == preset['target'],
+                selected: isSelected,
+                selectedColor: nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer,
+                backgroundColor: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                labelStyle: TextStyle(
+                  color: isSelected 
+                      ? nurColors?.brandGold ?? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isSelected 
+                        ? nurColors?.brandGold ?? theme.colorScheme.primary
+                        : theme.dividerColor.withValues(alpha: 0.2),
+                  ),
+                ),
                 onSelected: (selected) {
                   if (selected) {
                     setState(() {
@@ -479,6 +502,20 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
                     ),
                   ],
                   selected: {_selectedType},
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer;
+                      }
+                      return nurColors?.surfaceSunk ?? theme.colorScheme.surface;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return nurColors?.brandGold ?? theme.colorScheme.primary;
+                      }
+                      return theme.colorScheme.onSurface;
+                    }),
+                  ),
                   onSelectionChanged: (set) {
                     setState(() {
                       _selectedType = set.first;

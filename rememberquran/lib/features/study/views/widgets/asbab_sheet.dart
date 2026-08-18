@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/asbab_controller.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AsbabSheet extends StatefulWidget {
   final int surahId;
@@ -44,7 +45,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
       builder: (_, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
+            color: Theme.of(context).extension<NurColorsExtension>()?.surfaceSunk ?? Theme.of(context).scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(

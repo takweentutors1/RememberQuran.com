@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/bookmarks_controller.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
+import '../../../core/theme/app_colors.dart';
 
 class BookmarksView extends GetView<BookmarksController> {
   const BookmarksView({Key? key}) : super(key: key);
@@ -50,24 +51,76 @@ class BookmarksView extends GetView<BookmarksController> {
         return const Center(child: Text('No collections yet.'));
       }
 
-      return ListView.builder(
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
         itemCount: collections.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final collection = collections[index];
-          return ListTile(
-            leading: Icon(collection.isDefault ? Icons.favorite : Icons.folder),
-            title: Text(collection.name),
-            subtitle: Text('${collection.count} bookmarks'),
-            trailing: collection.isDefault 
-                ? null 
-                : IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDeleteCollection(context, collection.id),
+          final theme = Theme.of(context);
+          final nurColors = theme.extension<NurColorsExtension>();
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Get.toNamed(Routes.ACCOUNT_COLLECTION_DETAILS, arguments: collection.id);
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
                   ),
-            onTap: () {
-              // Navigate to Collection Details
-              Get.toNamed(Routes.ACCOUNT_COLLECTION_DETAILS, arguments: collection.id);
-            },
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: collection.isDefault 
+                            ? Colors.red.withValues(alpha: 0.1) 
+                            : theme.colorScheme.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        collection.isDefault ? Icons.favorite : Icons.folder,
+                        color: collection.isDefault ? Colors.red : theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            collection.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${collection.count} bookmarks',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: nurColors?.foregroundSubtle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!collection.isDefault)
+                      IconButton(
+                        icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                        tooltip: 'Delete Collection',
+                        onPressed: () => _confirmDeleteCollection(context, collection.id),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           );
         },
       );
@@ -85,22 +138,64 @@ class BookmarksView extends GetView<BookmarksController> {
         return const Center(child: Text('No notes yet.'));
       }
 
-      return ListView.builder(
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
         itemCount: notes.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final note = notes[index];
-          return ListTile(
-            leading: const Icon(Icons.note),
-            title: Text(note.verseKey),
-            subtitle: Text(note.text, maxLines: 2, overflow: TextOverflow.ellipsis),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => controller.deleteNote(note.verseKey),
+          final theme = Theme.of(context);
+          final nurColors = theme.extension<NurColorsExtension>();
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              ),
             ),
-            onTap: () {
-              // Navigate to Reader View at this verse
-              // This depends on how ReaderView accepts arguments
-            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.note, color: theme.colorScheme.primary),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        note.verseKey,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        note.text,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: nurColors?.foregroundSubtle,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                  tooltip: 'Delete Note',
+                  onPressed: () => _confirmDeleteNote(context, note.verseKey),
+                ),
+              ],
+            ),
           );
         },
       );
@@ -153,16 +248,42 @@ class BookmarksView extends GetView<BookmarksController> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () {
                 controller.deleteCollection(collectionId);
                 Navigator.pop(context);
               },
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
               child: const Text('Delete', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
-      }
+      },
+    );
+  }
+
+  void _confirmDeleteNote(BuildContext context, String verseKey) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Note'),
+          content: const Text('Are you sure you want to delete this note? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                controller.deleteNote(verseKey);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

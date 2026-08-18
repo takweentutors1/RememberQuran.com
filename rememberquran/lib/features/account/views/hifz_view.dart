@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/hifz_controller.dart';
 
 import '../../../shared/widgets/loading_skeleton.dart';
+import '../../../core/theme/app_colors.dart';
 
 class HifzView extends GetView<HifzController> {
   const HifzView({Key? key}) : super(key: key);
@@ -41,28 +42,82 @@ class HifzView extends GetView<HifzController> {
     final list = controller.surahProgress;
     if (list.isEmpty) return const SizedBox.shrink();
 
-    return ListView.builder(
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
       itemCount: list.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final progress = list[index];
-        return ListTile(
-          title: Text('Surah ${progress.surahId}'),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              LinearProgressIndicator(
-                value: progress.percentage,
-                backgroundColor: Colors.grey.withOpacity(0.2),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 4),
-              Text('${progress.memorisedCount} / ${progress.totalCount} Ayahs'),
-            ],
+        final theme = Theme.of(context);
+        final nurColors = theme.extension<NurColorsExtension>();
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            ),
           ),
-          trailing: Text(
-            '${(progress.percentage * 100).toStringAsFixed(1)}%',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '${progress.surahId}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Surah ${progress.surahId}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress.percentage,
+                        minHeight: 6,
+                        backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${progress.memorisedCount} / ${progress.totalCount} Ayahs',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: nurColors?.foregroundSubtle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                '${(progress.percentage * 100).toStringAsFixed(1)}%',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: progress.percentage == 1.0 ? theme.colorScheme.primary : null,
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -73,28 +128,82 @@ class HifzView extends GetView<HifzController> {
     final list = controller.juzProgress;
     if (list.isEmpty) return const SizedBox.shrink();
 
-    return ListView.builder(
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
       itemCount: list.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final progress = list[index];
-        return ListTile(
-          title: Text('Juz ${progress.juz}'),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              LinearProgressIndicator(
-                value: progress.percentage,
-                backgroundColor: Colors.grey.withOpacity(0.2),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 4),
-              Text('${progress.memorisedCount} / ${progress.totalCount} Ayahs'),
-            ],
+        final theme = Theme.of(context);
+        final nurColors = theme.extension<NurColorsExtension>();
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            ),
           ),
-          trailing: Text(
-            '${(progress.percentage * 100).toStringAsFixed(1)}%',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '${progress.juz}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Juz ${progress.juz}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress.percentage,
+                        minHeight: 6,
+                        backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${progress.memorisedCount} / ${progress.totalCount} Ayahs',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: nurColors?.foregroundSubtle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                '${(progress.percentage * 100).toStringAsFixed(1)}%',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: progress.percentage == 1.0 ? theme.colorScheme.primary : null,
+                ),
+              ),
+            ],
           ),
         );
       },

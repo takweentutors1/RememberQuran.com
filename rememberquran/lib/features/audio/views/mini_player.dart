@@ -28,7 +28,7 @@ class MiniPlayer extends StatelessWidget {
       return GestureDetector(
         onTap: () => AudioPlayerSheet.show(context),
         child: Container(
-          height: 64,
+          height: 72,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -67,14 +67,14 @@ class MiniPlayer extends StatelessWidget {
                   Text(
                     isRadioMode ? 'Surah ${surahName.isNotEmpty ? surahName : audioController.rxCurrentSurahId.value}' 
                                 : '${surahName.isNotEmpty ? surahName : ''} - Ayah ${audioController.rxCurrentAyahIndex.value}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     isRadioMode ? 'Radio • ${reciter.name}' : 'Recitation • ${reciter.name}',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 18,
                       color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ),
@@ -94,6 +94,7 @@ class MiniPlayer extends StatelessWidget {
             else
               IconButton(
                 icon: Icon(isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
+                tooltip: isPlaying ? 'Pause' : 'Play',
                 color: Theme.of(context).colorScheme.primary,
                 iconSize: 32,
                 onPressed: () {

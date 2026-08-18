@@ -15,7 +15,7 @@ class ReadingModeView extends GetView<ReaderController> {
         title: Obx(() => Text(controller.chapter.value?.nameSimple ?? 'Loading...')),
         centerTitle: true,
         actions: [
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.settings), tooltip: 'Settings', onPressed: () {}),
         ],
       ),
       body: Obx(() {

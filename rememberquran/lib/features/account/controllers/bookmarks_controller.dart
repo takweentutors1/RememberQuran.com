@@ -102,7 +102,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
     if (res['ok'] == true) {
       await loadCollections();
     } else {
-      Get.snackbar('Error', 'Failed to create collection: ${res['error']}');
+      Get.snackbar('Error', 'We couldn\'t create this collection. Please try again: ${res['error']}');
     }
   }
 
@@ -113,9 +113,9 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
     final res = await _bookmarksRepo.deleteCollection(userId, id);
     if (res['ok'] == true) {
       await loadCollections();
-      Get.snackbar('Success', 'Collection deleted');
+      Get.snackbar('Success', 'Collection removed. Its bookmarks have been moved to Favourites.');
     } else {
-      Get.snackbar('Error', 'Failed to delete collection: ${res['error']}');
+      Get.snackbar('Error', 'We couldn\'t delete this collection. Please try again: ${res['error']}');
     }
   }
 
@@ -131,7 +131,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
         await loadBookmarksForCollection(id);
       }
     } else {
-      Get.snackbar('Error', 'Failed to rename collection: ${res['error']}');
+      Get.snackbar('Error', 'We couldn\'t update the collection name. Please try again: ${res['error']}');
     }
   }
 
@@ -147,7 +147,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
       }
       await loadCollections(); // To update counts
     } else {
-      Get.snackbar('Error', 'Failed to delete bookmark');
+      Get.snackbar('Error', 'We couldn\'t remove this bookmark. Please try again.');
     }
   }
 
@@ -159,7 +159,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
       await _notesRepo.deleteNote(userId, verseKey);
       await loadNotes();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete note');
+      Get.snackbar('Error', 'Unable to remove this note. Please try again.');
     }
   }
 }

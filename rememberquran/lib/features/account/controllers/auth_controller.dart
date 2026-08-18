@@ -61,7 +61,7 @@ class AuthController extends GetxController {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       _navigateAfterAuth();
     } on FirebaseAuthException catch (e) {
-      error.value = e.message ?? 'An error occurred during login';
+      error.value = e.message ?? 'Unable to sign in. Please check your credentials and try again.';
     } finally {
       isLoading.value = false;
     }
@@ -95,7 +95,7 @@ class AuthController extends GetxController {
 
       _navigateAfterAuth();
     } on FirebaseAuthException catch (e) {
-      error.value = e.message ?? 'An error occurred during registration';
+      error.value = e.message ?? 'Unable to create account. Please check your details or try a different email.';
     } finally {
       isLoading.value = false;
     }
@@ -107,9 +107,9 @@ class AuthController extends GetxController {
       error.value = '';
       await _auth.sendPasswordResetEmail(email: email);
       Get.back();
-      Get.snackbar('Success', 'Password reset email sent to $email');
+      Get.snackbar('Success', 'Check your inbox! We\'ve sent password reset instructions to $email');
     } on FirebaseAuthException catch (e) {
-      error.value = e.message ?? 'An error occurred during password reset';
+      error.value = e.message ?? 'Unable to send reset email. Please ensure the email address is correct.';
     } finally {
       isLoading.value = false;
     }
@@ -134,10 +134,10 @@ class AuthController extends GetxController {
       // Update password
       await user.updatePassword(newPassword);
       
-      Get.snackbar('Success', 'Password changed successfully');
+      Get.snackbar('Success', 'Your password has been successfully updated.');
       Get.back(); // close dialog/screen
     } on FirebaseAuthException catch (e) {
-      error.value = e.message ?? 'Failed to change password';
+      error.value = e.message ?? 'We couldn\'t update your password. Please try again.';
     } finally {
       isLoading.value = false;
     }
@@ -195,9 +195,9 @@ class AuthController extends GetxController {
       await user.delete();
       
       Get.offAllNamed(Routes.LOGIN);
-      Get.snackbar('Success', 'Account and all data deleted');
+      Get.snackbar('Success', 'Your account and all associated data have been permanently deleted.');
     } on FirebaseAuthException catch (e) {
-      error.value = e.message ?? 'Failed to delete account';
+      error.value = e.message ?? 'Unable to delete your account. Please check your connection and try again.';
     } finally {
       isLoading.value = false;
     }

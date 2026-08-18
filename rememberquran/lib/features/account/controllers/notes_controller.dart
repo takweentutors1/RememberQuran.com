@@ -173,7 +173,7 @@ class NotesController extends GetxController {
         allNotes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         _filterNotes(searchController.text);
       }
-      Get.snackbar('Error', 'Failed to delete note');
+      Get.snackbar('Error', 'Unable to remove this note. Please try again.');
     }
   }
 }

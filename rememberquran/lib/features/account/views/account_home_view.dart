@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
+import '../../../core/theme/app_colors.dart';
 
 class AccountHomeView extends GetView<AuthController> {
   const AccountHomeView({Key? key}) : super(key: key);
@@ -48,42 +49,36 @@ class AccountHomeView extends GetView<AuthController> {
                   context,
                   title: 'Bookmarks',
                   icon: Icons.bookmark_rounded,
-                  color: Colors.blue.shade600,
                   onTap: () => Get.toNamed(Routes.ACCOUNT_BOOKMARKS),
                 ),
                 _buildDashboardCard(
                   context,
                   title: 'Notes',
                   icon: Icons.edit_note_rounded,
-                  color: Colors.purple.shade600,
                   onTap: () => Get.toNamed(Routes.ACCOUNT_NOTES),
                 ),
                 _buildDashboardCard(
                   context,
                   title: 'Hifz',
                   icon: Icons.auto_awesome_rounded,
-                  color: Colors.green.shade600,
                   onTap: () => Get.toNamed(Routes.ACCOUNT_HIFZ),
                 ),
                 _buildDashboardCard(
                   context,
                   title: 'Goals',
                   icon: Icons.flag_rounded,
-                  color: Colors.orange.shade600,
                   onTap: () => Get.toNamed(Routes.ACCOUNT_GOALS),
                 ),
                 _buildDashboardCard(
                   context,
                   title: 'Progress',
                   icon: Icons.show_chart_rounded,
-                  color: Colors.teal.shade600,
                   onTap: () => Get.toNamed(Routes.ACCOUNT_PROGRESS),
                 ),
                 _buildDashboardCard(
                   context,
                   title: 'Settings',
                   icon: Icons.settings_rounded,
-                  color: Colors.grey.shade700,
                   onTap: () => Get.toNamed(Routes.ACCOUNT_SETTINGS),
                 ),
               ]),
@@ -96,15 +91,18 @@ class AccountHomeView extends GetView<AuthController> {
   }
 
   Widget _buildAuthHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     return Obx(() {
       final user = controller.firebaseUser.value;
       if (user != null) {
         // Logged In State
         return Card(
           elevation: 0,
+          color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            side: BorderSide(color: nurColors?.borderStrong ?? theme.dividerColor.withValues(alpha: 0.1)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -182,7 +180,7 @@ class AccountHomeView extends GetView<AuthController> {
         // Not Logged In State
         return Card(
           elevation: 0,
-          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+          color: nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -239,13 +237,16 @@ class AccountHomeView extends GetView<AuthController> {
     });
   }
 
-  Widget _buildDashboardCard(BuildContext context, {required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildDashboardCard(BuildContext context, {required String title, required IconData icon, required VoidCallback onTap}) {
+    final theme = Theme.of(context);
+    final nurColors = theme.extension<NurColorsExtension>();
     return Card(
       elevation: 0,
+      color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.08)),
+        side: BorderSide(color: nurColors?.borderStrong ?? theme.dividerColor.withValues(alpha: 0.08)),
       ),
       child: InkWell(
         onTap: onTap,
@@ -258,10 +259,10 @@ class AccountHomeView extends GetView<AuthController> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: nurColors?.brandGold ?? theme.colorScheme.primary, size: 24),
               ),
               Text(
                 title,
