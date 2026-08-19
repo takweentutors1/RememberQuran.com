@@ -25,19 +25,20 @@ import 'features/shortcuts/controllers/shortcuts_controller.dart';
 import 'features/reader/controllers/reader_settings_controller.dart';
 
 void main() {
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    runApp(const RememberQuranApp(
-      initialRoute: Routes.SPLASH,
-    ));
-  }, (error, stack) {
-    // If Firebase isn't initialized yet, this will fail safely.
-    if (Firebase.apps.isNotEmpty) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    } else {
-      debugPrint('Fatal error before Firebase initialized: $error');
-    }
-  });
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      runApp(const RememberQuranApp(initialRoute: Routes.SPLASH));
+    },
+    (error, stack) {
+      // If Firebase isn't initialized yet, this will fail safely.
+      if (Firebase.apps.isNotEmpty) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      } else {
+        debugPrint('Fatal error before Firebase initialized: $error');
+      }
+    },
+  );
 }
 
 class RememberQuranApp extends StatefulWidget {
@@ -49,7 +50,8 @@ class RememberQuranApp extends StatefulWidget {
   State<RememberQuranApp> createState() => _RememberQuranAppState();
 }
 
-class _RememberQuranAppState extends State<RememberQuranApp> with WidgetsBindingObserver {
+class _RememberQuranAppState extends State<RememberQuranApp>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -65,7 +67,11 @@ class _RememberQuranAppState extends State<RememberQuranApp> with WidgetsBinding
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      Get.find<NotificationsController>().refreshReminder();
+      // Guard against the controller not being registered yet — this callback
+      // can fire before the route that puts NotificationsController has loaded.
+      if (Get.isRegistered<NotificationsController>()) {
+        Get.find<NotificationsController>().refreshReminder();
+      }
     }
   }
 
@@ -79,6 +85,22 @@ class _RememberQuranAppState extends State<RememberQuranApp> with WidgetsBinding
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
+      // Without this, a user's system font-size setting can scale text
+      // well past what the fixed-height rows/grids throughout this app
+      // (mini player, hifz/bookmark cards, chip rows, etc.) were designed
+      // to hold, causing overflow instead of just larger text.
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: mediaQuery.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.3,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }
