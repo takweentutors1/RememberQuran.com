@@ -6,12 +6,14 @@ import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_settings_controller.dart';
 import 'word_meaning_sheet.dart';
 import 'tajweed_text.dart';
+import '../../../../core/utils/responsive_layout.dart';
 
 class ArabicWord extends StatelessWidget {
   final Word word;
   final String verseKey;
 
-  const ArabicWord({Key? key, required this.word, required this.verseKey}) : super(key: key);
+  const ArabicWord({Key? key, required this.word, required this.verseKey})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,8 @@ class ArabicWord extends StatelessWidget {
       final font = settings.font.value;
       final fontSize = settings.fontSize.value;
       final isTajweedEnabled = settings.rxTajweedEnabled.value;
-      final isActiveWord = audioController.rxActiveVerseKey.value == verseKey &&
+      final isActiveWord =
+          audioController.rxActiveVerseKey.value == verseKey &&
           audioController.rxActiveWordPosition.value == word.position;
 
       final textStyle = TextStyle(
@@ -34,23 +37,28 @@ class ArabicWord extends StatelessWidget {
 
       return InkWell(
         onTap: () {
-          showModalBottomSheet(
+          showResponsiveSheet(
             context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
             builder: (context) => WordMeaningSheet(word: word),
           );
         },
         borderRadius: BorderRadius.circular(4),
         child: Container(
-          padding: isActiveWord ? const EdgeInsets.symmetric(horizontal: 2) : EdgeInsets.zero,
+          padding: isActiveWord
+              ? const EdgeInsets.symmetric(horizontal: 2)
+              : EdgeInsets.zero,
           decoration: isActiveWord
               ? BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(4),
                 )
               : null,
-          child: (isTajweedEnabled && word.textUthmaniTajweed != null && word.textUthmaniTajweed!.isNotEmpty)
+          child:
+              (isTajweedEnabled &&
+                  word.textUthmaniTajweed != null &&
+                  word.textUthmaniTajweed!.isNotEmpty)
               ? TajweedText(
                   htmlText: word.textUthmaniTajweed!,
                   style: textStyle,
@@ -69,11 +77,13 @@ class ArabicWord extends StatelessWidget {
     if (charType == 'end') {
       return theme.colorScheme.primary;
     }
-    if (charType == 'pause' || charType == 'sajdah' || charType == 'rubel_hizb') {
+    if (charType == 'pause' ||
+        charType == 'sajdah' ||
+        charType == 'rubel_hizb') {
       final nurColors = theme.extension<NurColorsExtension>();
       return nurColors?.brandGold ?? theme.colorScheme.secondary;
     }
-    
+
     final nurColors = theme.extension<NurColorsExtension>();
     return nurColors?.readerInk ?? theme.colorScheme.onSurface;
   }

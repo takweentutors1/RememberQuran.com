@@ -9,6 +9,7 @@ class RadioArtCard extends StatefulWidget {
   final bool hasError;
   final bool isPlaying;
   final VoidCallback onRetry;
+  final double size;
 
   const RadioArtCard({
     Key? key,
@@ -18,6 +19,7 @@ class RadioArtCard extends StatefulWidget {
     required this.hasError,
     required this.isPlaying,
     required this.onRetry,
+    this.size = 280,
   }) : super(key: key);
 
   @override
@@ -80,24 +82,25 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
     final brandGoldSoft = nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer;
     
     final cardColor = theme.cardColor;
+    final scale = widget.size / 280;
 
     return AnimatedBuilder(
       animation: Listenable.merge([_pulseController, _glowController, _rotationController]),
       builder: (context, child) {
         final glowOpacity = widget.isPlaying ? (0.1 + _glowController.value * 0.35) : 0.05;
-        
+
         return TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.95, end: 1.0),
           duration: const Duration(milliseconds: 350),
           curve: Curves.easeOutBack,
           key: ValueKey(widget.surahId),
-          builder: (context, scale, child) {
+          builder: (context, entranceScale, child) {
             return Transform.scale(
-              scale: scale,
+              scale: entranceScale,
               child: Container(
-                width: 280,
-                height: 280,
-                margin: const EdgeInsets.symmetric(vertical: 16),
+                width: widget.size,
+                height: widget.size,
+                margin: EdgeInsets.symmetric(vertical: 16 * scale),
                 decoration: BoxDecoration(
                   color: cardColor,
                   shape: BoxShape.circle, // Circular shape for the "record"
@@ -142,7 +145,7 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                         child: Opacity(
                           opacity: widget.hasError ? 0.02 : 0.12,
                           child: CustomPaint(
-                            size: const Size.square(280),
+                            size: Size.square(widget.size),
                             painter: ArabesquePainter(color: brandGold),
                           ),
                         ),
@@ -153,8 +156,8 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.wifi_off_rounded, size: 48, color: theme.colorScheme.error),
-                            const SizedBox(height: 16),
+                            Icon(Icons.wifi_off_rounded, size: 48 * scale, color: theme.colorScheme.error),
+                            SizedBox(height: 16 * scale),
                             Text(
                               'Connection Error',
                               style: theme.textTheme.titleMedium?.copyWith(
@@ -162,7 +165,7 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16 * scale),
                             ElevatedButton.icon(
                               onPressed: widget.onRetry,
                               icon: const Icon(Icons.refresh_rounded),
@@ -185,17 +188,17 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                                 widget.surahNameArabic,
                                 style: TextStyle(
                                   fontFamily: 'UthmanicHafs',
-                                  fontSize: 72,
+                                  fontSize: 72 * scale,
                                   color: brandGold,
                                   height: 1.2,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
                               if (widget.isBusy) ...[
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16 * scale),
                                 SizedBox(
-                                  width: 24,
-                                  height: 24,
+                                  width: 24 * scale,
+                                  height: 24 * scale,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     color: brandGold.withOpacity(0.5),

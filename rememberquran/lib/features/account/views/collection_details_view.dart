@@ -53,90 +53,117 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
           }),
         ],
       ),
-      body: Obx(() {
-        if (_controller.isLoadingBookmarks.value) {
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: 6,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, __) => AppShimmer.listTile(count: 1),
-          );
-        }
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Obx(() {
+            if (_controller.isLoadingBookmarks.value) {
+              return ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: 6,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (_, __) => AppShimmer.listTile(count: 1),
+              );
+            }
 
-        final bookmarks = _controller.currentCollectionBookmarks;
-        if (bookmarks.isEmpty) {
-          return const Center(child: Text('No bookmarks in this collection.'));
-        }
+            final bookmarks = _controller.currentCollectionBookmarks;
+            if (bookmarks.isEmpty) {
+              return const Center(
+                child: Text('No bookmarks in this collection.'),
+              );
+            }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: bookmarks.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final bookmark = bookmarks[index];
-            final theme = Theme.of(context);
-            final nurColors = theme.extension<NurColorsExtension>();
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // Navigate to reader
-                  // Get.toNamed(Routes.READER, arguments: {'verseKey': bookmark.verseKey});
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+            return GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 380,
+                mainAxisExtent: 92,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+              ),
+              itemCount: bookmarks.length,
+              itemBuilder: (context, index) {
+                final bookmark = bookmarks[index];
+                final theme = Theme.of(context);
+                final nurColors = theme.extension<NurColorsExtension>();
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      // Navigate to reader
+                      // Get.toNamed(Routes.READER, arguments: {'verseKey': bookmark.verseKey});
+                    },
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color:
+                            nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.bookmark,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  bookmark.verseKey,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  bookmark.createdAt.toString(),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: nurColors?.foregroundSubtle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: theme.colorScheme.error,
+                            ),
+                            tooltip: 'Delete Bookmark',
+                            onPressed: () => _confirmDeleteBookmark(
+                              context,
+                              bookmark.verseKey,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.bookmark, color: theme.colorScheme.primary),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              bookmark.verseKey,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              bookmark.createdAt.toString(),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: nurColors?.foregroundSubtle,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                        tooltip: 'Delete Bookmark',
-                        onPressed: () => _confirmDeleteBookmark(context, bookmark.verseKey),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                );
+              },
             );
-          },
-        );
-      }),
+          }),
+        ),
+      ),
     );
   }
 
@@ -169,7 +196,7 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
             ),
           ],
         );
-      }
+      },
     );
   }
 
@@ -179,7 +206,9 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Delete Bookmark'),
-          content: const Text('Are you sure you want to delete this bookmark? This action cannot be undone.'),
+          content: const Text(
+            'Are you sure you want to delete this bookmark? This action cannot be undone.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -190,8 +219,13 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
                 _controller.deleteBookmark(verseKey);
                 Navigator.pop(context);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-              child: const Text('Delete', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );

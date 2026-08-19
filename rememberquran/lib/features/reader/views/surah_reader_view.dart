@@ -27,8 +27,8 @@ class SurahReaderView extends GetView<ReaderController> {
             icon: const Icon(Icons.search),
             tooltip: 'Quick Jump',
             onPressed: () => QuickJumpSheet.show(
-              context, 
-              currentChapterId: controller.chapter.value?.id
+              context,
+              currentChapterId: controller.chapter.value?.id,
             ),
           ),
           IconButton(
@@ -42,10 +42,7 @@ class SurahReaderView extends GetView<ReaderController> {
         mobile: _buildReaderContent(context),
         desktop: Row(
           children: [
-            SizedBox(
-              width: 300,
-              child: _buildSurahSidebar(context),
-            ),
+            SizedBox(width: 300, child: _buildSurahSidebar(context)),
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(child: _buildReaderContent(context)),
           ],
@@ -94,7 +91,8 @@ class SurahReaderView extends GetView<ReaderController> {
     return Obx(() {
       if (controller.hasError.value && controller.verses.isEmpty) {
         return AppErrorView(
-          message: "We couldn't load this surah. Check your connection and try again.",
+          message:
+              "We couldn't load this surah. Check your connection and try again.",
           onRetry: controller.retryLoadChapter,
         );
       }
@@ -110,19 +108,30 @@ class SurahReaderView extends GetView<ReaderController> {
         );
       }
 
-      return ScrollablePositionedList.builder(
-        itemCount: controller.verses.length,
-        itemScrollController: controller.itemScrollController,
-        itemPositionsListener: controller.itemPositionsListener,
-        padding: context.responsivePadding,
-        itemBuilder: (context, index) {
-          final verse = controller.verses[index];
-          return AyahBlock(
-            verse: verse,
-            words: controller.verseWords[verse.id] ?? [],
-            translations: controller.verseTranslations[verse.id] ?? [],
-          );
-        },
+      // Capped and centered like a book page — this builder runs both
+      // standalone (mobile, and tablet since there's no dedicated `tablet:`
+      // branch above so it falls back to this) and embedded in the desktop
+      // Row next to the sidebar, so the cap has to live here rather than
+      // only around the desktop branch.
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: ScrollablePositionedList.builder(
+            itemCount: controller.verses.length,
+            itemScrollController: controller.itemScrollController,
+            itemPositionsListener: controller.itemPositionsListener,
+            padding: context.responsivePadding,
+            itemBuilder: (context, index) {
+              final verse = controller.verses[index];
+              return AyahBlock(
+                verse: verse,
+                words: controller.verseWords[verse.id] ?? [],
+                translations: controller.verseTranslations[verse.id] ?? [],
+              );
+            },
+          ),
+        ),
       );
     });
   }

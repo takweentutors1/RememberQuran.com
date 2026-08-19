@@ -6,6 +6,7 @@ import 'package:rememberquran/core/theme/app_colors.dart';
 import 'package:rememberquran/data/models/goal.dart';
 import 'package:rememberquran/features/account/controllers/goals_controller.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
+import '../../../core/utils/responsive_layout.dart';
 
 class GoalsView extends GetView<GoalsController> {
   const GoalsView({super.key});
@@ -13,37 +14,40 @@ class GoalsView extends GetView<GoalsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daily Goals'),
-        centerTitle: true,
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return ListView(
-            padding: const EdgeInsets.all(24.0),
-            children: [
-              AppShimmer.card(height: 200),
-              const SizedBox(height: 24),
-              Row(
+      appBar: AppBar(title: const Text('Daily Goals'), centerTitle: true),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return ListView(
+                padding: const EdgeInsets.all(24.0),
                 children: [
-                  Expanded(child: AppShimmer.card(height: 100)),
-                  const SizedBox(width: 16),
-                  Expanded(child: AppShimmer.card(height: 100)),
+                  AppShimmer.card(height: 200),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: AppShimmer.card(height: 100)),
+                      const SizedBox(width: 16),
+                      Expanded(child: AppShimmer.card(height: 100)),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  AppShimmer.card(height: 150),
                 ],
-              ),
-              const SizedBox(height: 24),
-              AppShimmer.card(height: 150),
-            ],
-          );
-        }
+              );
+            }
 
-        final snapshot = controller.snapshot.value;
-        if (snapshot == null || snapshot.goal == null) {
-          return _buildNoGoalView(context);
-        }
+            final snapshot = controller.snapshot.value;
+            if (snapshot == null || snapshot.goal == null) {
+              return _buildNoGoalView(context);
+            }
 
-        return _buildGoalDashboard(context, snapshot);
-      }),
+            return _buildGoalDashboard(context, snapshot);
+          }),
+        ),
+      ),
     );
   }
 
@@ -62,17 +66,17 @@ class GoalsView extends GetView<GoalsController> {
             const SizedBox(height: 24),
             Text(
               'Set a Daily Goal',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
               'Build a consistent reading habit by setting a daily goal for Ayahs or Pages.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
@@ -80,7 +84,10 @@ class GoalsView extends GetView<GoalsController> {
               icon: const Icon(Icons.add),
               label: const Text('Create Goal'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -121,12 +128,20 @@ class GoalsView extends GetView<GoalsController> {
               showDialog(
                 context: context,
                 builder: (context) {
-                  final nurColors = Theme.of(context).extension<NurColorsExtension>();
+                  final nurColors = Theme.of(
+                    context,
+                  ).extension<NurColorsExtension>();
                   return AlertDialog(
-                    backgroundColor: nurColors?.surfaceSunk ?? Theme.of(context).colorScheme.surface,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    backgroundColor:
+                        nurColors?.surfaceSunk ??
+                        Theme.of(context).colorScheme.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                     title: const Text('Clear Goal'),
-                    content: const Text('Are you sure you want to remove your daily goal?'),
+                    content: const Text(
+                      'Are you sure you want to remove your daily goal?',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
@@ -139,13 +154,15 @@ class GoalsView extends GetView<GoalsController> {
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: Theme.of(context).colorScheme.error,
-                          foregroundColor: Theme.of(context).colorScheme.onError,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onError,
                         ),
                         child: const Text('Clear'),
                       ),
                     ],
                   );
-                }
+                },
               );
             },
             child: Text(
@@ -162,7 +179,9 @@ class GoalsView extends GetView<GoalsController> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).extension<NurColorsExtension>()?.surfaceSunk ?? Theme.of(context).colorScheme.surface,
+        color:
+            Theme.of(context).extension<NurColorsExtension>()?.surfaceSunk ??
+            Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
@@ -176,10 +195,7 @@ class GoalsView extends GetView<GoalsController> {
               color: Theme.of(context).colorScheme.primaryContainer,
               shape: BoxShape.circle,
             ),
-            child: Text(
-              '🔥',
-              style: const TextStyle(fontSize: 32),
-            ),
+            child: Text('🔥', style: const TextStyle(fontSize: 32)),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -189,19 +205,18 @@ class GoalsView extends GetView<GoalsController> {
                 Text(
                   '${snapshot.streak.currentStreak} Day Streak',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Longest: ${snapshot.streak.longestStreak} Days',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onPrimaryContainer
-                            .withOpacity(0.7),
-                      ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                  ),
                 ),
               ],
             ),
@@ -238,9 +253,9 @@ class GoalsView extends GetView<GoalsController> {
         children: [
           Text(
             'Today\'s Progress',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
           Stack(
@@ -252,8 +267,9 @@ class GoalsView extends GetView<GoalsController> {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 12,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   color: snapshot.metToday
                       ? nurColors.brandGold
                       : Theme.of(context).colorScheme.primary,
@@ -266,15 +282,15 @@ class GoalsView extends GetView<GoalsController> {
                   Text(
                     '$current',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: snapshot.metToday ? nurColors.brandGold : null,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: snapshot.metToday ? nurColors.brandGold : null,
+                    ),
                   ),
                   Text(
                     'of $target $unit',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -300,8 +316,8 @@ class GoalsView extends GetView<GoalsController> {
             Text(
               '${target - current} more to go!',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
         ],
       ),
@@ -324,16 +340,15 @@ class GoalsView extends GetView<GoalsController> {
         children: [
           Text(
             'Last 7 Days',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: snapshot.week.map((daily) {
-              final isToday =
-                  DateUtils.isSameDay(daily.date, DateTime.now());
+              final isToday = DateUtils.isSameDay(daily.date, DateTime.now());
               return Column(
                 children: [
                   Container(
@@ -343,7 +358,9 @@ class GoalsView extends GetView<GoalsController> {
                       shape: BoxShape.circle,
                       color: daily.met
                           ? nurColors.brandGold
-                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.1),
                       border: isToday
                           ? Border.all(
                               color: Theme.of(context).colorScheme.primary,
@@ -359,11 +376,11 @@ class GoalsView extends GetView<GoalsController> {
                   Text(
                     DateFormat('E').format(daily.date).substring(0, 1),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: isToday ? FontWeight.bold : null,
-                          color: isToday
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      fontWeight: isToday ? FontWeight.bold : null,
+                      color: isToday
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               );
@@ -375,10 +392,8 @@ class GoalsView extends GetView<GoalsController> {
   }
 
   void _showSetGoalBottomSheet(BuildContext context) {
-    showModalBottomSheet(
+    showResponsiveSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => const _SetGoalSheet(),
     );
   }
@@ -409,7 +424,7 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final nurColors = theme.extension<NurColorsExtension>();
-    
+
     return Container(
       decoration: BoxDecoration(
         color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
@@ -439,8 +454,8 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
           Text(
             'Set Daily Goal',
             style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -448,21 +463,26 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
             spacing: 12,
             runSpacing: 12,
             children: _presets.map((preset) {
-              final isSelected = _selectedType == preset['type'] && _customTarget == preset['target'];
+              final isSelected =
+                  _selectedType == preset['type'] &&
+                  _customTarget == preset['target'];
               return ChoiceChip(
                 label: Text(preset['label'] as String),
                 selected: isSelected,
-                selectedColor: nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer,
-                backgroundColor: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                selectedColor:
+                    nurColors?.brandGoldSoft ??
+                    theme.colorScheme.primaryContainer,
+                backgroundColor:
+                    nurColors?.surfaceSunk ?? theme.colorScheme.surface,
                 labelStyle: TextStyle(
-                  color: isSelected 
+                  color: isSelected
                       ? nurColors?.brandGold ?? theme.colorScheme.primary
                       : theme.colorScheme.onSurface,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: isSelected 
+                    color: isSelected
                         ? nurColors?.brandGold ?? theme.colorScheme.primary
                         : theme.dividerColor.withValues(alpha: 0.2),
                   ),
@@ -482,36 +502,30 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 16),
-          Text(
-            'Custom Goal',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
+          Text('Custom Goal', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: SegmentedButton<GoalType>(
                   segments: const [
-                    ButtonSegment(
-                      value: GoalType.pages,
-                      label: Text('Pages'),
-                    ),
-                    ButtonSegment(
-                      value: GoalType.ayahs,
-                      label: Text('Ayahs'),
-                    ),
+                    ButtonSegment(value: GoalType.pages, label: Text('Pages')),
+                    ButtonSegment(value: GoalType.ayahs, label: Text('Ayahs')),
                   ],
                   selected: {_selectedType},
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.selected)) {
-                        return nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer;
+                        return nurColors?.brandGoldSoft ??
+                            theme.colorScheme.primaryContainer;
                       }
-                      return nurColors?.surfaceSunk ?? theme.colorScheme.surface;
+                      return nurColors?.surfaceSunk ??
+                          theme.colorScheme.surface;
                     }),
                     foregroundColor: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.selected)) {
-                        return nurColors?.brandGold ?? theme.colorScheme.primary;
+                        return nurColors?.brandGold ??
+                            theme.colorScheme.primary;
                       }
                       return theme.colorScheme.onSurface;
                     }),
@@ -531,7 +545,10 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                   onChanged: (val) {
                     final num = int.tryParse(val);

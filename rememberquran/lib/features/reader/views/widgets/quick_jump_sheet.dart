@@ -5,6 +5,7 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../core/models/translation.dart';
 import '../../../../data/repositories/quran_repository.dart';
 import '../../../../data/datasources/local/quran_db.dart';
+import '../../../../core/utils/responsive_layout.dart';
 
 class QuickJumpSheet extends StatefulWidget {
   final int? currentChapterId;
@@ -12,10 +13,8 @@ class QuickJumpSheet extends StatefulWidget {
   const QuickJumpSheet({super.key, this.currentChapterId});
 
   static void show(BuildContext context, {int? currentChapterId}) {
-    showModalBottomSheet(
+    showResponsiveSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => QuickJumpSheet(currentChapterId: currentChapterId),
     );
   }
@@ -27,15 +26,15 @@ class QuickJumpSheet extends StatefulWidget {
 class _QuickJumpSheetState extends State<QuickJumpSheet> {
   final QuranRepository _quranRepo = Get.find<QuranRepository>();
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<Chapter> _allChapters = [];
   List<Chapter> _filteredChapters = [];
   bool _isLoading = true;
-  
+
   // 0 = Surah selection, 1 = Ayah selection
   int _step = 0;
   Chapter? _selectedChapter;
-  
+
   // Direct jump match (e.g. 2:255)
   String? _directJumpKey;
 
@@ -71,7 +70,7 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
 
   void _onSearchChanged() {
     final query = _searchController.text.trim().toLowerCase();
-    
+
     if (query.isEmpty) {
       setState(() {
         _filteredChapters = _allChapters;
@@ -85,10 +84,13 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
     if (directJumpMatch != null) {
       final surahId = int.tryParse(directJumpMatch.group(1) ?? '');
       final ayahId = int.tryParse(directJumpMatch.group(2) ?? '');
-      
+
       if (surahId != null && surahId >= 1 && surahId <= 114) {
         final chapter = _allChapters.firstWhereOrNull((c) => c.id == surahId);
-        if (chapter != null && ayahId != null && ayahId >= 1 && ayahId <= chapter.versesCount) {
+        if (chapter != null &&
+            ayahId != null &&
+            ayahId >= 1 &&
+            ayahId <= chapter.versesCount) {
           setState(() {
             _directJumpKey = '$surahId:$ayahId';
             _filteredChapters = []; // Hide surahs when valid jump is found
@@ -102,8 +104,8 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
       _directJumpKey = null;
       _filteredChapters = _allChapters.where((c) {
         return c.id.toString() == query ||
-               c.nameSimple.toLowerCase().contains(query) ||
-               c.nameArabic.toLowerCase().contains(query);
+            c.nameSimple.toLowerCase().contains(query) ||
+            c.nameArabic.toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -113,10 +115,20 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
     if (widget.currentChapterId == chapterId) {
       // We are already on this Surah, just update the route parameter
       // and the controller will handle scrolling.
-      Get.offNamed(Routes.SURAH_AYAH.replaceAll(':surahId', chapterId.toString()).replaceAll(':ayahId', ayahId.toString()), preventDuplicates: false);
+      Get.offNamed(
+        Routes.SURAH_AYAH
+            .replaceAll(':surahId', chapterId.toString())
+            .replaceAll(':ayahId', ayahId.toString()),
+        preventDuplicates: false,
+      );
     } else {
       // We need to navigate to a new Surah
-      Get.toNamed(Routes.SURAH_AYAH.replaceAll(':surahId', chapterId.toString()).replaceAll(':ayahId', ayahId.toString()), preventDuplicates: false);
+      Get.toNamed(
+        Routes.SURAH_AYAH
+            .replaceAll(':surahId', chapterId.toString())
+            .replaceAll(':ayahId', ayahId.toString()),
+        preventDuplicates: false,
+      );
     }
   }
 
@@ -145,9 +157,12 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
               ),
             ),
           ),
-          
+
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Row(
               children: [
                 if (_step == 1)
@@ -164,7 +179,9 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
                 Expanded(
                   child: Text(
                     _step == 0 ? 'Choose a Surah' : 'Choose an Ayah',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -178,7 +195,10 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
 
           if (_step == 0)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: TextField(
                 controller: _searchController,
                 autofocus: true,
@@ -194,12 +214,14 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
                 ),
               ),
             ),
-          
+
           if (_isLoading)
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else
             Expanded(
-              child: _step == 0 ? _buildSurahList(theme) : _buildAyahGrid(theme),
+              child: _step == 0
+                  ? _buildSurahList(theme)
+                  : _buildAyahGrid(theme),
             ),
         ],
       ),
@@ -211,7 +233,7 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
       final parts = _directJumpKey!.split(':');
       final cId = int.parse(parts[0]);
       final aId = int.parse(parts[1]);
-      
+
       return ListTile(
         leading: CircleAvatar(
           backgroundColor: theme.colorScheme.primaryContainer,
@@ -255,7 +277,10 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
           subtitle: Text('${chapter.versesCount} ayahs'),
           trailing: Text(
             chapter.nameArabic,
-            style: const TextStyle(fontFamily: 'Uthmani', fontSize: 18),
+            style: TextStyle(
+              fontFamily: 'Uthmani',
+              fontSize: context.responsiveBaseTextSize,
+            ),
           ),
           onTap: () {
             setState(() {
@@ -283,7 +308,10 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
         ),
         Expanded(
           child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 5,
               mainAxisSpacing: 12,

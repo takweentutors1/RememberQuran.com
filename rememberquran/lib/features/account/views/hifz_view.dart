@@ -22,18 +22,19 @@ class HifzView extends GetView<HifzController> {
             ],
           ),
         ),
-        body: Obx(() {
-          if (controller.isLoading.value) {
-            return AppShimmer.surahList(count: 6);
-          }
+        body: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return AppShimmer.surahList(count: 6);
+              }
 
-          return TabBarView(
-            children: [
-              _buildSurahList(),
-              _buildJuzList(),
-            ],
-          );
-        }),
+              return TabBarView(children: [_buildSurahList(), _buildJuzList()]);
+            }),
+          ),
+        ),
       ),
     );
   }
@@ -42,15 +43,20 @@ class HifzView extends GetView<HifzController> {
     final list = controller.surahProgress;
     if (list.isEmpty) return const SizedBox.shrink();
 
-    return ListView.separated(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 380,
+        mainAxisExtent: 112,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+      ),
       itemCount: list.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final progress = list[index];
         final theme = Theme.of(context);
         final nurColors = theme.extension<NurColorsExtension>();
-        
+
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -95,7 +101,9 @@ class HifzView extends GetView<HifzController> {
                       child: LinearProgressIndicator(
                         value: progress.percentage,
                         minHeight: 6,
-                        backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        backgroundColor: theme.colorScheme.outline.withValues(
+                          alpha: 0.1,
+                        ),
                         color: theme.colorScheme.primary,
                       ),
                     ),
@@ -114,7 +122,9 @@ class HifzView extends GetView<HifzController> {
                 '${(progress.percentage * 100).toStringAsFixed(1)}%',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: progress.percentage == 1.0 ? theme.colorScheme.primary : null,
+                  color: progress.percentage == 1.0
+                      ? theme.colorScheme.primary
+                      : null,
                 ),
               ),
             ],
@@ -128,15 +138,20 @@ class HifzView extends GetView<HifzController> {
     final list = controller.juzProgress;
     if (list.isEmpty) return const SizedBox.shrink();
 
-    return ListView.separated(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 380,
+        mainAxisExtent: 112,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+      ),
       itemCount: list.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final progress = list[index];
         final theme = Theme.of(context);
         final nurColors = theme.extension<NurColorsExtension>();
-        
+
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -181,7 +196,9 @@ class HifzView extends GetView<HifzController> {
                       child: LinearProgressIndicator(
                         value: progress.percentage,
                         minHeight: 6,
-                        backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        backgroundColor: theme.colorScheme.outline.withValues(
+                          alpha: 0.1,
+                        ),
                         color: theme.colorScheme.primary,
                       ),
                     ),
@@ -200,7 +217,9 @@ class HifzView extends GetView<HifzController> {
                 '${(progress.percentage * 100).toStringAsFixed(1)}%',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: progress.percentage == 1.0 ? theme.colorScheme.primary : null,
+                  color: progress.percentage == 1.0
+                      ? theme.colorScheme.primary
+                      : null,
                 ),
               ),
             ],

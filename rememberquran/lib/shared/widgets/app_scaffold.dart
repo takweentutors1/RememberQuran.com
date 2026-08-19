@@ -37,7 +37,12 @@ class AppScaffold extends StatelessWidget {
                 ],
               )),
         ),
-        const MiniPlayer(),
+        // The Radio tab is its own full player (art card, play/pause,
+        // skip controls) — showing the MiniPlayer on top of it duplicates
+        // those controls, so hide it only while that tab is selected.
+        Obx(() => controller.rxSelectedIndex.value == 1
+            ? const SizedBox.shrink()
+            : const MiniPlayer()),
         Obx(() => BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               currentIndex: controller.rxSelectedIndex.value,
@@ -89,7 +94,9 @@ class AppScaffold extends StatelessWidget {
             ],
           ),
         ),
-        const MiniPlayer(),
+        Obx(() => controller.rxSelectedIndex.value == 1
+            ? const SizedBox.shrink()
+            : const MiniPlayer()),
       ],
     );
   }

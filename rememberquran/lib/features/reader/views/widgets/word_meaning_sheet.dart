@@ -104,7 +104,6 @@ class _WordMeaningSheetState extends State<WordMeaningSheet> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  fontStyle: FontStyle.italic,
                   color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                 ),
               ),

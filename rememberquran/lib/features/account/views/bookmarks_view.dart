@@ -23,10 +23,7 @@ class BookmarksView extends GetView<BookmarksController> {
       ),
       body: TabBarView(
         controller: controller.tabController,
-        children: [
-          _buildCollectionsTab(context),
-          _buildNotesTab(context),
-        ],
+        children: [_buildCollectionsTab(context), _buildNotesTab(context)],
       ),
       floatingActionButton: Obx(() {
         if (controller.tabIndex.value == 0) {
@@ -45,7 +42,7 @@ class BookmarksView extends GetView<BookmarksController> {
       if (controller.isLoading.value) {
         return AppShimmer.listTile(count: 3);
       }
-      
+
       final collections = controller.collections;
       if (collections.isEmpty) {
         return const Center(child: Text('No collections yet.'));
@@ -55,10 +52,18 @@ class BookmarksView extends GetView<BookmarksController> {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
-          child: ListView.separated(
+          // maxCrossAxisExtent below 380 naturally collapses to a single
+          // column on phones (375px < 380) without needing a breakpoint
+          // check — the same self-adapting pattern account_home_view uses.
+          child: GridView.builder(
             padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 380,
+              mainAxisExtent: 92,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+            ),
             itemCount: collections.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final collection = collections[index];
               final theme = Theme.of(context);
@@ -67,13 +72,17 @@ class BookmarksView extends GetView<BookmarksController> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    Get.toNamed(Routes.ACCOUNT_COLLECTION_DETAILS, arguments: collection.id);
+                    Get.toNamed(
+                      Routes.ACCOUNT_COLLECTION_DETAILS,
+                      arguments: collection.id,
+                    );
                   },
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                      color:
+                          nurColors?.surfaceSunk ?? theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: theme.colorScheme.outline.withValues(alpha: 0.1),
@@ -84,14 +93,20 @@ class BookmarksView extends GetView<BookmarksController> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: collection.isDefault 
-                                ? Colors.red.withValues(alpha: 0.1) 
-                                : theme.colorScheme.primary.withValues(alpha: 0.1),
+                            color: collection.isDefault
+                                ? Colors.red.withValues(alpha: 0.1)
+                                : theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            collection.isDefault ? Icons.favorite : Icons.folder,
-                            color: collection.isDefault ? Colors.red : theme.colorScheme.primary,
+                            collection.isDefault
+                                ? Icons.favorite
+                                : Icons.folder,
+                            color: collection.isDefault
+                                ? Colors.red
+                                : theme.colorScheme.primary,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -117,9 +132,15 @@ class BookmarksView extends GetView<BookmarksController> {
                         ),
                         if (!collection.isDefault)
                           IconButton(
-                            icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: theme.colorScheme.error,
+                            ),
                             tooltip: 'Delete Collection',
-                            onPressed: () => _confirmDeleteCollection(context, collection.id),
+                            onPressed: () => _confirmDeleteCollection(
+                              context,
+                              collection.id,
+                            ),
                           ),
                       ],
                     ),
@@ -138,7 +159,7 @@ class BookmarksView extends GetView<BookmarksController> {
       if (controller.isLoading.value) {
         return AppShimmer.listTile(count: 3);
       }
-      
+
       final notes = controller.notes;
       if (notes.isEmpty) {
         return const Center(child: Text('No notes yet.'));
@@ -148,10 +169,15 @@ class BookmarksView extends GetView<BookmarksController> {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
-          child: ListView.separated(
+          child: GridView.builder(
             padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 380,
+              mainAxisExtent: 112,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+            ),
             itemCount: notes.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final note = notes[index];
               final theme = Theme.of(context);
@@ -200,9 +226,13 @@ class BookmarksView extends GetView<BookmarksController> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: theme.colorScheme.error,
+                      ),
                       tooltip: 'Delete Note',
-                      onPressed: () => _confirmDeleteNote(context, note.verseKey),
+                      onPressed: () =>
+                          _confirmDeleteNote(context, note.verseKey),
                     ),
                   ],
                 ),
@@ -243,7 +273,7 @@ class BookmarksView extends GetView<BookmarksController> {
             ),
           ],
         );
-      }
+      },
     );
   }
 
@@ -253,7 +283,9 @@ class BookmarksView extends GetView<BookmarksController> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Delete Collection?'),
-          content: const Text('Are you sure you want to delete this collection? Any bookmarks inside will be moved to Favourites.'),
+          content: const Text(
+            'Are you sure you want to delete this collection? Any bookmarks inside will be moved to Favourites.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -264,8 +296,13 @@ class BookmarksView extends GetView<BookmarksController> {
                 controller.deleteCollection(collectionId);
                 Navigator.pop(context);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-              child: const Text('Delete', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -279,7 +316,9 @@ class BookmarksView extends GetView<BookmarksController> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Delete Note'),
-          content: const Text('Are you sure you want to delete this note? This action cannot be undone.'),
+          content: const Text(
+            'Are you sure you want to delete this note? This action cannot be undone.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -290,8 +329,13 @@ class BookmarksView extends GetView<BookmarksController> {
                 controller.deleteNote(verseKey);
                 Navigator.pop(context);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-              child: const Text('Delete', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );

@@ -19,76 +19,101 @@ class LoginView extends GetView<AuthController> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(Icons.lock_outline, size: 64, color: nurColors?.brandGold ?? theme.colorScheme.primary),
-              const SizedBox(height: 32),
-              Obx(() => controller.error.value.isNotEmpty
-                  ? Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            // Without this, crossAxisAlignment.stretch below stretches
+            // every field to the full screen width — fine on a phone, but
+            // an edge-to-edge 1000px+ login form on a tablet/desktop.
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  Icons.lock_outline,
+                  size: 64,
+                  color: nurColors?.brandGold ?? theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 32),
+                Obx(
+                  () => controller.error.value.isNotEmpty
+                      ? Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            controller.error.value,
+                            style: TextStyle(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    filled: true,
+                    fillColor:
+                        nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
                       ),
-                      child: Text(
-                        controller.error.value,
-                        style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
                       ),
-                    )
-                  : const SizedBox.shrink()),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  filled: true,
-                  fillColor: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                    ),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.password_outlined),
+                    filled: true,
+                    fillColor:
+                        nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Get.toNamed(Routes.RESET_PASSWORD),
+                    child: const Text('Forgot Password?'),
                   ),
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.password_outlined),
-                  filled: true,
-                  fillColor: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
-                  ),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Get.toNamed(Routes.RESET_PASSWORD),
-                  child: const Text('Forgot Password?'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Obx(() => ElevatedButton(
+                const SizedBox(height: 16),
+                Obx(
+                  () => ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: nurColors?.brandGold ?? theme.colorScheme.primary,
+                      backgroundColor:
+                          nurColors?.brandGold ?? theme.colorScheme.primary,
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -97,9 +122,9 @@ class LoginView extends GetView<AuthController> {
                     onPressed: controller.isLoading.value
                         ? null
                         : () => controller.login(
-                              emailController.text.trim(),
-                              passwordController.text,
-                            ),
+                            emailController.text.trim(),
+                            passwordController.text,
+                          ),
                     child: controller.isLoading.value
                         ? const SizedBox(
                             width: 20,
@@ -107,19 +132,21 @@ class LoginView extends GetView<AuthController> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Text('LOGIN'),
-                  )),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account?"),
-                  TextButton(
-                    onPressed: () => Get.toNamed(Routes.REGISTER),
-                    child: const Text('Register'),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account?"),
+                    TextButton(
+                      onPressed: () => Get.toNamed(Routes.REGISTER),
+                      child: const Text('Register'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

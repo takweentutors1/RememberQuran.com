@@ -12,38 +12,60 @@ class ReadingModeView extends GetView<ReaderController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Obx(() => Text(controller.chapter.value?.nameSimple ?? 'Loading...')),
+        title: Obx(
+          () => Text(controller.chapter.value?.nameSimple ?? 'Loading...'),
+        ),
         centerTitle: true,
         actions: [
-          IconButton(icon: const Icon(Icons.settings), tooltip: 'Settings', onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {},
+          ),
         ],
       ),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.verses.isEmpty) {
-          return AppShimmer.ayahList(count: 8);
-        }
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          // Narrower than the usual 800px dashboard cap — this is running
+          // Arabic text, and edge-to-edge lines on a tablet/desktop hurt
+          // readability more than a wide list ever would.
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: Obx(() {
+            if (controller.isLoading.value && controller.verses.isEmpty) {
+              return AppShimmer.ayahList(count: 8);
+            }
 
-        return ScrollablePositionedList.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-          itemCount: controller.verses.length,
-          itemScrollController: controller.itemScrollController,
-          itemPositionsListener: controller.itemPositionsListener,
-          itemBuilder: (context, index) {
-            final verse = controller.verses[index];
-            final words = controller.verseWords[verse.id] ?? [];
-            
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: Wrap(
-                spacing: 6.0,
-                runSpacing: 16.0,
-                alignment: WrapAlignment.start,
-                children: words.map((w) => ArabicWord(word: w, verseKey: verse.verseKey)).toList(),
+            return ScrollablePositionedList.builder(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 24.0,
               ),
+              itemCount: controller.verses.length,
+              itemScrollController: controller.itemScrollController,
+              itemPositionsListener: controller.itemPositionsListener,
+              itemBuilder: (context, index) {
+                final verse = controller.verses[index];
+                final words = controller.verseWords[verse.id] ?? [];
+
+                return Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Wrap(
+                    spacing: 6.0,
+                    runSpacing: 16.0,
+                    alignment: WrapAlignment.start,
+                    children: words
+                        .map(
+                          (w) => ArabicWord(word: w, verseKey: verse.verseKey),
+                        )
+                        .toList(),
+                  ),
+                );
+              },
             );
-          },
-        );
-      }),
+          }),
+        ),
+      ),
     );
   }
 }

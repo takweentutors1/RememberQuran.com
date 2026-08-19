@@ -4,6 +4,7 @@ import '../../../../shared/widgets/loading_skeleton.dart';
 import '../../../account/controllers/notes_controller.dart';
 import '../../../../data/models/note.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive_layout.dart';
 
 class NoteSheet extends StatefulWidget {
   final int chapterId;
@@ -16,14 +17,10 @@ class NoteSheet extends StatefulWidget {
   });
 
   static void show(BuildContext context, int chapterId, int verseNumber) {
-    showModalBottomSheet(
+    showResponsiveSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => NoteSheet(
-        chapterId: chapterId,
-        verseNumber: verseNumber,
-      ),
+      builder: (context) =>
+          NoteSheet(chapterId: chapterId, verseNumber: verseNumber),
     );
   }
 
@@ -34,7 +31,7 @@ class NoteSheet extends StatefulWidget {
 class _NoteSheetState extends State<NoteSheet> {
   final NotesController _notesController = Get.find<NotesController>();
   final TextEditingController _textController = TextEditingController();
-  
+
   bool _isLoading = true;
   bool _isSaving = false;
   String _verseKey = '';
@@ -76,22 +73,26 @@ class _NoteSheetState extends State<NoteSheet> {
     });
 
     final outcome = await _notesController.saveNote(_verseKey, text);
-    
+
     if (mounted) {
       setState(() {
         _isSaving = false;
       });
-      
+
       if (outcome['ok'] == true) {
         Get.back();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Your reflection has been safely stored.')),
+          const SnackBar(
+            content: Text('Your reflection has been safely stored.'),
+          ),
         );
       } else {
-        final error = outcome['error'] == 'limit-reached' 
+        final error = outcome['error'] == 'limit-reached'
             ? 'Note limit reached. Please delete some notes before adding more.'
             : 'Failed to save note. Please try again.';
-        final displayError = error.contains('limit') ? error : 'We couldn\'t save your reflection. Please check your connection and try again.';
+        final displayError = error.contains('limit')
+            ? error
+            : 'We couldn\'t save your reflection. Please check your connection and try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(displayError), backgroundColor: Colors.red),
         );
@@ -103,7 +104,7 @@ class _NoteSheetState extends State<NoteSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final nurColors = theme.extension<NurColorsExtension>();
-    
+
     return Container(
       decoration: BoxDecoration(
         color: nurColors?.surfaceSunk ?? theme.scaffoldBackgroundColor,
@@ -137,13 +138,15 @@ class _NoteSheetState extends State<NoteSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           if (_isLoading)
             const AppShimmer(
               child: SizedBox(
                 height: 120,
                 width: double.infinity,
-                child: DecoratedBox(decoration: BoxDecoration(color: Colors.white)),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: Colors.white),
+                ),
               ),
             )
           else
@@ -160,32 +163,37 @@ class _NoteSheetState extends State<NoteSheet> {
                 fillColor: theme.colorScheme.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                  ),
                 ),
               ),
             ),
-            
+
           const SizedBox(height: 24),
-          
+
           ElevatedButton(
             onPressed: _isSaving ? null : _saveNote,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: nurColors?.brandGold ?? theme.colorScheme.primary,
+              backgroundColor:
+                  nurColors?.brandGold ?? theme.colorScheme.primary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: _isSaving 
+            child: _isSaving
                 ? const SizedBox(
-                    width: 24, 
-                    height: 24, 
-                    child: CircularProgressIndicator(strokeWidth: 2)
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Text(
                     'Save Note',

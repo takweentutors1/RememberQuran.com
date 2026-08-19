@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../account/controllers/auth_controller.dart';
+import '../../../core/utils/responsive_layout.dart';
 
 class ContinueReadingCard extends GetView<AuthController> {
   const ContinueReadingCard({Key? key}) : super(key: key);
@@ -28,7 +29,9 @@ class ContinueReadingCard extends GetView<AuthController> {
             Get.toNamed('/surah/${pos.surahId}?ayahId=${pos.ayahId}');
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(
+              context.rv(mobile: 20.0, tablet: 24.0, desktop: 28.0),
+            ),
             child: Row(
               children: [
                 Container(
@@ -59,8 +62,12 @@ class ContinueReadingCard extends GetView<AuthController> {
                       const SizedBox(height: 4),
                       Text(
                         'Surah ${pos.surahId}, Ayah ${pos.ayahId}',
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: TextStyle(
+                          fontSize: context.rv(
+                            mobile: 18.0,
+                            tablet: 20.0,
+                            desktop: 22.0,
+                          ),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/responsive_layout.dart';
 
 class AccountHomeView extends GetView<AuthController> {
   const AccountHomeView({Key? key}) : super(key: key);
@@ -11,7 +12,10 @@ class AccountHomeView extends GetView<AuthController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Account', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          'My Account',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
       ),
       body: Align(
@@ -22,17 +26,23 @@ class AccountHomeView extends GetView<AuthController> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
                   child: _buildAuthHeader(context),
                 ),
               ),
-              const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     'Dashboard',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: context.responsiveBaseTextSize,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),
@@ -108,7 +118,11 @@ class AccountHomeView extends GetView<AuthController> {
           color: nurColors?.surfaceSunk ?? theme.colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: nurColors?.borderStrong ?? theme.dividerColor.withValues(alpha: 0.1)),
+            side: BorderSide(
+              color:
+                  nurColors?.borderStrong ??
+                  theme.dividerColor.withValues(alpha: 0.1),
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -116,7 +130,9 @@ class AccountHomeView extends GetView<AuthController> {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
                   child: Text(
                     user.email?.substring(0, 1).toUpperCase() ?? 'U',
                     style: TextStyle(
@@ -134,14 +150,13 @@ class AccountHomeView extends GetView<AuthController> {
                       Text(
                         'Assalamu Alaikum,',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Text(
                         user.email ?? 'User',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -156,7 +171,8 @@ class AccountHomeView extends GetView<AuthController> {
                   onPressed: () async {
                     try {
                       await controller.isLoading(true);
-                      await controller.firebaseUser.value?.uid != null; // Dummy await check
+                      await controller.firebaseUser.value?.uid !=
+                          null; // Dummy await check
                       // Actually call signout from firebase auth
                       // await FirebaseAuth.instance.signOut();
                       // We can just rely on standard Firebase Auth signout or prompt the user.
@@ -169,8 +185,8 @@ class AccountHomeView extends GetView<AuthController> {
                         cancelTextColor: Theme.of(context).colorScheme.primary,
                         buttonColor: Theme.of(context).colorScheme.primary,
                         onConfirm: () {
-                           Get.back();
-                           controller.logout();
+                          Get.back();
+                          controller.logout();
                         },
                       );
                     } finally {
@@ -186,23 +202,33 @@ class AccountHomeView extends GetView<AuthController> {
         // Not Logged In State
         return Card(
           elevation: 0,
-          color: nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+          color:
+              nurColors?.brandGoldSoft ??
+              theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 20.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.sync_rounded, color: Theme.of(context).colorScheme.primary, size: 28),
+                    Icon(
+                      Icons.sync_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Sync Your Progress',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: Theme.of(context).colorScheme.primary,
                             ),
@@ -214,8 +240,8 @@ class AccountHomeView extends GetView<AuthController> {
                 Text(
                   'Sign in to sync your bookmarks, notes, and memorization progress across all your devices securely.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -243,7 +269,12 @@ class AccountHomeView extends GetView<AuthController> {
     });
   }
 
-  Widget _buildDashboardCard(BuildContext context, {required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildDashboardCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     final theme = Theme.of(context);
     final nurColors = theme.extension<NurColorsExtension>();
     return Card(
@@ -252,7 +283,11 @@ class AccountHomeView extends GetView<AuthController> {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: nurColors?.borderStrong ?? theme.dividerColor.withValues(alpha: 0.08)),
+        side: BorderSide(
+          color:
+              nurColors?.borderStrong ??
+              theme.dividerColor.withValues(alpha: 0.08),
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -265,10 +300,16 @@ class AccountHomeView extends GetView<AuthController> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: nurColors?.brandGoldSoft ?? theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color:
+                      nurColors?.brandGoldSoft ??
+                      theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: nurColors?.brandGold ?? theme.colorScheme.primary, size: 24),
+                child: Icon(
+                  icon,
+                  color: nurColors?.brandGold ?? theme.colorScheme.primary,
+                  size: 24,
+                ),
               ),
               Text(
                 title,

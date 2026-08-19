@@ -3,22 +3,17 @@ import 'package:get/get.dart';
 import '../../controllers/asbab_controller.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive_layout.dart';
 
 class AsbabSheet extends StatefulWidget {
   final int surahId;
   final int ayahId;
 
-  const AsbabSheet({
-    super.key,
-    required this.surahId,
-    required this.ayahId,
-  });
+  const AsbabSheet({super.key, required this.surahId, required this.ayahId});
 
   static void show(BuildContext context, int surahId, int ayahId) {
-    showModalBottomSheet(
+    showResponsiveSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => AsbabSheet(surahId: surahId, ayahId: ayahId),
     );
   }
@@ -45,7 +40,11 @@ class _AsbabSheetState extends State<AsbabSheet> {
       builder: (_, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).extension<NurColorsExtension>()?.surfaceSunk ?? Theme.of(context).scaffoldBackgroundColor,
+            color:
+                Theme.of(
+                  context,
+                ).extension<NurColorsExtension>()?.surfaceSunk ??
+                Theme.of(context).scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -60,20 +59,29 @@ class _AsbabSheetState extends State<AsbabSheet> {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               // Header
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Text('Asbab al-Nuzul', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Asbab al-Nuzul',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Spacer(),
-                    Text('Reasons for Revelation', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    Text(
+                      'Reasons for Revelation',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
                   ],
                 ),
               ),
               const Divider(),
-              
+
               // Content
               Expanded(
                 child: Obx(() {
@@ -93,7 +101,9 @@ class _AsbabSheetState extends State<AsbabSheet> {
                     );
                   }
                   if (_controller.rxError.value != null) {
-                    final isNotFound = _controller.rxError.value!.contains('No Asbab');
+                    final isNotFound = _controller.rxError.value!.contains(
+                      'No Asbab',
+                    );
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(32.0),
@@ -101,27 +111,38 @@ class _AsbabSheetState extends State<AsbabSheet> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              isNotFound ? Icons.menu_book_rounded : Icons.error_outline_rounded,
+                              isNotFound
+                                  ? Icons.menu_book_rounded
+                                  : Icons.error_outline_rounded,
                               size: 64,
-                              color: isNotFound 
-                                  ? Theme.of(context).colorScheme.onSurface.withOpacity(0.2)
-                                  : Theme.of(context).colorScheme.error.withOpacity(0.8),
+                              color: isNotFound
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.2)
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.error.withOpacity(0.8),
                             ),
                             const SizedBox(height: 24),
                             Text(
                               isNotFound ? 'No Record Found' : 'Oops!',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                              ),
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.8),
+                                  ),
                             ),
                             const SizedBox(height: 12),
                             Text(
                               _controller.rxError.value!,
                               style: TextStyle(
-                                color: isNotFound 
-                                    ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
-                                    : Theme.of(context).colorScheme.error, 
+                                color: isNotFound
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.6)
+                                    : Theme.of(context).colorScheme.error,
                                 fontSize: 16,
                                 height: 1.5,
                               ),
@@ -138,9 +159,18 @@ class _AsbabSheetState extends State<AsbabSheet> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.hourglass_empty_rounded, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+                          Icon(
+                            Icons.hourglass_empty_rounded,
+                            size: 48,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.2),
+                          ),
                           const SizedBox(height: 16),
-                          const Text('No data found.', style: TextStyle(color: Colors.grey)),
+                          const Text(
+                            'No data found.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ],
                       ),
                     );
@@ -149,7 +179,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
                   // Parse the actual Asbab API response
                   // QDC Asbab payload usually has { "asbabs": [ { "text": "...", "author_name": "..." }, ... ] }
                   final asbabs = data['asbabs'] as List<dynamic>? ?? [];
-                  
+
                   if (asbabs.isEmpty) {
                     return Center(
                       child: Padding(
@@ -160,21 +190,28 @@ class _AsbabSheetState extends State<AsbabSheet> {
                             Icon(
                               Icons.menu_book_rounded,
                               size: 64,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.2),
                             ),
                             const SizedBox(height: 24),
                             Text(
                               'No Record Found',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                              ),
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.8),
+                                  ),
                             ),
                             const SizedBox(height: 12),
                             Text(
                               'No Asbab al-Nuzul recorded for this verse.',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), 
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
                                 fontSize: 16,
                                 height: 1.5,
                               ),
@@ -197,8 +234,9 @@ class _AsbabSheetState extends State<AsbabSheet> {
                     itemBuilder: (_, index) {
                       final item = asbabs[index] as Map<String, dynamic>;
                       final text = item['text'] ?? '';
-                      final author = item['author_name'] ?? item['source'] ?? '';
-                      
+                      final author =
+                          item['author_name'] ?? item['source'] ?? '';
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -206,9 +244,8 @@ class _AsbabSheetState extends State<AsbabSheet> {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
-                                author, 
+                                author,
                                 style: const TextStyle(
-                                  fontStyle: FontStyle.italic, 
                                   color: Colors.grey,
                                   fontWeight: FontWeight.bold,
                                 ),
