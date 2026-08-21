@@ -11,8 +11,9 @@ like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 RQM-01's gap has since been fixed, and RQM-14's code-fixable portion has too
 (though its actual reported symptom needs a Firebase console check, not a
-code fix). Ten are genuine bugs or missing features; six of those (RQM-02,
-RQM-05, RQM-06, RQM-08, RQM-09, RQM-12) have since been fixed too, four
+code fix). Ten are genuine bugs or missing features; seven of those (RQM-02,
+RQM-05, RQM-06, RQM-08, RQM-09, RQM-12, RQM-15) have since been fixed too,
+three
 still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
@@ -311,16 +312,30 @@ Noun / lemma اسْم / root سمو (matches known Arabic grammar), and a
 nonexistent key resolves to `null` cleanly rather than throwing.
 
 ### RQM-15 — Bookmark collection assignment not available while saving
-**Confirmed missing.** The data model and repository already fully support
-multiple collections (`moveBookmark(userId, verseKey, collectionId)` exists
-and works), but the only place a bookmark actually gets created —
-`toggleBookmark()` in the reader — always passes `null`, which the repository
-then defaults straight to Favourites. There's no collection-picker UI
-anywhere, and `moveBookmark` is never called from any screen. **Fix
-location:** add a collection picker (sheet/dropdown) triggered from the
-bookmark action in `ayah_block.dart`/`reader_controller.dart`, and/or wire the
-existing `moveBookmark` method to a "move to collection" action on the
-bookmarks screen.
+**STATUS: Fixed (commit `8096a98`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually click through it. Worth a real re-test: bookmark a fresh ayah,
+confirm the collection picker appears, create a new collection inline and
+confirm it's selected, then check the bookmarks page shows it under the
+right collection with the right count.
+
+The data model and repository already fully supported multiple collections
+(`createBookmark`/`moveBookmark` both take an explicit `collectionId`), but
+the only place a bookmark actually got created — `toggleBookmark()` in the
+reader — always passed `null`, which the repository then defaulted straight
+to Favourites. There was no collection-picker UI anywhere. **Fix applied:**
+new `CollectionPickerSheet` — lists existing collections (with bookmark
+counts, Favourites starred) to tap, or a name field to create-and-select a
+new one inline — shown only on the *create* path (removing an existing
+bookmark stays a single fast tap, unchanged). `toggleBookmark()` now takes an
+optional `collectionId`, passed straight through; omitting it keeps the
+exact prior default-to-Favourites behavior, so nothing else that might call
+it breaks. Didn't need to touch the bookmarks display page — it already
+correctly filters bookmarks per collection; every non-Favourites collection
+was simply always empty because nothing was ever being saved into it. Left
+`moveBookmark` (re-assigning an *existing* bookmark to a different
+collection after the fact) unaddressed — that's a distinct, smaller
+follow-up if wanted, not part of what RQM-15 asked for.
 
 ### RQM-16 — Clicking a bookmark doesn't open the ayah
 **Confirmed — and it's about as clear-cut as a bug gets.** The bookmark
@@ -374,8 +389,7 @@ math, and the screen) is already done.
 1. **RQM-16** (bookmark tap) — smallest, clearest fix; broken navigation with
    an already-correct pattern to copy from elsewhere in the same codebase.
 2. ~~RQM-08, RQM-12~~ — done.
-3. ~~RQM-05, RQM-06~~ — done. **RQM-15** still straightforward additive UI, no
-   architectural rework.
+3. ~~RQM-05, RQM-06, RQM-15~~ — done.
 5. ~~RQM-02, RQM-09~~ — both done (same file, same underlying
    single-continuous-track architecture).
 6. **RQM-18, RQM-19** — larger scope (branding asset + save flow; memorisation
