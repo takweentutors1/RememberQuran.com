@@ -7,6 +7,7 @@ import '../../../reader/controllers/reader_controller.dart';
 import '../../../../core/models/reciter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_layout.dart';
+import '../../widgets/reciter_selector.dart';
 import 'radio_art_card.dart';
 
 class AudioPlayerSheet extends StatefulWidget {
@@ -188,13 +189,31 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
-          Text(
-            reciter.name,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: brandGold,
-              fontWeight: FontWeight.w600,
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => showReciterPicker(
+              context: context,
+              selectedReciterId: _audioController.rxCurrentReciterId.value,
+              onReciterSelected: _audioController.changeReciter,
             ),
-            textAlign: TextAlign.center,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    reciter.name,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: brandGold,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(Icons.expand_more, size: 18, color: brandGold),
+                ],
+              ),
+            ),
           ),
         ],
       );

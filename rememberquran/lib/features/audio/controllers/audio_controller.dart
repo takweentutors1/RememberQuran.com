@@ -986,4 +986,44 @@ class AudioController extends GetxController {
     // Ensure we start playing if paused or completed
     unawaited(_audioHandler.play());
   }
+
+  /// Switches reciters. Radio mode already had a picker (RadioView); the
+  /// reading-mode "Now Playing" sheet did not, so a chapter played from the
+  /// reader had no way to change reciters at all. In Radio mode this
+  /// restarts the current surah with the new reciter, matching
+  /// RadioView's existing behaviour. Otherwise it reloads whatever chapter
+  /// is currently playing with the new reciter's audio and resumes from the
+  /// same ayah, so switching reciters mid-recitation doesn't reset you back
+  /// to the start of the surah.
+  Future<void> changeReciter(int newReciterId) async {
+    if (rxCurrentReciterId.value == newReciterId) return;
+    rxCurrentReciterId.value = newReciterId;
+
+    if (rxIsRadioMode.value) {
+      await startRadio(rxCurrentSurahId.value);
+      return;
+    }
+
+    final surahId = _lastSurahId;
+    if (surahId == null) return;
+
+    final resumeVerseNumber =
+        int.tryParse(rxActiveVerseKey.value?.split(':').last ?? '');
+
+    await _loadAndPlayChapter(surahId);
+    if (_timingFetchFuture != null) {
+      await _timingFetchFuture;
+    }
+
+    if (resumeVerseNumber != null) {
+      final timing = _findTiming(resumeVerseNumber);
+      if (timing != null) {
+        await _audioHandler.seek(Duration(milliseconds: timing.from));
+        _lastVerseIdx = -1;
+        _lastWordPos = null;
+        rxActiveVerseKey.value = timing.verseKey;
+        rxActiveWordPosition.value = null;
+      }
+    }
+  }
 }

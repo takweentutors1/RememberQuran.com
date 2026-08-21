@@ -7,11 +7,11 @@ import '../../../core/models/reciter.dart';
 import '../../../data/repositories/quran_repository.dart';
 import '../../../data/datasources/local/quran_db.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/widgets/loading_skeleton.dart';
 import 'widgets/radio_art_card.dart';
 import 'widgets/radio_facts.dart';
 import 'widgets/waveform_bars.dart';
 import '../../../core/utils/responsive_layout.dart';
+import '../widgets/reciter_selector.dart';
 
 class RadioView extends StatefulWidget {
   const RadioView({super.key});
@@ -904,88 +904,10 @@ class _RadioViewState extends State<RadioView> {
   }
 
   void _showReciterPicker(BuildContext context) {
-    showResponsiveSheet(
+    showReciterPicker(
       context: context,
-      builder: (context) {
-        final theme = Theme.of(context);
-        final nurColors = theme.extension<NurColorsExtension>();
-        final brandGold = nurColors?.brandGold ?? theme.colorScheme.primary;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.outline.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Select Reciter',
-                    style: TextStyle(
-                      fontSize: context.responsiveBaseTextSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: reciters.length,
-                    itemBuilder: (context, index) {
-                      final r = reciters[index];
-                      final isSelected = r.id == _selectedReciterId;
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isSelected
-                              ? brandGold.withOpacity(0.2)
-                              : theme.cardColor,
-                          child: Icon(
-                            Icons.person,
-                            color: isSelected
-                                ? brandGold
-                                : theme.iconTheme.color,
-                          ),
-                        ),
-                        title: Text(
-                          r.name,
-                          style: TextStyle(
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        subtitle: Text(
-                          'Riwaya: ${r.style}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: isSelected
-                            ? Icon(Icons.check_circle, color: brandGold)
-                            : null,
-                        onTap: () {
-                          Navigator.pop(context);
-                          _handleReciterChange(r.id);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      selectedReciterId: _selectedReciterId,
+      onReciterSelected: _handleReciterChange,
     );
   }
 
