@@ -8,6 +8,7 @@ import 'widgets/reader_settings_sheet.dart';
 import 'widgets/quick_jump_sheet.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../../core/utils/responsive_layout.dart';
+import '../../audio/views/mini_player.dart';
 
 class SurahReaderView extends GetView<ReaderController> {
   const SurahReaderView({Key? key}) : super(key: key);
@@ -70,6 +71,13 @@ class SurahReaderView extends GetView<ReaderController> {
           ],
         ),
       ),
+      // The reader is a separate full-screen route from AppScaffold's tab
+      // shell, which is the only other place MiniPlayer was mounted — so
+      // playback appeared to have no persistent mini player at all the
+      // moment a user actually opened a surah to read. MiniPlayer already
+      // renders nothing (SizedBox.shrink()) when there's no active audio,
+      // so mounting it here unconditionally is safe.
+      bottomNavigationBar: const MiniPlayer(),
     );
   }
 
