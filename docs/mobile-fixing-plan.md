@@ -9,11 +9,12 @@ three parallel codebase investigations plus one direct follow-up check
 already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each
-— RQM-01's and RQM-17's gaps have both since been fixed, and RQM-14's
-code-fixable portion has too (though its actual reported symptom needs a
-Firebase console check, not a code fix). Ten are genuine bugs or missing
-features; all ten (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12,
-RQM-15, RQM-16, RQM-18, RQM-19) have since been fixed.
+— RQM-01's, RQM-14's, and RQM-17's gaps have all since been fixed on the
+code side (RQM-14's actual reported symptom is a Firebase console
+configuration question that can't be resolved from here — see its section
+below). Ten are genuine bugs or missing features; all ten (RQM-02, RQM-05,
+RQM-06, RQM-08, RQM-09, RQM-12, RQM-15, RQM-16, RQM-18, RQM-19) have since
+been fixed.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -114,9 +115,11 @@ on logout, reloads them (plus the currently-viewed collection, if any) on
 login.
 
 ### RQM-14 — Password reset email not arriving
-**STATUS: Partially fixed (commit `77584a2`) — the code-fixable part is
-done; the actual reported symptom is very likely not a code bug at all and
-can't be resolved from here.**
+**STATUS: Code-complete (commits `77584a2`, `f9844e7`), `dart analyze`
+clean. Every part of this that can be fixed by editing the Flutter app has
+been; the actual reported symptom (a real account not receiving the email)
+is a Firebase project configuration question that genuinely cannot be
+diagnosed or fixed from this environment — see below.**
 
 The code itself was correct: `resetPassword()` calls Firebase Auth's real
 `sendPasswordResetEmail` directly (not a custom backend — the mobile app
@@ -126,23 +129,31 @@ double-checked the app is registered against the *same* Firebase project as
 the web app (`remember-quran`, confirmed in `firebase_options.dart`) — not a
 wrong-project misconfiguration.
 
-**Fixed:** the one real code gap — the catch clause only handled
+**Fixed (commit `77584a2`):** the catch clause only handled
 `FirebaseAuthException`; any other exception (e.g. a network/DNS failure)
 previously propagated uncaught, so a failed request silently reset the
 loading state with zero feedback (`error.value`, what the screen actually
 displays, was never set). Added a catch-all fallback.
 
-**Not fixed, because it isn't a code bug:** the actual "email doesn't
-arrive" symptom most likely traces to Firebase project configuration —
-Firebase's default "email enumeration protection" makes
-`sendPasswordResetEmail` report success even for an email with no account
-(so the in-app success message doesn't prove anything was actually sent), or
-the project's email templates/sender domain/SPF/DKIM aren't configured.
-**This needs a check in the Firebase console — outside what I can verify or
-fix from this environment.** Recommend: confirm the test email actually has
-an account, check Firebase Console → Authentication → Templates is enabled
-and the sender domain is verified, and check spam folders before assuming
-it's still broken after re-testing.
+**Fixed (commit `f9844e7`):** the success message stated "We've sent
+password reset instructions to X" unconditionally. Firebase's email
+enumeration protection makes `sendPasswordResetEmail` resolve successfully
+even when no account exists for that address, by design, and the client has
+no way to see through that — so the old copy was asserting something as
+fact that the app can't actually confirm. Reworded to "If an account exists
+for X, we've sent..." plus a spam/junk-folder nudge, which also covers the
+other realistic explanation for "the email never arrived": a genuine send
+that got filtered.
+
+**Cannot be fixed from here — needs the project owner to check the Firebase
+console:** attempted to inspect the project's Authentication email/template
+configuration this session via the Firebase CLI, but that would have
+required minting a new CI access token, which was correctly declined — this
+environment doesn't have (and shouldn't request) standing credentials for
+Firebase Console access. Recommend: confirm the test email actually has an
+account, check Firebase Console → Authentication → Templates → Password
+reset is enabled with a verified sender domain (SPF/DKIM), and check spam
+folders before assuming it's still broken after re-testing.
 
 ### RQM-17 — Reading streak doesn't update
 **STATUS: Fixed (commit `c697624`), `dart analyze` clean, not yet verified on
@@ -449,10 +460,15 @@ inline into `audio_player_sheet.dart`.
    single-continuous-track architecture).
 6. ~~RQM-18~~ — done (branding baked into the rendered card, `gal`-backed
    save-to-gallery flow).
-7. ~~RQM-17~~ — the code-fixable race is done. **RQM-14** still needs a
-   Firebase console check, not a code fix.
+7. ~~RQM-17~~ — the code-fixable race is done.
 8. ~~RQM-19~~ — done (hifz range picker, "mark as memorised" wiring;
    range-repeat turned out to already work, no code needed there).
+9. ~~RQM-14~~ — code-complete. Its actual reported symptom (a real account
+   not receiving the email) needs the project owner to check the Firebase
+   console (Authentication → Templates, sender domain/SPF/DKIM) — outside
+   what any code change can fix or what this environment has credentials
+   to inspect.
 
-Every RQM item is now either fixed (code-side) or, for RQM-14 alone,
-waiting on a Firebase console check rather than a code change.
+Every RQM item is now fully fixed on the code side. RQM-14 is the one
+exception where a remaining Firebase console check by the project owner is
+needed to close out the originally reported symptom.
