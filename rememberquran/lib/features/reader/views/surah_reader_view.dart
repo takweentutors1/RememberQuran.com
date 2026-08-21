@@ -15,69 +15,84 @@ class SurahReaderView extends GetView<ReaderController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Obx(() {
-          final name = controller.chapter.value?.nameSimple;
-          if (name != null) return Text(name);
-          return Text(controller.hasError.value ? 'Reader' : 'Loading…');
-        }),
-        centerTitle: true,
-        actions: [
-          Obx(() {
-            final currentId = controller.chapter.value?.id;
-            final isBusy = controller.isLoading.value;
-            return IconButton(
-              icon: const Icon(Icons.navigate_before),
-              tooltip: 'Previous surah',
-              onPressed: (isBusy || currentId == null)
-                  ? null
-                  : () => controller.loadChapter(currentId > 1 ? currentId - 1 : 114),
-            );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        // Ensures the last (debounced) reading-progress write actually
+        // lands before the pop completes — see
+        // ReaderController.flushPendingProgress for why this matters.
+        await controller.flushPendingProgress();
+        if (context.mounted) Navigator.of(context).pop(result);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Obx(() {
+            final name = controller.chapter.value?.nameSimple;
+            if (name != null) return Text(name);
+            return Text(controller.hasError.value ? 'Reader' : 'Loading…');
           }),
-          Obx(() {
-            final currentId = controller.chapter.value?.id;
-            final isBusy = controller.isLoading.value;
-            return IconButton(
-              icon: const Icon(Icons.navigate_next),
-              tooltip: 'Next surah',
-              onPressed: (isBusy || currentId == null)
-                  ? null
-                  : () => controller.loadChapter(currentId < 114 ? currentId + 1 : 1),
-            );
-          }),
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'Quick Jump',
-            onPressed: () => QuickJumpSheet.show(
-              context,
-              currentChapterId: controller.chapter.value?.id,
+          centerTitle: true,
+          actions: [
+            Obx(() {
+              final currentId = controller.chapter.value?.id;
+              final isBusy = controller.isLoading.value;
+              return IconButton(
+                icon: const Icon(Icons.navigate_before),
+                tooltip: 'Previous surah',
+                onPressed: (isBusy || currentId == null)
+                    ? null
+                    : () => controller.loadChapter(
+                        currentId > 1 ? currentId - 1 : 114,
+                      ),
+              );
+            }),
+            Obx(() {
+              final currentId = controller.chapter.value?.id;
+              final isBusy = controller.isLoading.value;
+              return IconButton(
+                icon: const Icon(Icons.navigate_next),
+                tooltip: 'Next surah',
+                onPressed: (isBusy || currentId == null)
+                    ? null
+                    : () => controller.loadChapter(
+                        currentId < 114 ? currentId + 1 : 1,
+                      ),
+              );
+            }),
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: 'Quick Jump',
+              onPressed: () => QuickJumpSheet.show(
+                context,
+                currentChapterId: controller.chapter.value?.id,
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-            onPressed: () => ReaderSettingsSheet.show(context),
-          ),
-        ],
-      ),
-      body: ResponsiveLayout(
-        mobile: _buildReaderContent(context),
-        desktop: Row(
-          children: [
-            SizedBox(width: 300, child: _buildSurahSidebar(context)),
-            const VerticalDivider(width: 1, thickness: 1),
-            Expanded(child: _buildReaderContent(context)),
+            IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: 'Settings',
+              onPressed: () => ReaderSettingsSheet.show(context),
+            ),
           ],
         ),
+        body: ResponsiveLayout(
+          mobile: _buildReaderContent(context),
+          desktop: Row(
+            children: [
+              SizedBox(width: 300, child: _buildSurahSidebar(context)),
+              const VerticalDivider(width: 1, thickness: 1),
+              Expanded(child: _buildReaderContent(context)),
+            ],
+          ),
+        ),
+        // The reader is a separate full-screen route from AppScaffold's tab
+        // shell, which is the only other place MiniPlayer was mounted — so
+        // playback appeared to have no persistent mini player at all the
+        // moment a user actually opened a surah to read. MiniPlayer already
+        // renders nothing (SizedBox.shrink()) when there's no active audio,
+        // so mounting it here unconditionally is safe.
+        bottomNavigationBar: const MiniPlayer(),
       ),
-      // The reader is a separate full-screen route from AppScaffold's tab
-      // shell, which is the only other place MiniPlayer was mounted — so
-      // playback appeared to have no persistent mini player at all the
-      // moment a user actually opened a surah to read. MiniPlayer already
-      // renders nothing (SizedBox.shrink()) when there's no active audio,
-      // so mounting it here unconditionally is safe.
-      bottomNavigationBar: const MiniPlayer(),
     );
   }
 

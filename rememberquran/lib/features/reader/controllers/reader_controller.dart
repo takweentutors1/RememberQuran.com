@@ -16,15 +16,15 @@ class ReaderController extends GetxController {
   final QuranRepository repository;
   final GoalsRepository _goalsRepository = GoalsRepository();
   final BookmarksRepository _bookmarksRepo = BookmarksRepository();
-  
+
   ReaderController({required this.repository});
 
   final Rx<Chapter?> chapter = Rx<Chapter?>(null);
   final verses = <Verse>[].obs;
-  
+
   final verseWords = <int, List<Word>>{}.obs;
   final verseTranslations = <int, List<VerseTranslation>>{}.obs;
-  
+
   final RxSet<String> bookmarkedVerses = <String>{}.obs;
 
   final isLoading = true.obs;
@@ -33,15 +33,16 @@ class ReaderController extends GetxController {
   int? _lastChapterId;
 
   final ItemScrollController itemScrollController = ItemScrollController();
-  final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
-  
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+
   bool _hasScrolledToAyah = false;
 
   // Tracking state
   int? _focusedAyah;
   int? _minAyah;
   int? _maxAyah;
-  
+
   int _lastPositionAt = 0;
   Timer? _eventTimer;
   Timer? _dwellTimer;
@@ -63,10 +64,14 @@ class ReaderController extends GetxController {
 
     ever(verses, (List<Verse> updatedVerses) {
       final targetAyahStr = Get.parameters['ayahId'];
-      if (targetAyahStr != null && !_hasScrolledToAyah && updatedVerses.isNotEmpty) {
+      if (targetAyahStr != null &&
+          !_hasScrolledToAyah &&
+          updatedVerses.isNotEmpty) {
         final targetAyah = int.tryParse(targetAyahStr);
         if (targetAyah != null) {
-          final index = updatedVerses.indexWhere((v) => v.verseNumber == targetAyah);
+          final index = updatedVerses.indexWhere(
+            (v) => v.verseNumber == targetAyah,
+          );
           if (index != -1) {
             _scrollToIndex(index);
           }
@@ -115,10 +120,12 @@ class ReaderController extends GetxController {
 
     for (final pos in positions) {
       final itemHeight = pos.itemTrailingEdge - pos.itemLeadingEdge;
-      final visiblePortion = min(pos.itemTrailingEdge, 1.0) - max(pos.itemLeadingEdge, 0.0);
+      final visiblePortion =
+          min(pos.itemTrailingEdge, 1.0) - max(pos.itemLeadingEdge, 0.0);
       final ratio = itemHeight > 0 ? visiblePortion / itemHeight : 0;
-      
-      final centerY = (max(pos.itemLeadingEdge, 0.0) + min(pos.itemTrailingEdge, 1.0)) / 2;
+
+      final centerY =
+          (max(pos.itemLeadingEdge, 0.0) + min(pos.itemTrailingEdge, 1.0)) / 2;
       final proximity = max(0.0, 1.0 - (centerY - 0.35).abs());
       final score = (ratio * 0.6) + (proximity * 0.4);
 
@@ -133,7 +140,7 @@ class ReaderController extends GetxController {
       if (index >= 0 && index < verses.length) {
         final ayah = verses[index].verseNumber;
         _focusedAyah = ayah;
-        
+
         _minAyah = _minAyah == null ? ayah : min(_minAyah!, ayah);
         _maxAyah = _maxAyah == null ? ayah : max(_maxAyah!, ayah);
 
@@ -156,23 +163,25 @@ class ReaderController extends GetxController {
     if (_focusedAyah == null || chapter.value == null) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - _lastPositionAt < POSITION_THROTTLE_MS) return;
-    
+
     _lastPositionAt = now;
     final authController = Get.find<AuthController>();
     final user = authController.firebaseUser.value;
     if (user == null) return;
 
     final verseKey = '${chapter.value!.id}:$_focusedAyah';
-    
+
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'lastPosition': {
-          'verseKey': verseKey,
-          'surahId': chapter.value!.id,
-          'ayahId': _focusedAyah,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }
-      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {
+          'lastPosition': {
+            'verseKey': verseKey,
+            'surahId': chapter.value!.id,
+            'ayahId': _focusedAyah,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+        },
+      );
     } catch (e) {
       // Silent failure
     }
@@ -188,7 +197,12 @@ class ReaderController extends GetxController {
     if (user == null) return;
 
     try {
-      await _goalsRepository.recordProgressEvent(user.uid, chapter.value!.id, from, to);
+      await _goalsRepository.recordProgressEvent(
+        user.uid,
+        chapter.value!.id,
+        from,
+        to,
+      );
     } catch (e) {
       // Silent
     }
@@ -199,6 +213,22 @@ class ReaderController extends GetxController {
     _eventTimer = Timer(const Duration(milliseconds: EVENT_DEBOUNCE_MS), () {
       _putEvent();
     });
+  }
+
+  /// Awaitable flush of any pending (debounced) progress event. GetX's
+  /// onClose() is synchronous, so its own flush (below) is necessarily
+  /// fire-and-forget — a user who finishes reading and immediately opens
+  /// Goals can reach GoalsController.loadGoalData() before that write has
+  /// actually landed, showing a streak/progress snapshot that doesn't yet
+  /// reflect what they just read. SurahReaderView calls this from a
+  /// PopScope and awaits it before letting the back-navigation complete, so
+  /// leaving the reader can no longer race the write that's supposed to
+  /// happen first.
+  Future<void> flushPendingProgress() async {
+    if (_eventTimer == null) return;
+    _eventTimer!.cancel();
+    _eventTimer = null;
+    await _putEvent();
   }
 
   Future<void> loadChapter(int chapterId) async {
@@ -229,12 +259,18 @@ class ReaderController extends GetxController {
       // Load bookmarks for this chapter
       final user = Get.find<AuthController>().firebaseUser.value;
       if (user != null) {
-        final bList = await _bookmarksRepo.listBookmarks(user.uid, surahPrefix: chapterId);
+        final bList = await _bookmarksRepo.listBookmarks(
+          user.uid,
+          surahPrefix: chapterId,
+        );
         bookmarkedVerses.assignAll(bList.map((e) => e.verseKey));
       }
 
       if (recoveringFromError) {
-        AppFeedback.showSuccess("You're back — the surah loaded fine.", title: 'Reconnected');
+        AppFeedback.showSuccess(
+          "You're back — the surah loaded fine.",
+          title: 'Reconnected',
+        );
       }
     } catch (e, st) {
       hasError.value = true;
@@ -263,16 +299,24 @@ class ReaderController extends GetxController {
         AppFeedback.showSuccess('Bookmark successfully removed.');
       } else {
         bookmarkedVerses.add(verseKey); // Rollback
-        AppFeedback.showError('We couldn\'t remove this bookmark. Please try again.');
+        AppFeedback.showError(
+          'We couldn\'t remove this bookmark. Please try again.',
+        );
       }
     } else {
       bookmarkedVerses.add(verseKey);
-      final res = await _bookmarksRepo.createBookmark(user.uid, verseKey, collectionId);
+      final res = await _bookmarksRepo.createBookmark(
+        user.uid,
+        verseKey,
+        collectionId,
+      );
       if (res['ok'] == true) {
         AppFeedback.showSuccess('Ayah successfully bookmarked!');
       } else {
         bookmarkedVerses.remove(verseKey); // Rollback
-        AppFeedback.showError('Unable to save this bookmark. Please try again.');
+        AppFeedback.showError(
+          'Unable to save this bookmark. Please try again.',
+        );
       }
     }
   }
@@ -287,7 +331,9 @@ class ReaderController extends GetxController {
 
   @override
   void onClose() {
-    itemPositionsListener.itemPositions.removeListener(_onScrollPositionsChanged);
+    itemPositionsListener.itemPositions.removeListener(
+      _onScrollPositionsChanged,
+    );
     _dwellTimer?.cancel();
     if (_eventTimer != null) {
       _eventTimer!.cancel();
