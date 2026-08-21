@@ -8,12 +8,12 @@ three parallel codebase investigations plus one direct follow-up check
 **Headline finding:** this tracker is noisier than the web one. Six items are
 already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
-current code. Three more were *mostly* correct with one small real gap each —
-RQM-01's gap has since been fixed, and RQM-14's code-fixable portion has too
-(though its actual reported symptom needs a Firebase console check, not a
-code fix). Ten are genuine bugs or missing features; eight of those (RQM-02,
-RQM-05, RQM-06, RQM-08, RQM-09, RQM-12, RQM-15, RQM-16) have since been
-fixed too, two still open.
+current code. Three more were *mostly* correct with one small real gap each
+— RQM-01's and RQM-17's gaps have both since been fixed, and RQM-14's
+code-fixable portion has too (though its actual reported symptom needs a
+Firebase console check, not a code fix). Ten are genuine bugs or missing
+features; eight of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12,
+RQM-15, RQM-16) have since been fixed too, two still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -144,24 +144,38 @@ and the sender domain is verified, and check spam folders before assuming
 it's still broken after re-testing.
 
 ### RQM-17 — Reading streak doesn't update
-**The pipeline is fully wired end-to-end and looks correct.** Scroll-dwell
-detection → debounced progress events → Firestore → streak evaluation
-(same-day/yesterday/gap logic) → display on the Goals screen — all present
-and connected, not a stub.
+**STATUS: Fixed (commit `c697624`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually reproduce the timing window. Worth a real re-test: with a goal
+set, read enough to meet it, immediately back out of the reader straight to
+Goals, and confirm it reflects the session right away.
 
-**Two real UX gaps that could easily read as "doesn't update" in testing:**
-1. Streak tracking only activates once a user has set an *active goal* — if a
-   tester never opened Goals → "Create Goal" first, the streak will correctly
-   stay at zero forever, not because tracking is broken but because there's
-   nothing to track against.
-2. The streak is recalculated lazily (on screen load, auth change, or
-   pull-to-refresh), not via a live Firestore listener — so it won't visibly
-   tick up while sitting on the Goals screen mid-session. Navigating away and
-   back is required to see the update.
+The pipeline (scroll-dwell detection → debounced progress events →
+Firestore → streak evaluation → Goals display) was fully wired end-to-end
+and looked correct — not a stub, no logic bug found in it. But
+`ReaderController.onClose()` is synchronous (a GetX constraint), so its
+flush of the last pending (debounced) progress event was necessarily
+fire-and-forget. A user who finishes reading and immediately opens Goals
+could reach `GoalsController.loadGoalData()` before that write actually
+landed in Firestore — showing a snapshot that doesn't yet reflect what they
+just read. This matches the reported symptom closely ("after completing the
+reading task... the streak is not updated"). **Fix applied:** new
+`ReaderController.flushPendingProgress()`, an awaitable version of the same
+flush, called from a `PopScope` in `SurahReaderView` that awaits it before
+letting the back-navigation complete — covers both the system back gesture
+and the AppBar's automatic back button. Doesn't affect in-place surah
+switching (RQM-05's prev/next buttons, the sidebar), since that never pops
+the route.
 
-Neither is a defect exactly, but both are worth either fixing (add a live
-listener; prompt for a goal earlier) or explicitly re-testing with a goal set
-before treating this as resolved.
+**Two more real gaps identified, not addressed by this fix — worth
+re-testing after this one before pursuing either further:**
+1. Streak tracking only activates once a user has set an *active goal* — if
+   never set, the streak correctly stays at zero, not a bug, but could read
+   as one to a tester who didn't set a goal first.
+2. The Goals screen still recalculates lazily (on load/pull-to-refresh), not
+   via a live Firestore listener, so it won't tick up while sitting on it
+   mid-session (distinct from the race this fix closes, which was about
+   *leaving* the reader too fast, not staying on Goals too long).
 
 ---
 
@@ -400,5 +414,5 @@ math, and the screen) is already done.
 6. **RQM-18, RQM-19** — larger scope (branding asset + save flow; memorisation
    range UI + progress-tracker wiring); worth scoping as their own pieces of
    work rather than quick fixes.
-7. **RQM-14, RQM-17** — not code fixes so much as verification: check the
-   Firebase console for RQM-14, re-test RQM-17 with a goal actually set.
+7. ~~RQM-17~~ — the code-fixable race is done. **RQM-14** still needs a
+   Firebase console check, not a code fix.
