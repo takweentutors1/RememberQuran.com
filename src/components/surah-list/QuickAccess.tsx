@@ -50,7 +50,7 @@ export function QuickAccess() {
           key={href}
           href={href}
           className={cn(
-            "group lift flex flex-col items-start gap-2.5 rounded-xl border border-border bg-card px-4 py-4",
+            "card group lift flex flex-col items-start gap-2.5 rounded-xl border border-border bg-card px-4 py-4",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           )}
         >
