@@ -244,13 +244,17 @@ class ReaderController extends GetxController {
     }
   }
 
-  Future<void> toggleBookmark(String verseKey) async {
+  /// Toggles the bookmark on [verseKey]. [collectionId] only matters for
+  /// the create path (removal always just deletes wherever it is) — pass
+  /// the id the user picked in CollectionPickerSheet, or leave it null to
+  /// save straight to Favourites (createBookmark's own default).
+  Future<void> toggleBookmark(String verseKey, {String? collectionId}) async {
     final user = Get.find<AuthController>().firebaseUser.value;
     if (user == null) {
       AppFeedback.showError('Please sign in to save your bookmarks.');
       return;
     }
-    
+
     final isBookmarked = bookmarkedVerses.contains(verseKey);
     if (isBookmarked) {
       bookmarkedVerses.remove(verseKey);
@@ -263,7 +267,7 @@ class ReaderController extends GetxController {
       }
     } else {
       bookmarkedVerses.add(verseKey);
-      final res = await _bookmarksRepo.createBookmark(user.uid, verseKey, null);
+      final res = await _bookmarksRepo.createBookmark(user.uid, verseKey, collectionId);
       if (res['ok'] == true) {
         AppFeedback.showSuccess('Ayah successfully bookmarked!');
       } else {

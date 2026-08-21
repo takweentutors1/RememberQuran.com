@@ -17,6 +17,8 @@ import 'note_sheet.dart';
 import '../../../../core/models/translation.dart';
 import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_controller.dart';
+import '../../../account/controllers/auth_controller.dart';
+import '../../../account/views/collection_picker_sheet.dart';
 
 class AyahBlock extends StatelessWidget {
   final Verse verse;
@@ -227,8 +229,30 @@ class AyahBlock extends StatelessWidget {
                                   ? Icons.bookmark
                                   : Icons.bookmark_border,
                             ),
-                            onPressed: () async =>
-                                await readerController.toggleBookmark(verseKey),
+                            onPressed: () async {
+                              if (isBookmarked) {
+                                await readerController.toggleBookmark(verseKey);
+                                return;
+                              }
+                              final userId = Get.find<AuthController>()
+                                  .firebaseUser
+                                  .value
+                                  ?.uid;
+                              if (userId == null) {
+                                // No account yet — let toggleBookmark's own
+                                // check surface the sign-in prompt rather
+                                // than duplicating that logic here.
+                                await readerController.toggleBookmark(verseKey);
+                                return;
+                              }
+                              final collectionId =
+                                  await CollectionPickerSheet.show(context, userId);
+                              if (collectionId == null) return; // cancelled
+                              await readerController.toggleBookmark(
+                                verseKey,
+                                collectionId: collectionId,
+                              );
+                            },
                             iconSize: 20,
                             tooltip: isBookmarked
                                 ? 'Remove Bookmark'
