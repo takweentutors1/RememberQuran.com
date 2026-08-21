@@ -299,16 +299,18 @@ class AudioController extends GetxController {
       );
     });
 
-    // Listen to media item changes (Queue index progression)
+    // Listen to media item changes (Queue index progression). Repeat used
+    // to be driven from here (see _handleRepeatLogic's removal below) but
+    // the queue only ever has one MediaItem per chapter (the whole surah's
+    // audio is one continuous file, not one file per ayah — see
+    // _loadAndPlayChapter), so this index never meaningfully changes
+    // mid-surah; repeat is now driven by _onPositionTick instead, which
+    // already tracks the actually-playing ayah for word-sync highlighting.
     _audioHandler.mediaItem.listen((item) {
       if (item != null) {
-        // Find index in queue
         final queue = _audioHandler.queue.value;
         final idx = queue.indexWhere((q) => q.id == item.id);
         if (idx != -1) {
-          if (idx != rxCurrentAyahIndex.value) {
-            _onIndexChanged(idx);
-          }
           rxCurrentAyahIndex.value = idx;
         }
       }
@@ -374,6 +376,17 @@ class AudioController extends GetxController {
     if (!within(idx)) {
       idx = within(idx + 1) ? idx + 1 : findVerseIndex(_timings, t);
     }
+
+    // Repeat interception: this is the same "we've moved on to the next
+    // ayah" boundary crossing that would otherwise just update
+    // _lastVerseIdx below — intercept it here instead when the ayah being
+    // left is the one repeat should hold on. idx > _lastVerseIdx guards
+    // against a manual seek backward (also a change in idx) being mistaken
+    // for "finished playing forward past the target".
+    if (idx != _lastVerseIdx && _lastVerseIdx >= 0 && idx > _lastVerseIdx) {
+      if (_tryTriggerRepeat(_lastVerseIdx)) return;
+    }
+
     if (idx != _lastVerseIdx) {
       _lastVerseIdx = idx;
       _lastWordPos = null;
@@ -490,55 +503,78 @@ class AudioController extends GetxController {
       advanceRadio();
       return;
     }
-    // Standard processingState=completed usually means the entire queue finished.
-    // just_audio automatically skips to next if it's a concatenating source, 
-    // so we handle track completion mostly in _onIndexChanged.
-    // However, if the entire queue finishes, we might need to handle repeat all.
-    _handleRepeatLogic(isEndOfQueue: true);
+    // Standard processingState=completed means the whole chapter's audio
+    // file finished. That's also how repeat's "the target ayah/range end
+    // was the last ayah in the surah" edge case surfaces — there's no
+    // "next ayah" position tick to intercept in _onPositionTick when
+    // there's nothing left to play, so it has to be caught here instead.
+    if (_lastVerseIdx >= 0) _tryTriggerRepeat(_lastVerseIdx);
   }
 
-  void _onIndexChanged(int newIndex) {
-    // When track naturally progresses to the next one, we check if we need to intercept
-    // and loop back based on our custom state machine.
-    _handleRepeatLogic(newIndex: newIndex);
-  }
-  
-  void _handleRepeatLogic({int? newIndex, bool isEndOfQueue = false}) {
+  /// Checks whether repeat should hold on the ayah at [leavingIdx] instead
+  /// of letting playback move past it, and if so schedules the restart.
+  /// Returns true if a repeat was triggered (a seek is scheduled/underway),
+  /// meaning the caller should not treat this as a normal advance/end.
+  ///
+  /// Driven by real playback position (via _onPositionTick and, for the
+  /// last-ayah-of-surah edge case, _onPlaybackCompleted) rather than the
+  /// old queue-index-based approach, which only worked when there was one
+  /// MediaItem per ayah. There's exactly one MediaItem per *chapter* (see
+  /// _loadAndPlayChapter), so that index never meaningfully changed
+  /// mid-surah and repeat never actually triggered before the whole
+  /// surah's audio had already finished playing once.
+  bool _tryTriggerRepeat(int leavingIdx) {
     final settings = rxRepeatSettings.value;
-    if (settings.mode == RepeatMode.none) return;
+    if (settings.mode == RepeatMode.none) return false;
 
+    final int restartIdx;
     if (settings.mode == RepeatMode.ayah) {
-      if (_currentRepeat < settings.count - 1) {
-        _currentRepeat++;
-        _pauseAndScheduleRestart(rxCurrentAyahIndex.value);
-      } else {
-        _currentRepeat = 0; // Move on
-      }
-    } else if (settings.mode == RepeatMode.range && settings.rangeStartIdx != null && settings.rangeEndIdx != null) {
-      // If we just entered a track past the rangeEndIdx, or the queue ended at rangeEndIdx
-      if (isEndOfQueue || (newIndex != null && newIndex > settings.rangeEndIdx!)) {
-        if (_currentRepeat < settings.count - 1) {
-          _currentRepeat++;
-          _pauseAndScheduleRestart(settings.rangeStartIdx!);
-        } else {
-          _currentRepeat = 0;
-        }
-      }
+      restartIdx = leavingIdx;
+    } else if (settings.mode == RepeatMode.range &&
+        settings.rangeStartIdx != null &&
+        settings.rangeEndIdx != null) {
+      if (leavingIdx != settings.rangeEndIdx) return false;
+      restartIdx = settings.rangeStartIdx!;
+    } else {
+      return false;
     }
+
+    if (_currentRepeat >= settings.count - 1) {
+      _currentRepeat = 0; // Exhausted — let playback continue normally.
+      return false;
+    }
+    _currentRepeat++;
+    _scheduleRepeatRestart(restartIdx);
+    return true;
   }
 
-  void _pauseAndScheduleRestart(int targetIndex) {
-    _audioHandler.pause();
-    
+  /// Pauses, then seeks back to the start of [verseIdx] and resumes —
+  /// after [RepeatSettings.delay] if one is set. Seeks via the verse's
+  /// real timestamp (_timings), not the previous no-op skipToQueueItem
+  /// (QuranAudioHandler never overrides it, so it silently did nothing —
+  /// the repeat looked like it restarted but audio just kept playing from
+  /// wherever it already was).
+  void _scheduleRepeatRestart(int verseIdx) {
+    if (verseIdx < 0 || verseIdx >= _timings.length) return;
+    final fromMs = _timings[verseIdx].from;
+
     _pauseTimer?.cancel();
-    if (rxRepeatSettings.value.delay > Duration.zero) {
-      _pauseTimer = Timer(rxRepeatSettings.value.delay, () {
-        _audioHandler.skipToQueueItem(targetIndex);
-        _audioHandler.play();
-      });
+    unawaited(_audioHandler.pause());
+
+    Future<void> restart() async {
+      _lastVerseIdx = -1;
+      _lastWordPos = null;
+      await _audioHandler.seek(Duration(milliseconds: fromMs));
+      rxActiveVerseKey.value = _timings[verseIdx].verseKey;
+      rxActiveWordPosition.value = null;
+      await _audioHandler.play();
+    }
+
+    final delay = rxRepeatSettings.value.delay;
+    if (delay > Duration.zero) {
+      _pauseTimer = Timer(delay, () => unawaited(restart()));
     } else {
-      _audioHandler.skipToQueueItem(targetIndex);
-      _audioHandler.play();
+      unawaited(restart());
     }
   }
 
