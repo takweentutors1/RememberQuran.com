@@ -12,8 +12,8 @@ current code. Three more were *mostly* correct with one small real gap each
 — RQM-01's and RQM-17's gaps have both since been fixed, and RQM-14's
 code-fixable portion has too (though its actual reported symptom needs a
 Firebase console check, not a code fix). Ten are genuine bugs or missing
-features; nine of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12,
-RQM-15, RQM-16, RQM-18) have since been fixed too, one still open.
+features; all ten (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12,
+RQM-15, RQM-16, RQM-18, RQM-19) have since been fixed.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -22,14 +22,15 @@ A recurring pattern worth flagging on its own: **the codebase has a lot of
 `lib/features/study/views/tafsir_view.dart`, `word_detail_view.dart`,
 `lib/features/media_maker/` (the whole folder — the real Media Maker lives in
 the sibling `lib/features/media/`), `lib/features/audio/widgets/reciter_selector.dart`,
-`repeat_controls.dart`, `speed_control.dart`, `lib/data/models/morphology_entry.dart`,
+`speed_control.dart`, `lib/data/models/morphology_entry.dart`,
 `lib/data/datasources/local/prefs_ds.dart`, `lib/data/models/streak.dart`. These
 look like an initial scaffold (`fc4da88 Add RememberQuran Flutter app — full
 feature implementation`) that was partially superseded by later real
 implementations without the stubs being deleted. Worth a cleanup pass
 independent of this tracker — they make the codebase harder to navigate and
 at least one of them (`morphology_entry.dart`) is sitting right next to data
-that's already bundled and ready to use (see RQM-12).
+that's already bundled and ready to use (see RQM-12). (`repeat_controls.dart`
+was in this list too — deleted as part of RQM-19, see below.)
 
 ---
 
@@ -397,24 +398,45 @@ permissions `gal` needs: iOS `NSPhotoLibraryAddUsageDescription`/
 (`maxSdkVersion=29`, unneeded on scoped storage).
 
 ### RQM-19 — Memorisation tools largely unimplemented
-**More is built than the tracker implies, but the gaps are real.**
-Single-ayah hide/reveal genuinely works as designed (confirmed). Range
-selection for hide/reveal doesn't exist at all — hifz mode is a single global
-on/off toggle, not a range picker. A memorisation progress tracker is
-**fully built** on both ends — Firestore repository methods
+**STATUS: Fixed (commit `471144c`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually tap through any of the three pieces below. Worth a real re-test:
+(a) mark an ayah as memorised in the reader, then check the Hifz Progress
+screen reflects it (note: that screen doesn't live-refresh — re-enter it
+after marking); (b) turn on Hifz Mode, set a from/to ayah range, confirm
+ayahs outside the range stay visible while ones inside still hide/reveal
+per-tap as before; (c) open the Now Playing sheet's range-repeat picker and
+confirm it still works as it already did before this ticket.
+
+**More was built than the tracker implied, but the gaps were real.**
+Single-ayah hide/reveal genuinely worked as designed (confirmed, unchanged).
+Range selection for hide/reveal didn't exist at all — hifz mode was a single
+global on/off toggle, not a range picker. A memorisation progress tracker was
+**already fully built** on both ends — Firestore repository methods
 (`markMemorised`/`unmarkMemorised`), a controller computing per-surah/per-juz
 percentages, and a complete "Hifz Progress" screen with tabs and progress
 bars, all reachable from the account menu — but `markMemorised`/`unmarkMemorised`
-are **never called from anywhere in the app**. There's no button anywhere to
-actually mark an ayah as memorised, so the fully-built progress screen will
-permanently show 0% for everything. **Fix locations:** (1) range
-selection needs start/end pickers added to the hifz settings UI and the
-reveal-gating logic in `reader_settings_controller.dart`/`hideable_arabic.dart`
-changed to operate over a range instead of the whole surah; (2) range-repeat
-could reuse the audio player's existing repeat-count UI/logic as a model; (3)
-the progress tracker just needs a "mark as memorised" action wired to the
-already-built `HifzRepository.markMemorised()` — the hard part (storage,
-math, and the screen) is already done.
+were **never called from anywhere in the app**. There was no button anywhere
+to actually mark an ayah as memorised, so the fully-built progress screen
+could only ever show 0%. Range-repeat was also filed as missing, but turned
+out to already be fully implemented (`AudioController`'s `RepeatMode.range`
+engine, wired to a working start/end ayah picker in the Now Playing sheet) —
+that part of the ticket was a documentation gap, not a code gap.
+
+**Fix applied:** (1) `ReaderController` now loads the current chapter's
+memorised verse keys alongside its bookmarks in `loadChapter()`, and a new
+`toggleMemorised()` calls `markMemorised`/`unmarkMemorised` with optimistic
+UI + rollback on failure — same shape as the existing `toggleBookmark()`.
+`AyahBlock` gained a "Mark as Memorised" button mirroring the bookmark
+button. (2) `ReaderSettingsController` gained a session-only, optional
+ayah-number range (`hifzRangeStart`/`hifzRangeEnd`, cleared on chapter
+change since ayah numbers reset per surah), with a from/to picker added to
+the reader settings sheet shown only while Hifz Mode is on; `HideableArabic`
+now shows ayahs outside the selected range normally instead of hiding them.
+(3) Range-repeat needed no code change — instead removed the actual dead
+code, a 0-byte orphaned `lib/features/audio/widgets/repeat_controls.dart`
+stub with zero references anywhere, left over from before the real UI moved
+inline into `audio_player_sheet.dart`.
 
 ---
 
@@ -429,6 +451,8 @@ math, and the screen) is already done.
    save-to-gallery flow).
 7. ~~RQM-17~~ — the code-fixable race is done. **RQM-14** still needs a
    Firebase console check, not a code fix.
-8. **RQM-19** — largest remaining scope (range selection/repeat UI +
-   wiring the already-built progress tracker to a "mark as memorised"
-   action); worth scoping as its own piece of work.
+8. ~~RQM-19~~ — done (hifz range picker, "mark as memorised" wiring;
+   range-repeat turned out to already work, no code needed there).
+
+Every RQM item is now either fixed (code-side) or, for RQM-14 alone,
+waiting on a Firebase console check rather than a code change.
