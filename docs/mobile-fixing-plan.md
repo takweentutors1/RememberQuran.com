@@ -10,8 +10,9 @@ already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
-features, still open. None of the "Already implemented" verdicts below are
-guesses — each cites the actual file and logic that proves it works.
+features; one of those (RQM-02) has since been fixed too, nine still open.
+None of the "Already implemented" verdicts below are guesses — each cites the
+actual file and logic that proves it works.
 
 A recurring pattern worth flagging on its own: **the codebase has a lot of
 0-byte dead stub files** sitting alongside working implementations —
@@ -149,15 +150,34 @@ before treating this as resolved.
 ## Real gaps and bugs — need actual implementation work
 
 ### RQM-02 — Surah auto-advance shows an error and skips a surah
-**Partially fixed already, one bug remains.** A prior infinite-skip-loop bug
-(instantly-completing broken audio sources looping forever) was already fixed
-in commit `d6b47bb`. But `_onPlaybackCompleted()` has **no debounce/re-entrancy
-guard** — `just_audio`'s event stream can re-emit while `processingState` is
-still `completed` during the multi-`await` chapter-load sequence, and each
-re-emission re-enters the advance logic, which can visibly skip a surah (the
-reported "1 to 3, missing 2"). **Fix location:** `audio_controller.dart`,
-around the `playbackState.listen`/`_onPlaybackCompleted()` block — add a busy
-flag or edge-detect the completed transition before calling `advanceRadio()`.
+**STATUS: Fixed (commit `bafe3b3`), `dart analyze` clean project-wide, not yet
+verified on a live device/simulator** — no Flutter emulator was available in
+this session to actually let a surah play to completion and watch the
+transition. The reasoning is solid (below) and reuses a flag the app was
+already tracking, but this should still get a real re-test: let radio mode
+run through at least 3-4 surah transitions and confirm none are skipped.
+
+A prior infinite-skip-loop bug (instantly-completing broken audio sources
+looping forever) was already fixed in commit `d6b47bb`. The remaining bug:
+`_onPlaybackCompleted()` had **no debounce/re-entrancy guard** —
+`_loadAndPlayChapter()` performs several `await`s before `updateQueue()` moves
+the player out of `AudioProcessingState.completed`, and the audio engine's
+`playbackState` stream can keep re-emitting a stale `completed` state during
+that window. Each re-emission re-entered `_onPlaybackCompleted()` →
+`advanceRadio()` → `radioSkipToNext()`, which reads/writes
+`rxCurrentSurahId.value` synchronously before the next chapter's load even
+starts — two rapid re-entries in a row visibly skip a surah (the reported
+"1 to 3, missing 2").
+
+**Fix applied:** the controller already tracked `rxIsBusy` — `true` for the
+entire span of `_loadAndPlayChapter()` (previously only read by the UI to
+show a loading spinner, never used as a guard). Added
+`if (rxIsBusy.value) return;` at the top of `_onPlaybackCompleted()`: a
+completion event can only be stale while a load is already in flight, since
+the outgoing track has already fully stopped by the time a new load starts,
+and the guard clears itself the moment the new chapter is ready — no new
+state needed, no risk of it getting stuck permanently true (the reset is in
+`_loadAndPlayChapter`'s `finally` block).
 
 ### RQM-05 — No previous/next surah buttons
 **Confirmed missing.** The reader's AppBar only has Quick Jump and Settings
@@ -278,16 +298,15 @@ math, and the screen) is already done.
 
 1. **RQM-16** (bookmark tap) — smallest, clearest fix; broken navigation with
    an already-correct pattern to copy from elsewhere in the same codebase.
-2. **RQM-08** (mini player in the reader) and **RQM-01**'s auth-listener gap —
-   both small, both fix a real persistence/continuity gap in the core reading
-   experience.
+2. **RQM-08** (mini player in the reader) — small, fixes a real
+   persistence/continuity gap in the core reading experience.
 3. **RQM-12** (morphology panel) — data's already bundled, humanizer already
    written; mostly UI wiring.
 4. **RQM-05, RQM-06, RQM-15** — straightforward additive UI, no architectural
    rework.
-5. **RQM-02, RQM-09** — both need real changes to the audio completion/repeat
-   logic in `audio_controller.dart`; do these together since they touch the
-   same file and the same underlying single-continuous-track architecture.
+5. ~~RQM-02~~ — done. **RQM-09** still needs real changes to the repeat logic
+   in `audio_controller.dart` (same file, same underlying single-continuous-
+   track architecture RQM-02 lives in).
 6. **RQM-18, RQM-19** — larger scope (branding asset + save flow; memorisation
    range UI + progress-tracker wiring); worth scoping as their own pieces of
    work rather than quick fixes.
