@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../../../data/models/bookmark.dart';
@@ -24,6 +25,8 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
   final isLoading = false.obs;
   final isLoadingBookmarks = false.obs;
 
+  StreamSubscription? _authSubscription;
+
   @override
   void onInit() {
     super.onInit();
@@ -33,15 +36,35 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
     });
     _bookmarksRepo = BookmarksRepository();
     _notesRepo = NotesRepository();
-    
+
     if (_auth.firebaseUser.value != null) {
       loadCollections();
       loadNotes();
     }
+
+    // Without this, a controller instance that survives a logout (e.g. it
+    // isn't disposed by GetX's binding lifecycle on every navigation path)
+    // keeps showing the previous user's collections/notes/bookmarks until
+    // something else forces a rebuild. Mirrors NotesController's listener.
+    _authSubscription = _auth.firebaseUser.listen((user) {
+      if (user == null) {
+        collections.clear();
+        notes.clear();
+        currentCollectionBookmarks.clear();
+        currentCollection.value = null;
+        return;
+      }
+      loadCollections();
+      loadNotes();
+      if (currentCollection.value != null) {
+        loadBookmarksForCollection(currentCollection.value!.id);
+      }
+    });
   }
 
   @override
   void onClose() {
+    _authSubscription?.cancel();
     tabController.dispose();
     super.onClose();
   }
