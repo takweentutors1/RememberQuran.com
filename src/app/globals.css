@@ -339,6 +339,12 @@
   html {
     @apply font-sans;
   }
+
+  /* Prevent aggressive pill-radius clipping on containers in Spotify theme */
+  [data-slot$="-content"],
+  .card {
+    --radius: 0.5rem;
+  }
 }
 
 /* Quran reader typography helpers */
