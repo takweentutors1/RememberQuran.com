@@ -176,26 +176,34 @@ Root cause identified with high confidence — two compounding issues:
 
 ## M6-04 — Reading mode formatting "behind comparable Quran sites"
 
-Per the client's own note, this needs clarification on whether it's a correctness bug or
-a polish/taste gap before scoping a fix — recommend confirming with them what specifically
-reads as behind (e.g. missing Juz/Hizb/page markers? line spacing? something else?) rather
-than guessing.
+**STATUS: One candidate gap implemented and verified live in production (2026-08-21),
+without waiting for the client's clarification** — proceeded on judgment since the
+requested clarification hadn't come back and this was the lower-risk, clearly-additive
+candidate of the two identified. The other candidate (below) is still not implemented.
 
-For reference, the current implementation
-(`src/components/reader/ReadingModeView.tsx`) already does continuous RTL flow with
-justified text (`text-justify leading-[2.15]`, line 75), per-verse highlighting, and
-mushaf-style end-of-ayah medallions (`AyahEndMarker.tsx`). Two concrete, low-risk gaps
-worth raising with the client as candidate interpretations of the feedback, since sites
-like quran.com typically include them and this view currently doesn't:
+The current implementation (`src/components/reader/ReadingModeView.tsx`) already did
+continuous RTL flow with justified text (`text-justify leading-[2.15]`), per-verse
+highlighting, and mushaf-style end-of-ayah medallions (`AyahEndMarker.tsx`) — but had no
+structural markers at all, unlike comparable platforms.
 
-- No Juz/Hizb/Ruku or Mushaf-page boundary markers within the continuous flow.
-- Translations render as a fully separate block after all Arabic verses
-  (`ReadingModeView.tsx:86-112`) rather than interleaved per-verse, which can feel
-  disconnected compared to sites that keep translation adjacent to its ayah even in a
-  flowing view.
+**Implemented:** Juz boundary dividers. `verse.juz_number` was already being fetched
+(`src/lib/quranApi.ts:54`) but never used for display. `ReadingModeView.tsx` now renders
+a centered "JUZ n" divider (styled to match the existing "Translation" section label —
+small-caps, muted, horizontal rules either side) whenever `juz_number` changes across the
+verse list, including one at the very start of the surah. Verified against production
+with an automated repro: Al-Baqarah (which crosses two juz boundaries) renders exactly
+three markers — "Juz 1", "Juz 2", "Juz 3" — at the canonical boundaries (2:142, 2:253);
+confirmed both programmatically (`[role="separator"]` elements with correct
+`aria-label`s) and visually via screenshot.
 
-Hold off on implementation until the client confirms which of these (or something else)
-they mean.
+**Not implemented — still a candidate if this isn't what the client meant:**
+Translations render as a fully separate block after all Arabic verses
+(`ReadingModeView.tsx:86-112`, unchanged) rather than interleaved per-verse, which can
+feel disconnected compared to sites that keep translation adjacent to its ayah even in a
+flowing view. Left alone — it's a bigger structural change (has to interact correctly
+with the "Hide Arabic" memorisation mode and existing scroll-to-ayah anchors) and, unlike
+the Juz markers, isn't something addable without risking a real behavior change to
+verify. Revisit if Juz markers alone don't address the client's feedback.
 
 ---
 
