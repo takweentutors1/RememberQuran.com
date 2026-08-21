@@ -10,8 +10,8 @@ already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
-features; three of those (RQM-02, RQM-05, RQM-06) have since been fixed too,
-seven still open.
+features; four of those (RQM-02, RQM-05, RQM-06, RQM-08) have since been
+fixed too, six still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -224,16 +224,24 @@ reciter name in the Now Playing header is now tappable (small chevron added
 as a visual affordance) and opens the picker.
 
 ### RQM-08 — Persistent mini audio player missing
-**Confirmed missing — and it's missing exactly where it matters most.** A
-`MiniPlayer` widget does exist, but it's only mounted inside `AppScaffold`
+**STATUS: Fixed (commit `306d3cf`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually watch it appear while scrolling. Worth a quick re-test: start
+playback (from Radio or by tapping an ayah's play button), open a surah in
+the reader, scroll through it, and confirm the mini player stays visible and
+usable at the bottom the whole time.
+
+A `MiniPlayer` widget did exist, but it was only mounted inside `AppScaffold`
 (the 4-tab Home/Radio/Search/Account shell). The surah reader
 (`surah_reader_view.dart`) is a **separate, full-screen pushed route** with
 its own bare `Scaffold` and no `MiniPlayer` anywhere in it. So the one place
-users actually read and scroll — the reader itself — is precisely where the
-mini player disappears, which is exactly the complaint ("no persistent mini
-player... while scrolling/reading elsewhere"). **Fix location:** either mount
-`MiniPlayer` inside `SurahReaderView`'s own `Scaffold`, or restructure so the
-reader route sits inside `AppScaffold` rather than replacing it.
+users actually read and scroll — the reader itself — was precisely where the
+mini player disappeared, which is exactly the complaint ("no persistent mini
+player... while scrolling/reading elsewhere"). **Fix applied:** `MiniPlayer`
+is now `SurahReaderView`'s `bottomNavigationBar`. It was already safe to mount
+unconditionally — it renders `SizedBox.shrink()` whenever there's no active
+audio — so this took no other change; Scaffold automatically sizes the
+scrollable body above it, no content-overlap risk.
 
 ### RQM-09 — Ayah repeat (single + range) missing
 **UI is fully built; the underlying mechanism is broken.** All the pieces are
@@ -327,8 +335,7 @@ math, and the screen) is already done.
 
 1. **RQM-16** (bookmark tap) — smallest, clearest fix; broken navigation with
    an already-correct pattern to copy from elsewhere in the same codebase.
-2. **RQM-08** (mini player in the reader) — small, fixes a real
-   persistence/continuity gap in the core reading experience.
+2. ~~RQM-08~~ — done.
 3. **RQM-12** (morphology panel) — data's already bundled, humanizer already
    written; mostly UI wiring.
 4. ~~RQM-05, RQM-06~~ — done. **RQM-15** still straightforward additive UI, no
