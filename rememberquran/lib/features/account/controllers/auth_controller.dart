@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -110,6 +109,12 @@ class AuthController extends GetxController {
       Get.snackbar('Success', 'Check your inbox! We\'ve sent password reset instructions to $email');
     } on FirebaseAuthException catch (e) {
       error.value = e.message ?? 'Unable to send reset email. Please ensure the email address is correct.';
+    } catch (e) {
+      // Anything outside FirebaseAuthException (e.g. no network/DNS
+      // failure) previously propagated uncaught — the request looked like
+      // it silently did nothing, since `finally` still reset isLoading but
+      // error.value (what the UI actually displays) was never set.
+      error.value = 'Something went wrong. Check your connection and try again.';
     } finally {
       isLoading.value = false;
     }
