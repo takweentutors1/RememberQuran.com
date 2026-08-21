@@ -10,8 +10,8 @@ already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
-features; two of those (RQM-02, RQM-05) have since been fixed too, eight
-still open.
+features; three of those (RQM-02, RQM-05, RQM-06) have since been fixed too,
+seven still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -201,12 +201,27 @@ individually `Obx`-wrapped and disabled while a chapter is loading, so rapid
 tapping can't fire overlapping loads.
 
 ### RQM-06 — Reciter selection unavailable in reading mode
-**Confirmed missing.** The only reciter picker in the app is a private method
-inside `RadioView`. The reading-mode "Now Playing" sheet only *displays* the
-current reciter's name as static text with no way to change it. **Fix
-location:** the empty `lib/features/audio/widgets/reciter_selector.dart` stub
-is exactly where this should live — extract the picker logic out of
-`radio_view.dart` into it, then call it from `audio_player_sheet.dart`.
+**STATUS: Fixed (commit `7984bbc`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually tap through it. Worth a quick re-test: open the reading-mode
+"Now Playing" sheet, tap the reciter name, pick a different reciter, and
+confirm playback switches to that reciter's audio and resumes from the same
+ayah rather than restarting the surah.
+
+The only reciter picker in the app was a private method inside `RadioView`.
+The reading-mode "Now Playing" sheet only *displayed* the current reciter's
+name as static text with no way to change it. **Fix applied:** the empty
+`lib/features/audio/widgets/reciter_selector.dart` stub now holds a shared,
+parameterized `showReciterPicker()` extracted from `RadioView`'s original
+implementation (both call sites use the same picker instead of drifting
+apart); `RadioView._showReciterPicker` is now a thin wrapper around it with
+no behavior change. Added `AudioController.changeReciter()`: in Radio mode it
+restarts the current surah with the new reciter (matching Radio's existing
+behavior); otherwise it reloads whatever chapter is currently playing with
+the new reciter's audio and seeks back to the same ayah, so switching
+reciters mid-recitation doesn't reset you to the start of the surah. The
+reciter name in the Now Playing header is now tappable (small chevron added
+as a visual affordance) and opens the picker.
 
 ### RQM-08 — Persistent mini audio player missing
 **Confirmed missing — and it's missing exactly where it matters most.** A
@@ -316,7 +331,7 @@ math, and the screen) is already done.
    persistence/continuity gap in the core reading experience.
 3. **RQM-12** (morphology panel) — data's already bundled, humanizer already
    written; mostly UI wiring.
-4. ~~RQM-05~~ — done. **RQM-06, RQM-15** still straightforward additive UI, no
+4. ~~RQM-05, RQM-06~~ — done. **RQM-15** still straightforward additive UI, no
    architectural rework.
 5. ~~RQM-02~~ — done. **RQM-09** still needs real changes to the repeat logic
    in `audio_controller.dart` (same file, same underlying single-continuous-
