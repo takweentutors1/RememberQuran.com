@@ -23,6 +23,28 @@ class SurahReaderView extends GetView<ReaderController> {
         }),
         centerTitle: true,
         actions: [
+          Obx(() {
+            final currentId = controller.chapter.value?.id;
+            final isBusy = controller.isLoading.value;
+            return IconButton(
+              icon: const Icon(Icons.navigate_before),
+              tooltip: 'Previous surah',
+              onPressed: (isBusy || currentId == null)
+                  ? null
+                  : () => controller.loadChapter(currentId > 1 ? currentId - 1 : 114),
+            );
+          }),
+          Obx(() {
+            final currentId = controller.chapter.value?.id;
+            final isBusy = controller.isLoading.value;
+            return IconButton(
+              icon: const Icon(Icons.navigate_next),
+              tooltip: 'Next surah',
+              onPressed: (isBusy || currentId == null)
+                  ? null
+                  : () => controller.loadChapter(currentId < 114 ? currentId + 1 : 1),
+            );
+          }),
           IconButton(
             icon: const Icon(Icons.search),
             tooltip: 'Quick Jump',
