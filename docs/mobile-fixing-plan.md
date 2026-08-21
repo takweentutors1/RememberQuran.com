@@ -10,8 +10,8 @@ already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
-features; five of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09) have since
-been fixed too, five still open.
+features; six of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12) have
+since been fixed too, four still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -271,18 +271,27 @@ to the real verse timestamp via `_timings` instead of the no-op
 `skipToQueueItem`.
 
 ### RQM-12 — Word morphology/grammar panel missing
-**The data is already there; only the UI is missing.** Tapping a word already
-opens a sheet — but it only shows translation/transliteration, no
-root/lemma/form. The per-word morphology data (POS, lemma, root, features) is
-**already bundled as JSON assets** (`assets/data/morphology/v1/{surah}.json`,
-declared in `pubspec.yaml`) and there's even a ready-made label-humanizing
-utility (`lib/core/utils/morphology_labels.dart`, `humanizePOS()`/
-`humanizeFeatures()`) that's fully written but has zero callers anywhere in
-the app. **Fix location:** implement a small local datasource to load/parse
-the bundled JSON (no network call needed), then extend the existing word-tap
-sheet (or resurrect the empty `word_detail_view.dart` stub) to display it
-using the humanizer that's already sitting there unused. This is the
-lowest-effort "missing feature" on this list — most of the work is done.
+**STATUS: Fixed (commit `89cb40f`), `dart analyze` clean, data-layer logic
+verified standalone against the real bundled asset — not yet verified in the
+actual app UI on a live device/simulator** (no Flutter emulator was available
+in this session). Worth a quick re-test: tap an Arabic word and confirm the
+sheet shows Part of Speech / Lemma / Root / Grammar beneath the translation.
+
+The data was already there; only the UI was missing. Tapping a word already
+opened a sheet, but it only showed translation/transliteration, no
+root/lemma/form. The per-word morphology data (POS, lemma, root, features)
+was **already bundled as JSON assets** (`assets/data/morphology/v1/
+{surah}.json`, declared in `pubspec.yaml`) and there was a ready-made
+label-humanizing utility (`lib/core/utils/morphology_labels.dart`,
+`humanizePOS()`/`humanizeFeatures()`) fully written with zero callers.
+**Fix applied:** filled in the two empty stub files —
+`morphology_entry.dart` (model) and `morphology_local_ds.dart` (loads/caches
+the bundled per-surah JSON via `rootBundle`, no network call) — then wired
+`WordMeaningSheet` to load and render it (it needed `verseKey`, which
+`ArabicWord` already had but wasn't passing through). Verified the data-layer
+logic standalone outside Flutter: `1:1` ("بِسْمِ") correctly resolves to
+Noun / lemma اسْم / root سمو (matches known Arabic grammar), and a
+nonexistent key resolves to `null` cleanly rather than throwing.
 
 ### RQM-15 — Bookmark collection assignment not available while saving
 **Confirmed missing.** The data model and repository already fully support
@@ -347,10 +356,8 @@ math, and the screen) is already done.
 
 1. **RQM-16** (bookmark tap) — smallest, clearest fix; broken navigation with
    an already-correct pattern to copy from elsewhere in the same codebase.
-2. ~~RQM-08~~ — done.
-3. **RQM-12** (morphology panel) — data's already bundled, humanizer already
-   written; mostly UI wiring.
-4. ~~RQM-05, RQM-06~~ — done. **RQM-15** still straightforward additive UI, no
+2. ~~RQM-08, RQM-12~~ — done.
+3. ~~RQM-05, RQM-06~~ — done. **RQM-15** still straightforward additive UI, no
    architectural rework.
 5. ~~RQM-02, RQM-09~~ — both done (same file, same underlying
    single-continuous-track architecture).
