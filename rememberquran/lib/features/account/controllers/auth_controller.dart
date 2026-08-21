@@ -106,7 +106,21 @@ class AuthController extends GetxController {
       error.value = '';
       await _auth.sendPasswordResetEmail(email: email);
       Get.back();
-      Get.snackbar('Success', 'Check your inbox! We\'ve sent password reset instructions to $email');
+      // Firebase Auth's email enumeration protection makes this call
+      // succeed even when no account exists for `email` — it never reveals
+      // that server-side, by design. Wording this as conditional ("if an
+      // account exists") plus a spam-folder nudge avoids the app claiming
+      // an email was sent to someone with no account, and covers the most
+      // common reason a genuine reset email doesn't show up (filtered to
+      // spam) — the two real explanations behind "the reset email never
+      // arrived" that no client-side code change can eliminate outright.
+      Get.snackbar(
+        'Check Your Inbox',
+        'If an account exists for $email, we\'ve sent password reset '
+            'instructions. It can take a few minutes to arrive — please '
+            'check your spam/junk folder too.',
+        duration: const Duration(seconds: 6),
+      );
     } on FirebaseAuthException catch (e) {
       error.value = e.message ?? 'Unable to send reset email. Please ensure the email address is correct.';
     } catch (e) {
