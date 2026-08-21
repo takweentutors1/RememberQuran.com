@@ -2,12 +2,17 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../../../data/datasources/local/quran_db.dart';
+import '../../../../data/datasources/remote/morphology_local_ds.dart';
+import '../../../../data/models/morphology_entry.dart';
 import '../../../../core/models/reciter.dart';
+import '../../../../core/utils/morphology_labels.dart';
 
 class WordMeaningSheet extends StatefulWidget {
   final Word word;
+  final String verseKey;
 
-  const WordMeaningSheet({Key? key, required this.word}) : super(key: key);
+  const WordMeaningSheet({Key? key, required this.word, required this.verseKey})
+      : super(key: key);
 
   @override
   State<WordMeaningSheet> createState() => _WordMeaningSheetState();
@@ -15,7 +20,31 @@ class WordMeaningSheet extends StatefulWidget {
 
 class _WordMeaningSheetState extends State<WordMeaningSheet> {
   final AudioPlayer _player = AudioPlayer();
+  final MorphologyLocalDataSource _morphologyDs = MorphologyLocalDataSource();
   bool _isPlaying = false;
+  MorphologyEntry? _morphology;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMorphology();
+  }
+
+  Future<void> _loadMorphology() async {
+    final parts = widget.verseKey.split(':');
+    if (parts.length != 2) return;
+    final surahId = int.tryParse(parts[0]);
+    final ayahNumber = int.tryParse(parts[1]);
+    if (surahId == null || ayahNumber == null) return;
+
+    final entry = await _morphologyDs.getEntry(
+      surahId: surahId,
+      ayahNumber: ayahNumber,
+      wordPosition: widget.word.position,
+    );
+    if (!mounted || entry == null) return;
+    setState(() => _morphology = entry);
+  }
 
   @override
   void dispose() {
@@ -118,6 +147,10 @@ class _WordMeaningSheetState extends State<WordMeaningSheet> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+            if (_morphology != null) ...[
+              const SizedBox(height: 20),
+              _buildMorphologySection(theme, _morphology!),
+            ],
             const SizedBox(height: 32),
             // Play Audio Button
             if (word.audioUrl != null && word.audioUrl!.isNotEmpty)
@@ -139,6 +172,64 @@ class _WordMeaningSheetState extends State<WordMeaningSheet> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMorphologySection(ThemeData theme, MorphologyEntry morphology) {
+    const arabicLabels = {'Lemma', 'Root'};
+    final rows = <MapEntry<String, String>>[
+      if (morphology.pos.isNotEmpty)
+        MapEntry('Part of Speech', MorphologyLabels.humanizePOS(morphology.pos)),
+      if (morphology.lemma.isNotEmpty) MapEntry('Lemma', morphology.lemma),
+      if (morphology.root.isNotEmpty) MapEntry('Root', morphology.root),
+      if (morphology.features.isNotEmpty)
+        MapEntry(
+          'Grammar',
+          MorphologyLabels.humanizeFeatures(morphology.features).join(' · '),
+        ),
+    ];
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          for (final row in rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    row.key,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      row.value,
+                      textAlign: TextAlign.end,
+                      textDirection: arabicLabels.contains(row.key)
+                          ? TextDirection.rtl
+                          : TextDirection.ltr,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontFamily:
+                            arabicLabels.contains(row.key) ? 'UthmanicHafs' : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

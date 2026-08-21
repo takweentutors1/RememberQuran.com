@@ -39,7 +39,7 @@ class ArabicWord extends StatelessWidget {
         onTap: () {
           showResponsiveSheet(
             context: context,
-            builder: (context) => WordMeaningSheet(word: word),
+            builder: (context) => WordMeaningSheet(word: word, verseKey: verseKey),
           );
         },
         borderRadius: BorderRadius.circular(4),
