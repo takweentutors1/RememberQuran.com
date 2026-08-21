@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:rememberquran/data/models/goal.dart';
 import 'package:rememberquran/data/repositories/goals_repository.dart';
 import 'package:rememberquran/features/account/controllers/auth_controller.dart';
+import 'package:rememberquran/shared/widgets/app_feedback.dart';
 
 class GoalsController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();
@@ -53,7 +54,7 @@ class GoalsController extends GetxController {
       await _goalsRepo.setActiveGoal(userId, goal);
       await loadGoalData();
     } catch (e) {
-      Get.snackbar('Error', 'We couldn\'t save your daily goal. Please try again.');
+      AppFeedback.showError('We couldn\'t save your daily goal. Please try again.');
     }
   }
 
@@ -65,7 +66,7 @@ class GoalsController extends GetxController {
       await _goalsRepo.clearActiveGoal(userId);
       await loadGoalData();
     } catch (e) {
-      Get.snackbar('Error', 'We couldn\'t remove your daily goal. Please try again.');
+      AppFeedback.showError('We couldn\'t remove your daily goal. Please try again.');
     }
   }
 }

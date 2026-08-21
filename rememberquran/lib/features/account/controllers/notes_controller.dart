@@ -5,6 +5,7 @@ import '../../../data/models/note.dart';
 import '../../../data/repositories/notes_repository.dart';
 import '../../../data/repositories/quran_repository.dart';
 import '../../../data/datasources/local/quran_db.dart';
+import '../../../shared/widgets/app_feedback.dart';
 import 'auth_controller.dart';
 
 class NotesController extends GetxController {
@@ -173,7 +174,7 @@ class NotesController extends GetxController {
         allNotes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         _filterNotes(searchController.text);
       }
-      Get.snackbar('Error', 'Unable to remove this note. Please try again.');
+      AppFeedback.showError('Unable to remove this note. Please try again.');
     }
   }
 }

@@ -5,6 +5,7 @@ import '../../../data/models/bookmark.dart';
 import '../../../data/models/note.dart';
 import '../../../data/repositories/bookmarks_repository.dart';
 import '../../../data/repositories/notes_repository.dart';
+import '../../../shared/widgets/app_feedback.dart';
 import 'auth_controller.dart';
 
 class BookmarksController extends GetxController with GetSingleTickerProviderStateMixin {
@@ -125,7 +126,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
     if (res['ok'] == true) {
       await loadCollections();
     } else {
-      Get.snackbar('Error', 'We couldn\'t create this collection. Please try again: ${res['error']}');
+      AppFeedback.showError('We couldn\'t create this collection. Please try again: ${res['error']}');
     }
   }
 
@@ -136,9 +137,9 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
     final res = await _bookmarksRepo.deleteCollection(userId, id);
     if (res['ok'] == true) {
       await loadCollections();
-      Get.snackbar('Success', 'Collection removed. Its bookmarks have been moved to Favourites.');
+      AppFeedback.showSuccess('Collection removed. Its bookmarks have been moved to Favourites.');
     } else {
-      Get.snackbar('Error', 'We couldn\'t delete this collection. Please try again: ${res['error']}');
+      AppFeedback.showError('We couldn\'t delete this collection. Please try again: ${res['error']}');
     }
   }
 
@@ -154,7 +155,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
         await loadBookmarksForCollection(id);
       }
     } else {
-      Get.snackbar('Error', 'We couldn\'t update the collection name. Please try again: ${res['error']}');
+      AppFeedback.showError('We couldn\'t update the collection name. Please try again: ${res['error']}');
     }
   }
 
@@ -170,7 +171,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
       }
       await loadCollections(); // To update counts
     } else {
-      Get.snackbar('Error', 'We couldn\'t remove this bookmark. Please try again.');
+      AppFeedback.showError('We couldn\'t remove this bookmark. Please try again.');
     }
   }
 
@@ -182,7 +183,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
       await _notesRepo.deleteNote(userId, verseKey);
       await loadNotes();
     } catch (e) {
-      Get.snackbar('Error', 'Unable to remove this note. Please try again.');
+      AppFeedback.showError('Unable to remove this note. Please try again.');
     }
   }
 }

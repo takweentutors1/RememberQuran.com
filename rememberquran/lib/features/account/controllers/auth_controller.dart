@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/models/last_position.dart';
+import '../../../shared/widgets/app_feedback.dart';
 import 'dart:async';
 
 class AuthController extends GetxController {
@@ -114,12 +115,11 @@ class AuthController extends GetxController {
       // common reason a genuine reset email doesn't show up (filtered to
       // spam) — the two real explanations behind "the reset email never
       // arrived" that no client-side code change can eliminate outright.
-      Get.snackbar(
-        'Check Your Inbox',
+      AppFeedback.showSuccess(
         'If an account exists for $email, we\'ve sent password reset '
-            'instructions. It can take a few minutes to arrive — please '
-            'check your spam/junk folder too.',
-        duration: const Duration(seconds: 6),
+        'instructions. It can take a few minutes to arrive — please '
+        'check your spam/junk folder too.',
+        title: 'Check Your Inbox',
       );
     } on FirebaseAuthException catch (e) {
       error.value = e.message ?? 'Unable to send reset email. Please ensure the email address is correct.';
@@ -153,7 +153,7 @@ class AuthController extends GetxController {
       // Update password
       await user.updatePassword(newPassword);
       
-      Get.snackbar('Success', 'Your password has been successfully updated.');
+      AppFeedback.showSuccess('Your password has been successfully updated.');
       Get.back(); // close dialog/screen
     } on FirebaseAuthException catch (e) {
       error.value = e.message ?? 'We couldn\'t update your password. Please try again.';
@@ -214,7 +214,7 @@ class AuthController extends GetxController {
       await user.delete();
       
       Get.offAllNamed(Routes.LOGIN);
-      Get.snackbar('Success', 'Your account and all associated data have been permanently deleted.');
+      AppFeedback.showSuccess('Your account and all associated data have been permanently deleted.');
     } on FirebaseAuthException catch (e) {
       error.value = e.message ?? 'Unable to delete your account. Please check your connection and try again.';
     } finally {

@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../shared/widgets/app_feedback.dart';
 
 class AyahCardDesignerController extends GetxController {
   final GlobalKey repaintKey = GlobalKey();
@@ -40,7 +41,7 @@ class AyahCardDesignerController extends GetxController {
       final xFile = XFile.fromData(bytes, mimeType: 'image/png', name: 'ayah_card.png');
       await Share.shareXFiles([xFile], text: 'Shared via RememberQuran');
     } catch (e) {
-      Get.snackbar('Error', 'Unable to share the Ayah card at this moment. Please try again.');
+      AppFeedback.showError('Unable to share the Ayah card at this moment. Please try again.');
     }
   }
 
@@ -53,25 +54,25 @@ class AyahCardDesignerController extends GetxController {
     try {
       final bytes = await _capturePng();
       if (bytes == null) {
-        Get.snackbar('Error', 'Unable to save the Ayah card at this moment. Please try again.');
+        AppFeedback.showError('Unable to save the Ayah card at this moment. Please try again.');
         return;
       }
 
       final hasAccess = await Gal.hasAccess() || await Gal.requestAccess();
       if (!hasAccess) {
-        Get.snackbar(
-          'Permission needed',
+        AppFeedback.showError(
           'Allow photo library access in Settings to save ayah cards.',
+          title: 'Permission needed',
         );
         return;
       }
 
       await Gal.putImageBytes(bytes, name: 'rememberquran_ayah_card');
-      Get.snackbar('Saved', 'Ayah card saved to your gallery.');
+      AppFeedback.showSuccess('Ayah card saved to your gallery.', title: 'Saved');
     } on GalException catch (e) {
-      Get.snackbar('Error', e.type.message);
+      AppFeedback.showError(e.type.message);
     } catch (e) {
-      Get.snackbar('Error', 'Unable to save the Ayah card at this moment. Please try again.');
+      AppFeedback.showError('Unable to save the Ayah card at this moment. Please try again.');
     } finally {
       isSaving.value = false;
     }
