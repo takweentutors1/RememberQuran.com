@@ -1,6 +1,11 @@
+"use client"
+
 import Link from "next/link"
 import { Bookmark, ImagePlus, Radio, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useSession } from "next-auth/react"
+import { useSoftGate } from "@/context/SoftGateContext"
+import type { SoftGateReason } from "@/lib/auth/safe-next"
 
 interface Tile {
   href: string
@@ -8,6 +13,7 @@ interface Tile {
   hint: string
   icon: typeof Bookmark
   tone: "primary" | "gold"
+  authReason?: SoftGateReason
 }
 
 const TILES: Tile[] = [
@@ -17,6 +23,7 @@ const TILES: Tile[] = [
     hint: "Saved ayahs",
     icon: Bookmark,
     tone: "primary",
+    authReason: "bookmark",
   },
   {
     href: "/radio",
@@ -38,17 +45,27 @@ const TILES: Tile[] = [
     hint: "Track your reading",
     icon: Target,
     tone: "gold",
+    authReason: "goal",
   },
 ]
 
 /** Four shortcut tiles surfacing the app's key features from the home page. */
 export function QuickAccess() {
+  const { status } = useSession()
+  const { requireAuth } = useSoftGate()
+
   return (
     <section aria-label="Quick access" className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-      {TILES.map(({ href, label, hint, icon: Icon, tone }) => (
+      {TILES.map(({ href, label, hint, icon: Icon, tone, authReason }) => (
         <Link
           key={href}
           href={href}
+          onClick={(e) => {
+            if (authReason && status === "unauthenticated") {
+              e.preventDefault()
+              requireAuth(authReason, href)
+            }
+          }}
           className={cn(
             "card group lift flex flex-col items-start gap-2.5 rounded-xl border border-border bg-card px-4 py-4",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
