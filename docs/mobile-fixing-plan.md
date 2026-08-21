@@ -9,9 +9,11 @@ three parallel codebase investigations plus one direct follow-up check
 already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
-one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
-features; six of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12) have
-since been fixed too, four still open.
+RQM-01's gap has since been fixed, and RQM-14's code-fixable portion has too
+(though its actual reported symptom needs a Firebase console check, not a
+code fix). Ten are genuine bugs or missing features; six of those (RQM-02,
+RQM-05, RQM-06, RQM-08, RQM-09, RQM-12) have since been fixed too, four
+still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -111,20 +113,35 @@ on logout, reloads them (plus the currently-viewed collection, if any) on
 login.
 
 ### RQM-14 — Password reset email not arriving
-**The code is correct.** `resetPassword()` calls Firebase Auth's real
+**STATUS: Partially fixed (commit `77584a2`) — the code-fixable part is
+done; the actual reported symptom is very likely not a code bug at all and
+can't be resolved from here.**
+
+The code itself was correct: `resetPassword()` calls Firebase Auth's real
 `sendPasswordResetEmail` directly (not a custom backend — the mobile app
 doesn't share the web app's `/api/auth/reset/request` endpoint at all), with
-proper `FirebaseAuthException` handling and a success snackbar.
+proper `FirebaseAuthException` handling and a success snackbar. Also
+double-checked the app is registered against the *same* Firebase project as
+the web app (`remember-quran`, confirmed in `firebase_options.dart`) — not a
+wrong-project misconfiguration.
 
-**Most likely actual cause, outside the code:** Firebase's default "email
-enumeration protection" makes `sendPasswordResetEmail` return success even for
-an email with no account — so the in-app success message doesn't prove an
-email was actually sent. Check the Firebase console: email templates enabled,
-sender domain/SPF/DKIM configured, and whether the test email actually has an
-account. **One real (minor) code gap:** the catch clause only handles
-`FirebaseAuthException` — a network error (e.g. `SocketException`) would
-propagate unhandled instead of showing a friendly error, worth a broader
-`catch (e)` fallback.
+**Fixed:** the one real code gap — the catch clause only handled
+`FirebaseAuthException`; any other exception (e.g. a network/DNS failure)
+previously propagated uncaught, so a failed request silently reset the
+loading state with zero feedback (`error.value`, what the screen actually
+displays, was never set). Added a catch-all fallback.
+
+**Not fixed, because it isn't a code bug:** the actual "email doesn't
+arrive" symptom most likely traces to Firebase project configuration —
+Firebase's default "email enumeration protection" makes
+`sendPasswordResetEmail` report success even for an email with no account
+(so the in-app success message doesn't prove anything was actually sent), or
+the project's email templates/sender domain/SPF/DKIM aren't configured.
+**This needs a check in the Firebase console — outside what I can verify or
+fix from this environment.** Recommend: confirm the test email actually has
+an account, check Firebase Console → Authentication → Templates is enabled
+and the sender domain is verified, and check spam folders before assuming
+it's still broken after re-testing.
 
 ### RQM-17 — Reading streak doesn't update
 **The pipeline is fully wired end-to-end and looks correct.** Scroll-dwell
