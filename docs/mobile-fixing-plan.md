@@ -1,18 +1,17 @@
 # Mobile App (RQM) Fixing Plan
 
 Source: `docs/QA_Tracker_RememberQuran_Mobile - QA Tracker.pdf` (RQM-01–RQM-19),
-analyzed against the actual Flutter codebase at `rememberquran/`. No code was
-changed for this pass — this is analysis only, produced by three parallel
-codebase investigations plus one direct follow-up check (RQM-08), covering
-every item with file:line evidence.
+analyzed against the actual Flutter codebase at `rememberquran/`, produced by
+three parallel codebase investigations plus one direct follow-up check
+(RQM-08), covering every item with file:line evidence.
 
 **Headline finding:** this tracker is noisier than the web one. Six items are
 already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
-current code. Three more are *mostly* correct with one small real gap each.
-Ten are genuine bugs or missing features. None of the "Already implemented"
-verdicts below are guesses — each cites the actual file and logic that proves
-it works.
+current code. Three more were *mostly* correct with one small real gap each —
+one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
+features, still open. None of the "Already implemented" verdicts below are
+guesses — each cites the actual file and logic that proves it works.
 
 A recurring pattern worth flagging on its own: **the codebase has a lot of
 0-byte dead stub files** sitting alongside working implementations —
@@ -79,6 +78,14 @@ ayah" shows instantly without a round-trip), `asbab_controller.dart` and
 ## Mostly correct — one real gap each, needs a small fix to fully close
 
 ### RQM-01 — Notes/bookmarks persistence after logout: contradictory findings
+**STATUS: Fixed (commit `7880a2a`), `dart analyze` clean, not yet verified on a
+live device/simulator** — no Flutter emulator was available in this session to
+click through the actual repro. The fix below mirrors an already-proven
+working pattern elsewhere in the same codebase, so confidence is high, but
+this should still get a real re-test: log in, add a bookmark, log out, log
+back into the *same* account, confirm the bookmark is still there and no
+stale/wrong-user data ever flashes in between.
+
 **The contradiction has an explanation, and there's one real bug underneath
 it.** This is not local-device storage — notes and bookmarks live entirely in
 Firestore under `users/{userId}/...`, and `logout()` only calls
@@ -95,8 +102,11 @@ that reloads on login/logout. **`BookmarksController` has no such listener** —
 it only loads once in `onInit()`. If that controller instance survives a
 logout (e.g. it isn't disposed by GetX's binding lifecycle on every
 navigation path), it could keep showing the previous user's bookmarks/collections
-until something forces a rebuild. **Fix:** add the same `ever(_auth.firebaseUser, ...)`
-pattern to `BookmarksController` that `NotesController` already has.
+until something forces a rebuild. **Fix applied:** `BookmarksController` now
+has the same `firebaseUser.listen(...)` pattern `NotesController` already had
+— clears `collections`/`notes`/`currentCollectionBookmarks`/`currentCollection`
+on logout, reloads them (plus the currently-viewed collection, if any) on
+login.
 
 ### RQM-14 — Password reset email not arriving
 **The code is correct.** `resetPassword()` calls Firebase Auth's real
