@@ -1,5 +1,6 @@
 "use client"
 
+import { Fragment } from "react"
 import type { Verse } from "@/types/quran"
 import { useHighlightedWord } from "@/lib/playbackStore"
 import { ArabicWord } from "./ArabicWord"
@@ -56,9 +57,28 @@ function ReadingVerse({ verse, isTarget }: { verse: Verse; isTarget: boolean }) 
   )
 }
 
+/** Juz boundary divider — mirrors comparable Quran sites, which mark the
+ * juz a reader is currently in rather than leaving continuous mode as one
+ * undifferentiated block of text. */
+function JuzMarker({ juz }: { juz: number }) {
+  return (
+    <div
+      dir="ltr"
+      role="separator"
+      aria-label={`Juz ${juz}`}
+      className="my-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+    >
+      <span aria-hidden className="h-px flex-1 bg-border/50" />
+      <span className="shrink-0 tabular-nums">Juz {juz}</span>
+      <span aria-hidden className="h-px flex-1 bg-border/50" />
+    </div>
+  )
+}
+
 /**
  * Continuous Arabic flow (quran.com "Reading" preference).
- * Words stream RTL; end-of-ayah glyphs mark verse boundaries.
+ * Words stream RTL; end-of-ayah glyphs mark verse boundaries; juz dividers
+ * break up the flow at each boundary crossed within the surah.
  * Optional translations appear as a compact list below the mushaf block.
  */
 export function ReadingModeView({
@@ -74,13 +94,19 @@ export function ReadingModeView({
         lang="ar"
         className="quran-arabic text-justify leading-[2.15]"
       >
-        {verses.map((verse) => (
-          <ReadingVerse
-            key={verse.id}
-            verse={verse}
-            isTarget={targetAyahId === verse.verse_number}
-          />
-        ))}
+        {verses.map((verse, index) => {
+          const prevJuz = index > 0 ? verses[index - 1].juz_number : null
+          const showJuzMarker = verse.juz_number !== prevJuz
+          return (
+            <Fragment key={verse.id}>
+              {showJuzMarker && <JuzMarker juz={verse.juz_number} />}
+              <ReadingVerse
+                verse={verse}
+                isTarget={targetAyahId === verse.verse_number}
+              />
+            </Fragment>
+          )
+        })}
       </div>
 
       {showTranslation && (
