@@ -7,7 +7,7 @@ import type { LucideIcon } from "lucide-react"
 import { BookOpenText, Headphones, ImagePlus, Search } from "lucide-react"
 import { AuthNav } from "@/components/auth/AuthNav"
 import { LogoWordmark } from "@/components/layout/Logo"
-import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher"
 import { useUI } from "@/context/UIContext"
 import { cn } from "@/lib/utils"
 
@@ -77,7 +77,7 @@ function NavLinks({ pathname }: { pathname: string }) {
           </Link>
         )
       })}
-      <ThemeToggle />
+      <ThemeSwitcher />
       <AuthNav />
     </nav>
   )

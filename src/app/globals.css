@@ -190,6 +190,141 @@
   --elev-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 28px 60px -20px rgb(0 0 0 / 0.8);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   APPLE THEME
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme="apple"] {
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --card: #fafafc;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
+  --primary: #0066cc;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #7a7a7a;
+  --accent: #d2d2d7;
+  --accent-foreground: #1d1d1f;
+  --destructive: oklch(0.52 0.16 27);
+  --border: #f0f0f0;
+  --input: #e0e0e0;
+  --ring: #0071e3;
+  --radius: 0.75rem;
+
+  --sidebar: #f5f5f7;
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-primary: #0066cc;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d2d2d7;
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: #f0f0f0;
+  --sidebar-ring: #0071e3;
+
+  --surface-sunk: #f0f0f0;
+  --foreground-subtle: #7a7a7a;
+  --foreground-faint: #cccccc;
+  --border-strong: #e0e0e0;
+
+  --brand-gold: #0066cc;
+  --brand-gold-strong: #0071e3;
+  --brand-gold-soft: #f5f5f7;
+
+  --reader-ink: #1d1d1f;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPOTIFY THEME
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme="spotify"] {
+  --background: #121212;
+  --foreground: #ffffff;
+  --card: #181818;
+  --card-foreground: #ffffff;
+  --popover: #282828;
+  --popover-foreground: #ffffff;
+  --primary: #1ed760;
+  --primary-foreground: #000000;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #ffffff;
+  --muted: #121212;
+  --muted-foreground: #b3b3b3;
+  --accent: #2a2a2a;
+  --accent-foreground: #ffffff;
+  --destructive: #f3727f;
+  --border: #282828;
+  --input: #2a2a2a;
+  --ring: #1ed760;
+  --radius: 9999px;
+
+  --sidebar: #000000;
+  --sidebar-foreground: #b3b3b3;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #000000;
+  --sidebar-ring: #1ed760;
+
+  --surface-sunk: #000000;
+  --foreground-subtle: #b3b3b3;
+  --foreground-faint: #cbcbcb;
+  --border-strong: #3e3e3e;
+
+  --brand-gold: #1ed760;
+  --brand-gold-strong: #1db954;
+  --brand-gold-soft: #121212;
+
+  --reader-ink: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AIRTABLE THEME
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme="airtable"] {
+  --background: #ffffff;
+  --foreground: #181d26;
+  --card: #f8fafc;
+  --card-foreground: #181d26;
+  --popover: #ffffff;
+  --popover-foreground: #181d26;
+  --primary: #181d26;
+  --primary-foreground: #ffffff;
+  --secondary: #e0e2e6;
+  --secondary-foreground: #181d26;
+  --muted: #f8fafc;
+  --muted-foreground: #41454d;
+  --accent: #e0e2e6;
+  --accent-foreground: #181d26;
+  --destructive: #aa2d00;
+  --border: #dddddd;
+  --input: #dddddd;
+  --ring: #1b61c9;
+  --radius: 0.5rem;
+
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #41454d;
+  --sidebar-primary: #181d26;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0e2e6;
+  --sidebar-accent-foreground: #181d26;
+  --sidebar-border: #dddddd;
+  --sidebar-ring: #1b61c9;
+
+  --surface-sunk: #f8fafc;
+  --foreground-subtle: #41454d;
+  --foreground-faint: #9297a0;
+  --border-strong: #9297a0;
+
+  --brand-gold: #1b61c9;
+  --brand-gold-strong: #1a3866;
+  --brand-gold-soft: #f8fafc;
+
+  --reader-ink: #181d26;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

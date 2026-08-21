@@ -29,6 +29,7 @@ export default function Providers({
       <ThemeProvider
         attribute="class"
         defaultTheme="system"
+        themes={['light', 'dark', 'apple', 'spotify', 'airtable']}
         enableSystem
         disableTransitionOnChange
       >
