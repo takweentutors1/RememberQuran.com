@@ -10,8 +10,8 @@ already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
-features; four of those (RQM-02, RQM-05, RQM-06, RQM-08) have since been
-fixed too, six still open.
+features; five of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09) have since
+been fixed too, five still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -244,19 +244,31 @@ audio — so this took no other change; Scaffold automatically sizes the
 scrollable body above it, no content-overlap risk.
 
 ### RQM-09 — Ayah repeat (single + range) missing
-**UI is fully built; the underlying mechanism is broken.** All the pieces are
-there — `RepeatMode` selector, count slider, delay slider, range dropdowns —
-but the trigger logic only fires on whole-*track* completion or a queue-index
-change, and since the whole surah is one continuous `MediaItem` (see RQM-07),
-neither ever fires mid-surah at the actual target ayah/range boundary. Worse,
-the "restart" call (`skipToQueueItem`) is never overridden in the app's audio
-handler, so it silently falls through to the audio_service package's default
-no-op — the repeat doesn't even seek back to the right position when it does
-trigger. **Fix location:** `audio_controller.dart` — `_handleRepeatLogic()`
-needs a real per-ayah-boundary trigger (compare the live position against the
-target verse timing on each position tick, not queue/track-completion events),
-and `_pauseAndScheduleRestart()` needs to seek to the actual verse start
-instead of calling the no-op `skipToQueueItem`.
+**STATUS: Fixed (commit `d68d1b2`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually listen to it loop. Worth a real re-test: turn on single-ayah
+repeat mid-surah and confirm the same ayah loops the set number of times
+(with the pause delay honored) before continuing; then try range repeat,
+including the edge case where the range end is the surah's last ayah.
+
+The UI was fully built — `RepeatMode` selector, count slider, delay slider,
+range dropdowns — but the trigger logic only fired on whole-*track*
+completion or a queue-index change, and since the whole surah is one
+continuous `MediaItem` (see RQM-07), neither ever fired mid-surah at the
+actual target ayah/range boundary — repeat only kicked in once the entire
+chapter had already played through once, regardless of what was selected.
+Worse, the "restart" call (`skipToQueueItem`) was never overridden in the
+app's audio handler, so it silently fell through to the audio_service
+package's default no-op — even the rare cases that did trigger didn't
+actually seek anywhere. **Fix applied:** trigger now hooks into
+`_onPositionTick`, which already tracks the live playing-ayah index
+(`_lastVerseIdx`) for word-sync highlighting — the same signal RQM-02's fix
+builds on — intercepting right at the verse-boundary crossing that would
+otherwise advance past the target ayah/range end. `_onPlaybackCompleted`
+still has its own check for the edge case where the target is the surah's
+last ayah (no "next ayah" tick exists to intercept there). Restart now seeks
+to the real verse timestamp via `_timings` instead of the no-op
+`skipToQueueItem`.
 
 ### RQM-12 — Word morphology/grammar panel missing
 **The data is already there; only the UI is missing.** Tapping a word already
@@ -340,9 +352,8 @@ math, and the screen) is already done.
    written; mostly UI wiring.
 4. ~~RQM-05, RQM-06~~ — done. **RQM-15** still straightforward additive UI, no
    architectural rework.
-5. ~~RQM-02~~ — done. **RQM-09** still needs real changes to the repeat logic
-   in `audio_controller.dart` (same file, same underlying single-continuous-
-   track architecture RQM-02 lives in).
+5. ~~RQM-02, RQM-09~~ — both done (same file, same underlying
+   single-continuous-track architecture).
 6. **RQM-18, RQM-19** — larger scope (branding asset + save flow; memorisation
    range UI + progress-tracker wiring); worth scoping as their own pieces of
    work rather than quick fixes.
