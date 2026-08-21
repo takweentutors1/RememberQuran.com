@@ -84,48 +84,52 @@ can surface a raw platform 500 anymore.
 
 ## M6-02 (Critical) — Audio doesn't update when switching surahs
 
-Not browser-specific per the report (reproduced on Chrome, but flagged as general).
+**STATUS: Partial fix applied (lead #1 below); NOT independently confirmed live** — no
+browser tool was available in this session (declined) to reproduce and verify against
+actual playback. Ship the fix, but re-test manually before calling this closed.
 
-This one needs a live repro to pin down precisely — the playback state machine in
-`src/context/AudioPlayerContext.tsx` is fairly defensive (chapter-id tracking via
-`chapterIdRef`, a `loadTokenRef` guard against stale async loads, a per-chapter+reciter
-promise cache in `src/lib/audioApi.ts:14` keyed correctly by chapter id) and I could not
-find a clear-cut logic error by static reading alone. Two concrete leads to check first,
-in order of likelihood:
+Not browser-specific per the report (reproduced on Chrome, but flagged as general). Two
+concrete leads were identified by static reading of `src/context/AudioPlayerContext.tsx`
+(otherwise a fairly defensive state machine — chapter-id tracking via `chapterIdRef`, a
+`loadTokenRef` guard against stale async loads, a per-chapter+reciter promise cache in
+`src/lib/audioApi.ts:14` keyed correctly by chapter id):
 
-1. **`src/context/AudioPlayerContext.tsx:488-494`** — `loadChapter()` reassigns
-   `audio.src` directly on the single shared `<audio>` element while it may still be
-   playing the previous chapter. Reassigning `.src` on a currently-playing element can
-   synchronously fire a native `pause` event before the new source is ready.
-   `handlePause` (`AudioPlayerContext.tsx:788-793`) unconditionally dispatches
-   `{ type: "PAUSED" }` whenever `audioRef.current?.currentSrc` is truthy — it doesn't
-   check whether a load is in flight. Since the reducer's `PAUSED` case
-   (`AudioPlayerContext.tsx:165-168`) only special-cases `status === "idle"`, this can
-   clobber the `"loading"` status set by `LOAD_START` moments earlier, and `LOAD_SUCCESS`
-   (`AudioPlayerContext.tsx:140-148`) never resets `status` back. Depending on event
-   timing, this can leave the bar showing "paused" instead of transitioning to
-   "playing" for the new chapter, or otherwise desync the UI from the actual audio
-   element state.
-2. **Reader toolbar trigger** — `src/components/reader/ReaderControls.tsx:53,57-64`
-   (`handlePlaySurah`) decides whether to call `togglePlayPause()` vs. `playChapter()`
-   based on `player.chapterId === toolbarId`, and `toolbarId` is derived from
-   `pendingSurahId ?? chapter?.id ?? parseSurahId(pathname)`
-   (`ReaderControls.tsx:50`, sourced from `src/context/SurahContentContext.tsx`, which
-   runs its own client-side navigation/caching layer alongside Next.js routing). If
-   `chapter?.id` lags behind the route during a fast surah-to-surah navigation, this
-   button could briefly compute the wrong `toolbarId` and either no-op or target the
-   previous chapter.
+1. **Fixed.** `loadChapter()` (`AudioPlayerContext.tsx:488-494`) reassigns `audio.src`
+   directly on the single shared `<audio>` element while it may still be playing the
+   previous chapter. Reassigning `.src` on a currently-playing element can fire a native
+   `pause` event for the outgoing source. `handlePause` (`AudioPlayerContext.tsx:788-799`)
+   used to dispatch `{ type: "PAUSED" }` unconditionally whenever
+   `audioRef.current?.currentSrc` was truthy, with no check for an in-flight load. Since
+   the reducer's `PAUSED` case only special-cases `status === "idle"`, this could clobber
+   the `"loading"` status `LOAD_START` had just set (and `LOAD_SUCCESS` never resets
+   `status` back), stranding the bar on "paused" instead of transitioning to "playing" for
+   the new chapter. **Fix applied:** `handlePause` now returns early when
+   `statusRef.current === "loading"` — a pause event during an active load is never
+   meaningful; the real transition to "playing" still comes from the native `play`/
+   `playing` events once the new source actually starts.
+2. **Not addressed — lower-priority, needs its own repro.** Reader toolbar trigger
+   `src/components/reader/ReaderControls.tsx:53,57-64` (`handlePlaySurah`) decides
+   `togglePlayPause()` vs. `playChapter()` based on `player.chapterId === toolbarId`, and
+   `toolbarId` comes from `pendingSurahId ?? chapter?.id ?? parseSurahId(pathname)`
+   (`ReaderControls.tsx:50`, sourced from `src/context/SurahContentContext.tsx`'s own
+   client-side navigation/caching layer). If `chapter?.id` lags behind the route during a
+   fast surah-to-surah navigation, this button could briefly compute the wrong `toolbarId`
+   and either no-op or target the previous chapter. Left alone since lead #1 is the more
+   likely and more broadly-triggering cause; revisit if the bug persists after re-test.
 
-**Recommended next step:** reproduce with the browser console open, watch
-`player.status`/`player.chapterId` values (e.g. temporarily log state transitions in the
-reducer), and note the exact sequence: does clicking Play on the new surah do nothing,
-keep playing the old surah's audio, or show wrong metadata while playing correct audio?
-That will confirm which of the two leads above (or something else entirely) is the actual
-cause before writing a fix.
+**Next step:** re-test manually (or with a browser tool in a future session) — play a
+surah, switch to another surah's page while it's still playing, press Play there, and
+confirm the bar switches to the new chapter's audio and correctly shows "playing" rather
+than getting stuck on "paused" or continuing the old chapter. If it still reproduces,
+lead #2 is next.
 
 ---
 
 ## M6-03 — Tafsir-quoted ayat not in the platform's Arabic font
+
+**STATUS: Fixed, deployed to production, build/lint verified.** Not independently
+re-checked in a live browser (no browser tool available this session) — worth a quick
+visual spot-check on an English-language tafsir with an inline ayah quote.
 
 Root cause identified with high confidence — two compounding issues:
 
@@ -145,18 +149,18 @@ Root cause identified with high confidence — two compounding issues:
    coverage, it's always the *default* Uthmani font, never whatever font/script the user
    actually has selected — which is "not the proper font used elsewhere on the platform."
 
-**Fix plan:**
-1. In `sanitizeTafsirHtml()`, allow `dir`, `lang`, and a constrained `class` (or add a
-   `transformTags`/custom rule that wraps recognized Arabic-quote markup) so RTL ayah
-   quotes keep their semantics through sanitization instead of degrading to plain spans.
-2. Change `.study-prose`'s font stack (`globals.css:236-238`) to use
+**Fix applied:**
+1. `sanitizeTafsirHtml()` (`src/app/api/tafsir/[slug]/[surahId]/[ayahId]/route.ts`) now
+   allows `dir` and `lang` on every allowed tag (`allowedAttributes: { a: ["href"], "*":
+   ["dir", "lang"] }`), so inline RTL/language markup on Arabic ayah quotes survives
+   sanitization instead of degrading to plain, direction-less spans. Left `class` out
+   deliberately — `dir`/`lang` alone fix both the direction and (via the font-stack change
+   below) the font; allowing arbitrary `class` values would be unnecessary surface area for
+   what it fixes.
+2. `.study-prose`'s font stack (`globals.css:236-238`) now uses
    `var(--reader-arabic-font, var(--font-uthmani))` in place of the hardcoded
    `var(--font-uthmani)`, matching `.font-arabic`, so embedded ayah quotes track whatever
-   font the reader is actually using.
-3. After sanitizer changes, spot-check that inline Arabic quotes also get `dir="rtl"`
-   applied at the span level (not just at the outer container, which is only RTL for
-   Arabic-language tafsir books) so quotes inside English-language tafsir commentary are
-   right-to-left too.
+   font the reader is actually using rather than always falling back to the default.
 
 ---
 
@@ -187,6 +191,9 @@ they mean.
 
 ## M6-05 — Card creation text not centered
 
+**STATUS: Fixed, deployed to production, build/lint verified.** Not independently
+re-checked visually in a live browser (no browser tool available this session).
+
 Root cause identified with high confidence — `src/components/media-maker/AyahCardDesigner.tsx`:
 
 - Line 250: the Arabic ayah paragraph is `text-right` (in an RTL block, "right" is the
@@ -199,11 +206,12 @@ None of the card's text blocks are ever centered — this reads as a straightfor
 styling gap against whatever the intended card design was (typical shareable
 ayah-card/quote-card layouts center all text blocks).
 
-**Fix plan:** add `text-center` to the Arabic paragraph (`AyahCardDesigner.tsx:247-253`)
-and the translation paragraph (`:254-259`); if the footer (surah name / verse key /
-watermark row, `:262-286`) is also meant to read as centered rather than
-edge-aligned, center those too — confirm against the intended design before changing the
-footer's left/right split layout, since that one may be laid out that way on purpose.
+**Fix applied:** the Arabic paragraph is now `text-center` (was `text-right`), and the
+translation paragraph is now `mx-auto text-center` (was unaligned, and not centered as a
+block despite its `max-w-[88%]`). Left the footer (surah name / verse key / watermark row)
+edge-aligned, as originally planned — that split layout (attribution on one side,
+branding on the other) reads as an intentional design choice, not the same bug; revisit
+only if the client specifically calls it out too.
 
 ---
 
