@@ -7,6 +7,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../data/repositories/quran_repository.dart';
 import '../../../data/repositories/goals_repository.dart';
 import '../../../data/repositories/bookmarks_repository.dart';
+import '../../../data/repositories/hifz_repository.dart';
 import '../../../data/datasources/local/quran_db.dart';
 import '../../../shared/widgets/app_feedback.dart';
 import '../../account/controllers/auth_controller.dart';
@@ -16,6 +17,7 @@ class ReaderController extends GetxController {
   final QuranRepository repository;
   final GoalsRepository _goalsRepository = GoalsRepository();
   final BookmarksRepository _bookmarksRepo = BookmarksRepository();
+  final HifzRepository _hifzRepo = HifzRepository();
 
   ReaderController({required this.repository});
 
@@ -26,6 +28,7 @@ class ReaderController extends GetxController {
   final verseTranslations = <int, List<VerseTranslation>>{}.obs;
 
   final RxSet<String> bookmarkedVerses = <String>{}.obs;
+  final RxSet<String> memorisedVerses = <String>{}.obs;
 
   final isLoading = true.obs;
   final hasError = false.obs;
@@ -238,7 +241,9 @@ class ReaderController extends GetxController {
     hasError.value = false;
     try {
       if (Get.isRegistered<ReaderSettingsController>()) {
-        Get.find<ReaderSettingsController>().clearRevealedAyahs();
+        final settings = Get.find<ReaderSettingsController>();
+        settings.clearRevealedAyahs();
+        settings.clearHifzRange();
       }
 
       chapter.value = await repository.getChapter(chapterId);
@@ -264,6 +269,12 @@ class ReaderController extends GetxController {
           surahPrefix: chapterId,
         );
         bookmarkedVerses.assignAll(bList.map((e) => e.verseKey));
+
+        final mList = await _hifzRepo.listMemorisedAyahs(
+          user.uid,
+          surahId: chapterId,
+        );
+        memorisedVerses.assignAll(mList.map((e) => e.verseKey));
       }
 
       if (recoveringFromError) {
@@ -316,6 +327,56 @@ class ReaderController extends GetxController {
         bookmarkedVerses.remove(verseKey); // Rollback
         AppFeedback.showError(
           'Unable to save this bookmark. Please try again.',
+        );
+      }
+    }
+  }
+
+  /// Toggles whether [verseKey] is marked memorised in the user's Hifz
+  /// progress tracker. That tracker (HifzController/HifzRepository) was
+  /// already fully built — storage, per-surah/per-juz percentages, and a
+  /// dedicated progress screen — but nothing anywhere ever called
+  /// markMemorised/unmarkMemorised, so it could only ever show 0%. This is
+  /// the missing write path.
+  Future<void> toggleMemorised(
+    String verseKey,
+    int surahId,
+    int ayahId,
+  ) async {
+    final user = Get.find<AuthController>().firebaseUser.value;
+    if (user == null) {
+      AppFeedback.showError('Please sign in to track memorised ayahs.');
+      return;
+    }
+
+    final isMemorised = memorisedVerses.contains(verseKey);
+    if (isMemorised) {
+      memorisedVerses.remove(verseKey);
+      final success = await _hifzRepo.unmarkMemorised(user.uid, verseKey);
+      if (success) {
+        AppFeedback.showSuccess('Ayah unmarked as memorised.');
+      } else {
+        memorisedVerses.add(verseKey); // Rollback
+        AppFeedback.showError(
+          'We couldn\'t update this. Please try again.',
+        );
+      }
+    } else {
+      memorisedVerses.add(verseKey);
+      final res = await _hifzRepo.markMemorised(
+        user.uid,
+        verseKey,
+        surahId,
+        ayahId,
+      );
+      if (res.ok) {
+        AppFeedback.showSuccess('Ayah marked as memorised!');
+      } else {
+        memorisedVerses.remove(verseKey); // Rollback
+        AppFeedback.showError(
+          res.error == 'limit-reached'
+              ? 'You\'ve reached the maximum number of memorised ayahs.'
+              : 'Unable to update this. Please try again.',
         );
       }
     }

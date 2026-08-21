@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/reader_settings_controller.dart';
+import '../../controllers/reader_controller.dart';
 import '../../../../core/models/translation.dart';
 import '../../../../core/theme/app_fonts.dart';
 import '../../../../core/utils/responsive_layout.dart';
@@ -149,6 +150,7 @@ class ReaderSettingsSheet extends GetView<ReaderSettingsController> {
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
+              _buildHifzRangePicker(context),
               const Divider(),
               Obx(
                 () => SwitchListTile(
@@ -225,6 +227,88 @@ class ReaderSettingsSheet extends GetView<ReaderSettingsController> {
               ),
           ],
         ],
+      );
+    });
+  }
+
+  /// Lets the user restrict hifz hiding to a specific ayah range instead of
+  /// the whole surah — only shown while hifz mode is on, and only once a
+  /// chapter is actually loaded (needed to know the max ayah number).
+  Widget _buildHifzRangePicker(BuildContext context) {
+    if (!Get.isRegistered<ReaderController>()) return const SizedBox.shrink();
+    final reader = Get.find<ReaderController>();
+
+    return Obx(() {
+      if (!controller.isHifzMode.value) return const SizedBox.shrink();
+      final maxAyah = reader.verses.length;
+      if (maxAyah == 0) return const SizedBox.shrink();
+
+      final start = controller.hifzRangeStart.value;
+      final end = controller.hifzRangeEnd.value;
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hide only a range (optional)',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    decoration: const InputDecoration(
+                      labelText: 'From ayah',
+                      isDense: true,
+                    ),
+                    value: start,
+                    items: [
+                      for (int i = 1; i <= maxAyah; i++)
+                        DropdownMenuItem(value: i, child: Text('$i')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      final newEnd = (end != null && end < value)
+                          ? value
+                          : end;
+                      controller.setHifzRange(value, newEnd);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    decoration: const InputDecoration(
+                      labelText: 'To ayah',
+                      isDense: true,
+                    ),
+                    value: end,
+                    items: [
+                      for (int i = 1; i <= maxAyah; i++)
+                        DropdownMenuItem(value: i, child: Text('$i')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      final newStart = (start != null && start > value)
+                          ? value
+                          : start;
+                      controller.setHifzRange(newStart, value);
+                    },
+                  ),
+                ),
+                if (start != null || end != null)
+                  IconButton(
+                    icon: const Icon(Icons.clear),
+                    tooltip: 'Clear range (hide whole surah)',
+                    onPressed: controller.clearHifzRange,
+                  ),
+              ],
+            ),
+          ],
+        ),
       );
     });
   }

@@ -23,6 +23,13 @@ class ReaderSettingsController extends GetxController {
   final RxBool rxTajweedEnabled = false.obs;
   final RxSet<String> revealedAyahs = <String>{}.obs;
 
+  /// Optional ayah-number range (1-based, inclusive) restricting hifz
+  /// hiding to a portion of the surah instead of the whole thing. Session-
+  /// only — not persisted, since ayah numbers are meaningless once the
+  /// user moves to a different surah (cleared on chapter load).
+  final Rxn<int> hifzRangeStart = Rxn<int>();
+  final Rxn<int> hifzRangeEnd = Rxn<int>();
+
   final _isLoaded = false.obs;
   bool get isLoaded => _isLoaded.value;
 
@@ -134,7 +141,20 @@ class ReaderSettingsController extends GetxController {
     _prefs.setBool('reader_hifz_mode', isHifzMode.value);
     if (!isHifzMode.value) {
       revealedAyahs.clear();
+      clearHifzRange();
     }
+  }
+
+  /// Restricts hifz hiding to ayahs [start]..[end] (inclusive) instead of
+  /// the whole surah. Pass null for both to go back to hiding everything.
+  void setHifzRange(int? start, int? end) {
+    hifzRangeStart.value = start;
+    hifzRangeEnd.value = end;
+  }
+
+  void clearHifzRange() {
+    hifzRangeStart.value = null;
+    hifzRangeEnd.value = null;
   }
 
   void toggleTajweed() {

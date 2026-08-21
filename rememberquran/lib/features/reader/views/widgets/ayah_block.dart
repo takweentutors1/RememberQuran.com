@@ -259,6 +259,31 @@ class AyahBlock extends StatelessWidget {
                                 : 'Bookmark',
                           );
                         }),
+                        Obx(() {
+                          final readerController = Get.find<ReaderController>();
+                          final verseKey =
+                              '${verse.chapterId}:${verse.verseNumber}';
+                          final isMemorised = readerController.memorisedVerses
+                              .contains(verseKey);
+                          return AnimatedActionButton(
+                            icon: Icon(
+                              isMemorised
+                                  ? Icons.psychology
+                                  : Icons.psychology_outlined,
+                            ),
+                            onPressed: () async {
+                              await readerController.toggleMemorised(
+                                verseKey,
+                                verse.chapterId,
+                                verse.verseNumber,
+                              );
+                            },
+                            iconSize: 20,
+                            tooltip: isMemorised
+                                ? 'Unmark as Memorised'
+                                : 'Mark as Memorised',
+                          );
+                        }),
                       ],
                     ),
                   ),

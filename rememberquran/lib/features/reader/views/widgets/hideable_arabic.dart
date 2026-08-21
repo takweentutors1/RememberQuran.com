@@ -21,6 +21,15 @@ class HideableArabic extends StatelessWidget {
       final isHifzMode = settingsController.isHifzMode.value;
       if (!isHifzMode) return child;
 
+      final rangeStart = settingsController.hifzRangeStart.value;
+      final rangeEnd = settingsController.hifzRangeEnd.value;
+      if (rangeStart != null && rangeEnd != null) {
+        final ayahNumber = int.tryParse(verseKey.split(':').last);
+        if (ayahNumber == null || ayahNumber < rangeStart || ayahNumber > rangeEnd) {
+          return child; // Outside the selected range — show normally.
+        }
+      }
+
       final isRevealed = settingsController.revealedAyahs.contains(verseKey);
 
       return GestureDetector(
