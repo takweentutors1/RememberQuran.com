@@ -247,12 +247,12 @@ export function AyahCardDesigner({
               <p
                 dir="rtl"
                 lang="ar"
-                className={`font-uthmani text-right leading-[1.8] ${arabicSizeClass(card.arabic.length)}`}
+                className={`font-uthmani text-center leading-[1.8] ${arabicSizeClass(card.arabic.length)}`}
               >
                 {card.arabic}
               </p>
               <p
-                className="max-w-[88%] font-serif text-[2.15cqw] leading-[1.45]"
+                className="mx-auto max-w-[88%] text-center font-serif text-[2.15cqw] leading-[1.45]"
                 style={{ color: colors.muted }}
               >
                 {truncateText(card.translation, 280)}

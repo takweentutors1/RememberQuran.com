@@ -789,6 +789,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     stopLoop()
     if (repeatGapRef.current) return // memorisation inter-loop pause
     if (!audioRef.current?.currentSrc) return // src cleared by stop()
+    // Reassigning `audio.src` (loadChapter, e.g. switching surahs while one
+    // is already playing) can itself fire a native `pause` for the outgoing
+    // source. Without this guard that clobbers the "loading" status LOAD_START
+    // just set, leaving the bar stuck on "paused" instead of transitioning to
+    // "playing" once the new chapter's audio actually starts.
+    if (statusRef.current === "loading") return
     dispatch({ type: "PAUSED" })
   }, [stopLoop])
 

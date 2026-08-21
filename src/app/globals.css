@@ -235,7 +235,8 @@
 .study-prose {
   font-family:
     var(--font-source-serif), ui-serif, Georgia,
-    var(--font-uthmani), var(--font-amiri-quran), var(--font-amiri), serif;
+    var(--reader-arabic-font, var(--font-uthmani)), var(--font-amiri-quran),
+    var(--font-amiri), serif;
   font-size: 0.9375rem;
   line-height: 1.8;
   overflow-wrap: break-word;

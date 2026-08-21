@@ -29,12 +29,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const lastChecked = typeof token.pwCheckedAt === "number" ? token.pwCheckedAt : 0
       if (Date.now() - lastChecked < PASSWORD_REVALIDATE_MS) return token
 
-      const current = await getUserById(token.sub)
-      if (current && current.passwordChangedAt.getTime() > token.pwChangedAt) {
-        token.error = "PasswordChanged"
-        return token
+      // A Firestore hiccup here must not break every authenticated page
+      // load — fail open and just retry the revalidation next cycle.
+      try {
+        const current = await getUserById(token.sub)
+        if (current && current.passwordChangedAt.getTime() > token.pwChangedAt) {
+          token.error = "PasswordChanged"
+          return token
+        }
+        token.pwCheckedAt = Date.now()
+      } catch (error) {
+        console.error("Password revalidation check failed", error)
       }
-      token.pwCheckedAt = Date.now()
       return token
     },
   },
@@ -52,39 +58,49 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         )
         if (!parsed.success) return null
 
-        // Checked before the (deliberately slow) bcrypt compare so a
-        // blocked request doesn't also burn that compute — and before the
-        // DB lookup, so hammering nonexistent emails is throttled too.
-        const ip = getClientIp(request)
-        const [ipCheck, emailCheck] = await Promise.all([
-          checkRateLimit(`login:ip:${ip}`, LOGIN_IP_LIMIT, LOGIN_WINDOW_MS),
-          checkRateLimit(
-            `login:email:${parsed.data.email}`,
-            LOGIN_EMAIL_LIMIT,
-            LOGIN_WINDOW_MS,
-          ),
-        ])
-        // Same outward result (null → generic "invalid credentials") as a
-        // wrong password — an attacker shouldn't be able to distinguish
-        // "rate limited" from "wrong password" from the response alone.
-        if (!ipCheck.allowed || !emailCheck.allowed) return null
+        // A downstream failure (Firestore/rate-limit store unreachable,
+        // credential misconfiguration, etc.) must surface as an ordinary
+        // "invalid credentials" result, never an unhandled exception —
+        // NextAuth's route handler has no try/catch of its own, so an
+        // uncaught throw here becomes a raw platform 500 on the login form.
+        try {
+          // Checked before the (deliberately slow) bcrypt compare so a
+          // blocked request doesn't also burn that compute — and before the
+          // DB lookup, so hammering nonexistent emails is throttled too.
+          const ip = getClientIp(request)
+          const [ipCheck, emailCheck] = await Promise.all([
+            checkRateLimit(`login:ip:${ip}`, LOGIN_IP_LIMIT, LOGIN_WINDOW_MS),
+            checkRateLimit(
+              `login:email:${parsed.data.email}`,
+              LOGIN_EMAIL_LIMIT,
+              LOGIN_WINDOW_MS,
+            ),
+          ])
+          // Same outward result (null → generic "invalid credentials") as a
+          // wrong password — an attacker shouldn't be able to distinguish
+          // "rate limited" from "wrong password" from the response alone.
+          if (!ipCheck.allowed || !emailCheck.allowed) return null
 
-        const user = await getUserByEmail(parsed.data.email)
+          const user = await getUserByEmail(parsed.data.email)
 
-        if (!user || user.moderation.suspended) return null
+          if (!user || user.moderation.suspended) return null
 
-        const passwordMatches = await compare(
-          parsed.data.password,
-          user.passwordHash,
-        )
-        if (!passwordMatches) return null
+          const passwordMatches = await compare(
+            parsed.data.password,
+            user.passwordHash,
+          )
+          if (!passwordMatches) return null
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.profile.displayName || null,
-          roles: user.roles,
-          passwordChangedAt: user.passwordChangedAt.getTime(),
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.profile.displayName || null,
+            roles: user.roles,
+            passwordChangedAt: user.passwordChangedAt.getTime(),
+          }
+        } catch (error) {
+          console.error("Login failed", error)
+          return null
         }
       },
     }),
