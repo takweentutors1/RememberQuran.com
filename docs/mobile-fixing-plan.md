@@ -10,7 +10,8 @@ already fully implemented and working — the tracker calling them "Open" looks
 like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 one of those (RQM-01) has since been fixed. Ten are genuine bugs or missing
-features; one of those (RQM-02) has since been fixed too, nine still open.
+features; two of those (RQM-02, RQM-05) have since been fixed too, eight
+still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -180,11 +181,24 @@ state needed, no risk of it getting stuck permanently true (the reset is in
 `_loadAndPlayChapter`'s `finally` block).
 
 ### RQM-05 — No previous/next surah buttons
-**Confirmed missing.** The reader's AppBar only has Quick Jump and Settings
-icons — no prev/next control. Radio mode has its own skip-surah logic
+**STATUS: Fixed (commit `1177c8e`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually tap through it. Worth a quick re-test: open a surah, tap next a
+few times through a wraparound (113→114→1), tap previous back the other way
+(1→114→113), and confirm the title/content updates each time with no double
+loads from rapid tapping.
+
+The reader's AppBar only had Quick Jump and Settings icons — no prev/next
+control. Radio mode has its own skip-surah logic
 (`radioSkipToPrevious`/`radioSkipToNext`) that's audio-only and unrelated to
-text navigation. **Fix location:** add prev/next `IconButton`s to
-`surah_reader_view.dart`'s AppBar `actions`, wrapping 1↔114.
+text navigation. **Fix applied:** two new `IconButton`s
+(`navigate_before`/`navigate_next`) in `surah_reader_view.dart`'s AppBar
+`actions`, calling the same `ReaderController.loadChapter()` the desktop
+sidebar's tap handler already uses (an in-place content swap, not a new
+navigation route), wrapping 1↔114 to match the convention
+`AudioController.nextAvailableSurahId` already uses elsewhere. Each button is
+individually `Obx`-wrapped and disabled while a chapter is loading, so rapid
+tapping can't fire overlapping loads.
 
 ### RQM-06 — Reciter selection unavailable in reading mode
 **Confirmed missing.** The only reciter picker in the app is a private method
@@ -302,8 +316,8 @@ math, and the screen) is already done.
    persistence/continuity gap in the core reading experience.
 3. **RQM-12** (morphology panel) — data's already bundled, humanizer already
    written; mostly UI wiring.
-4. **RQM-05, RQM-06, RQM-15** — straightforward additive UI, no architectural
-   rework.
+4. ~~RQM-05~~ — done. **RQM-06, RQM-15** still straightforward additive UI, no
+   architectural rework.
 5. ~~RQM-02~~ — done. **RQM-09** still needs real changes to the repeat logic
    in `audio_controller.dart` (same file, same underlying single-continuous-
    track architecture RQM-02 lives in).
