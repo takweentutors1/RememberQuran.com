@@ -7,6 +7,10 @@
     <!-- Daily reading reminder: re-registers the scheduled notification after
          a device reboot, otherwise it silently stops firing. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Required by the gal package (Media Maker's "Save to Gallery" action)
+         on API <= 29; scoped storage on API 30+ doesn't need it. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
 
     <application
         android:label="Remember Quran"

@@ -14,6 +14,19 @@ class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
       appBar: AppBar(
         title: const Text('Design Ayah Card'),
         actions: [
+          Obx(
+            () => IconButton(
+              icon: controller.isSaving.value
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.download_rounded),
+              tooltip: 'Save to Gallery',
+              onPressed: controller.isSaving.value ? null : controller.saveToGallery,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.share_rounded),
             tooltip: 'Share Card',
@@ -75,18 +88,46 @@ class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
   Widget _buildControls(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: FilledButton.icon(
-        onPressed: controller.shareCard,
-        icon: const Icon(Icons.ios_share_rounded),
-        label: const Text('Share Ayah'),
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
-          backgroundColor: Theme.of(context).extension<NurColorsExtension>()?.brandGold,
-          foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Obx(
+              () => OutlinedButton.icon(
+                onPressed: controller.isSaving.value ? null : controller.saveToGallery,
+                icon: controller.isSaving.value
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download_rounded),
+                label: const Text('Save'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: controller.shareCard,
+              icon: const Icon(Icons.ios_share_rounded),
+              label: const Text('Share'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(56),
+                backgroundColor: Theme.of(context).extension<NurColorsExtension>()?.brandGold,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -165,6 +206,30 @@ class AyahCardDesignerView extends GetView<AyahCardDesignerController> {
                 height: 1,
                 width: 40,
                 color: theme.colorScheme.primary.withOpacity(0.3),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Branding — previously the app name only appeared in the share
+          // sheet's caption text, not the image itself, so it disappeared
+          // the moment someone saved/reposted the PNG on its own.
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/icon/app_icon_foreground.png',
+                width: 16,
+                height: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'RememberQuran.com',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                ),
               ),
             ],
           ),
