@@ -11,10 +11,9 @@ like it was written from an earlier build or a partial test pass, not the
 current code. Three more were *mostly* correct with one small real gap each —
 RQM-01's gap has since been fixed, and RQM-14's code-fixable portion has too
 (though its actual reported symptom needs a Firebase console check, not a
-code fix). Ten are genuine bugs or missing features; seven of those (RQM-02,
-RQM-05, RQM-06, RQM-08, RQM-09, RQM-12, RQM-15) have since been fixed too,
-three
-still open.
+code fix). Ten are genuine bugs or missing features; eight of those (RQM-02,
+RQM-05, RQM-06, RQM-08, RQM-09, RQM-12, RQM-15, RQM-16) have since been
+fixed too, two still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -338,15 +337,22 @@ collection after the fact) unaddressed — that's a distinct, smaller
 follow-up if wanted, not part of what RQM-15 asked for.
 
 ### RQM-16 — Clicking a bookmark doesn't open the ayah
-**Confirmed — and it's about as clear-cut as a bug gets.** The bookmark
-card's `onTap` in `collection_details_view.dart` is a literal no-op, with a
-commented-out line referencing a route (`Routes.READER`) that doesn't even
-exist in the app's actual route table anymore. The notes list has the same
-gap — no `onTap` at all. The correct pattern already exists elsewhere in the
-app (`search_controller.dart`'s `onResultTapped`, which navigates to
-`Routes.SURAH_AYAH` built from the same `chapterId:verseNumber` format
-bookmarks already store). **Fix location:** replace the empty `onTap` with the
-same `Routes.SURAH_AYAH` navigation pattern, parsing `bookmark.verseKey`.
+**STATUS: Fixed (commit `9536b17`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually tap through it. Worth a quick re-test: tap a bookmark on the
+collection details page and a note on the Notes tab, confirm both jump to
+the right ayah.
+
+The bookmark card's `onTap` in `collection_details_view.dart` was a literal
+no-op, with a commented-out line referencing a route (`Routes.READER`) that
+doesn't even exist in the app's actual route table. The notes list had the
+same gap — no `onTap` at all. **Fix applied:** both now mirror the pattern
+already used by search results (`search_controller.dart`'s
+`onResultTapped`), navigating to `Routes.SURAH_AYAH` built from the same
+`chapterId:verseNumber` format bookmarks/notes already store. The notes fix
+wasn't part of the filed ticket title, but it's the identical bug in the
+same screen, found while fixing the bookmark side — same one-line pattern,
+not worth leaving half-fixed.
 
 ### RQM-18 — Media Maker missing branding and no download option
 **Both confirmed.** Note: the actual working Media Maker lives in
@@ -386,8 +392,7 @@ math, and the screen) is already done.
 
 ## Suggested priority order
 
-1. **RQM-16** (bookmark tap) — smallest, clearest fix; broken navigation with
-   an already-correct pattern to copy from elsewhere in the same codebase.
+1. ~~RQM-16~~ — done.
 2. ~~RQM-08, RQM-12~~ — done.
 3. ~~RQM-05, RQM-06, RQM-15~~ — done.
 5. ~~RQM-02, RQM-09~~ — both done (same file, same underlying
