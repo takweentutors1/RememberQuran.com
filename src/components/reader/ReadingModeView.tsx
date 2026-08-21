@@ -76,10 +76,42 @@ function JuzMarker({ juz }: { juz: number }) {
 }
 
 /**
+ * Translation for one ayah, placed immediately after its Arabic — unlike
+ * the meta-heavy AyahBlock/TranslationBlock pairing in verse-by-verse mode,
+ * this stays deliberately quiet (no action bar, no per-ayah controls) so
+ * reading mode still reads as one continuous pass rather than a list of
+ * discrete cards; it's a block element, so it breaks the Arabic's inline
+ * flow at the ayah boundary the same way JuzMarker does at a juz boundary.
+ */
+function VerseTranslation({
+  verseKey,
+  verseNumber,
+  translations,
+}: {
+  verseKey: string
+  verseNumber: number
+  translations: Verse["translations"]
+}) {
+  return (
+    <div
+      dir="ltr"
+      className="my-4 scroll-mt-28"
+      id={`ayah-trans-${verseNumber}`}
+    >
+      <p className="text-[11px] tabular-nums text-muted-foreground/70">{verseKey}</p>
+      {translations.map((t) => (
+        <TranslationBlock key={t.resource_id} translation={t} />
+      ))}
+    </div>
+  )
+}
+
+/**
  * Continuous Arabic flow (quran.com "Reading" preference).
  * Words stream RTL; end-of-ayah glyphs mark verse boundaries; juz dividers
- * break up the flow at each boundary crossed within the surah.
- * Optional translations appear as a compact list below the mushaf block.
+ * break up the flow at each boundary crossed within the surah. With
+ * translation on, each ayah's translation follows immediately after it
+ * rather than in one long separate block at the end.
  */
 export function ReadingModeView({
   verses,
@@ -88,54 +120,30 @@ export function ReadingModeView({
   targetAyahId,
 }: ReadingModeViewProps) {
   return (
-    <div className="space-y-10">
-      <div
-        dir="rtl"
-        lang="ar"
-        className="quran-arabic text-justify leading-[2.15]"
-      >
-        {verses.map((verse, index) => {
-          const prevJuz = index > 0 ? verses[index - 1].juz_number : null
-          const showJuzMarker = verse.juz_number !== prevJuz
-          return (
-            <Fragment key={verse.id}>
-              {showJuzMarker && <JuzMarker juz={verse.juz_number} />}
-              <ReadingVerse
-                verse={verse}
-                isTarget={targetAyahId === verse.verse_number}
+    <div dir="rtl" lang="ar" className="quran-arabic text-justify leading-[2.15]">
+      {verses.map((verse, index) => {
+        const prevJuz = index > 0 ? verses[index - 1].juz_number : null
+        const showJuzMarker = verse.juz_number !== prevJuz
+        const activeTranslations = verse.translations.filter((t) =>
+          activeTranslationIds.includes(t.resource_id),
+        )
+        return (
+          <Fragment key={verse.id}>
+            {showJuzMarker && <JuzMarker juz={verse.juz_number} />}
+            <ReadingVerse
+              verse={verse}
+              isTarget={targetAyahId === verse.verse_number}
+            />
+            {showTranslation && activeTranslations.length > 0 && (
+              <VerseTranslation
+                verseKey={verse.verse_key}
+                verseNumber={verse.verse_number}
+                translations={activeTranslations}
               />
-            </Fragment>
-          )
-        })}
-      </div>
-
-      {showTranslation && (
-        <div className="space-y-6 border-t border-border/40 pt-8" dir="ltr">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Translation
-          </p>
-          {verses.map((verse) => {
-            const active = verse.translations.filter((t) =>
-              activeTranslationIds.includes(t.resource_id),
-            )
-            if (!active.length) return null
-            return (
-              <div
-                key={verse.id}
-                className="scroll-mt-28"
-                id={`ayah-trans-${verse.verse_number}`}
-              >
-                <p className="mb-1 text-xs tabular-nums text-muted-foreground/70">
-                  {verse.verse_key}
-                </p>
-                {active.map((t) => (
-                  <TranslationBlock key={t.resource_id} translation={t} />
-                ))}
-              </div>
-            )
-          })}
-        </div>
-      )}
+            )}
+          </Fragment>
+        )
+      })}
     </div>
   )
 }
