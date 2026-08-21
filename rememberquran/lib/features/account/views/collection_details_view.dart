@@ -91,8 +91,17 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      // Navigate to reader
-                      // Get.toNamed(Routes.READER, arguments: {'verseKey': bookmark.verseKey});
+                      // Routes.READER referenced here previously doesn't
+                      // exist in this app's route table — this mirrors the
+                      // pattern search results already use to jump to a
+                      // specific ayah (SearchController.onResultTapped).
+                      final parts = bookmark.verseKey.split(':');
+                      if (parts.length != 2) return;
+                      Get.toNamed(
+                        Routes.SURAH_AYAH
+                            .replaceAll(':surahId', parts[0])
+                            .replaceAll(':ayahId', parts[1]),
+                      );
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
