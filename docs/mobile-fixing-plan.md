@@ -12,8 +12,8 @@ current code. Three more were *mostly* correct with one small real gap each
 — RQM-01's and RQM-17's gaps have both since been fixed, and RQM-14's
 code-fixable portion has too (though its actual reported symptom needs a
 Firebase console check, not a code fix). Ten are genuine bugs or missing
-features; eight of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12,
-RQM-15, RQM-16) have since been fixed too, two still open.
+features; nine of those (RQM-02, RQM-05, RQM-06, RQM-08, RQM-09, RQM-12,
+RQM-15, RQM-16, RQM-18) have since been fixed too, one still open.
 None of the "Already implemented" verdicts below are guesses — each cites the
 actual file and logic that proves it works.
 
@@ -369,18 +369,32 @@ same screen, found while fixing the bookmark side — same one-line pattern,
 not worth leaving half-fixed.
 
 ### RQM-18 — Media Maker missing branding and no download option
-**Both confirmed.** Note: the actual working Media Maker lives in
-`lib/features/media/` — the identically-named `lib/features/media_maker/`
-folder is dead (empty stub files). Neither the rendered card nor the share
-caption includes any visible branding in the actual image — the app name only
-appears in the share-sheet caption text, which disappears if the image is
-saved/reposted alone. There's also genuinely no download/save action —
-`shareCard()` is the only capability, and no gallery-saving package is even a
-dependency. **Fix location:** `ayah_card_designer_view.dart`'s `_buildCard()`
-needs a branding row/watermark added to the actual rendered widget tree
-(not just the share caption); `ayah_card_designer_controller.dart` already
-captures the card to PNG bytes for sharing — add a gallery-save package and a
-`saveToGallery()` method reusing that same byte buffer.
+**STATUS: Fixed (commit `3db4d00`), `dart analyze` clean, not yet verified on
+a live device/simulator** — no Flutter emulator was available in this session
+to actually tap through the save flow or inspect a saved PNG. Worth a quick
+re-test: design a card, tap Save (both the AppBar icon and the bottom button),
+confirm the photo-library permission prompt appears and the saved image in
+Photos/Gallery shows the branding footer baked in.
+
+Note: the actual working Media Maker lives in `lib/features/media/` — the
+identically-named `lib/features/media_maker/` folder is dead (empty stub
+files). Neither the rendered card nor the share caption included any visible
+branding in the actual image — the app name only appeared in the share-sheet
+caption text, which disappeared if the image was saved/reposted alone.
+There was also genuinely no download/save action — `shareCard()` was the
+only capability, and no gallery-saving package was even a dependency.
+**Fix applied:** a branding footer (app icon + "RememberQuran.com") is now
+baked directly into `_buildCard()`'s widget tree, so it's part of the
+captured PNG itself, not just the share caption. Added the `gal` package and
+a new `saveToGallery()` method on the controller (checks/requests photo
+library access, writes via `Gal.putImageBytes`, surfaces permission/
+`GalException` failures via snackbar), reusing the same PNG-capture logic
+that `shareCard()` uses via a shared `_capturePng()` helper. Added a Save
+button in both the AppBar (download icon) and the bottom controls (alongside
+Share), with a loading spinner while the save is in flight. Added the native
+permissions `gal` needs: iOS `NSPhotoLibraryAddUsageDescription`/
+`NSPhotoLibraryUsageDescription`, Android `WRITE_EXTERNAL_STORAGE`
+(`maxSdkVersion=29`, unneeded on scoped storage).
 
 ### RQM-19 — Memorisation tools largely unimplemented
 **More is built than the tracker implies, but the gaps are real.**
@@ -411,8 +425,10 @@ math, and the screen) is already done.
 3. ~~RQM-05, RQM-06, RQM-15~~ — done.
 5. ~~RQM-02, RQM-09~~ — both done (same file, same underlying
    single-continuous-track architecture).
-6. **RQM-18, RQM-19** — larger scope (branding asset + save flow; memorisation
-   range UI + progress-tracker wiring); worth scoping as their own pieces of
-   work rather than quick fixes.
+6. ~~RQM-18~~ — done (branding baked into the rendered card, `gal`-backed
+   save-to-gallery flow).
 7. ~~RQM-17~~ — the code-fixable race is done. **RQM-14** still needs a
    Firebase console check, not a code fix.
+8. **RQM-19** — largest remaining scope (range selection/repeat UI +
+   wiring the already-built progress tracker to a "mark as memorised"
+   action); worth scoping as its own piece of work.
