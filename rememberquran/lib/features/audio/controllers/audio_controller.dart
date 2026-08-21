@@ -447,6 +447,17 @@ class AudioController extends GetxController {
 
 
   void _onPlaybackCompleted() {
+    // A chapter load is already in flight (rxIsBusy is true for the whole
+    // span of _loadAndPlayChapter, from the first await through
+    // waitUntilReady()). The audio engine's playbackState stream can keep
+    // re-emitting a stale processingState == completed while that load is
+    // still in progress, since nothing moves the player out of "completed"
+    // until updateQueue() lands partway through the load. Without this
+    // guard, each stale re-emission re-enters this method and calls
+    // advanceRadio() again on top of the advance already under way,
+    // silently skipping a surah (e.g. Surah 1 -> 3, missing Surah 2).
+    if (rxIsBusy.value) return;
+
     // "End of Surah" sleep timer: the track has already stopped at its own
     // end, so honoring it just means *not* doing whatever would normally
     // happen next — auto-advancing in Radio mode, or restarting a repeat
