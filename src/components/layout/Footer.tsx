@@ -1,15 +1,6 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
-import type { LucideIcon } from "lucide-react"
-import {
-  ArrowRight,
-  AudioLines,
-  BookOpenText,
-  Heart,
-  Languages,
-  ShieldCheck,
-  Waypoints,
-} from "lucide-react"
+import { ArrowRight, Heart } from "lucide-react"
 import { LogoWordmark } from "@/components/layout/Logo"
 import { ArabesquePattern } from "@/components/layout/ArabesquePattern"
 import { FooterAccountLinks } from "@/components/layout/FooterAccountLinks"
@@ -54,40 +45,6 @@ const COLUMNS: { heading: string; links: readonly FooterLink[] }[] = [
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
     ],
-  },
-]
-
-/** Text, audio, and data provenance. For a Quran app this is the product. */
-const CREDITS: { title: string; detail: string; Icon: LucideIcon }[] = [
-  {
-    title: "KFGQPC Uthmanic Hafs",
-    detail: "Madani mushaf script, via Quran Foundation",
-    Icon: BookOpenText,
-  },
-  {
-    title: "The Clear Quran",
-    detail: "Translation by Dr. Mustafa Khattab",
-    Icon: Languages,
-  },
-  {
-    title: "Quran.com API",
-    detail: "Verses, metadata, and audio timings",
-    Icon: Waypoints,
-  },
-  {
-    title: "Recitations",
-    detail: "Alafasy, Sudais, and other reciters",
-    Icon: AudioLines,
-  },
-  {
-    title: "Quranic Arabic Corpus",
-    detail: "Word-by-word grammar and roots",
-    Icon: Waypoints,
-  },
-  {
-    title: "Checked against print",
-    detail: "Text verified against the Madani mushaf",
-    Icon: ShieldCheck,
   },
 ]
 
@@ -199,55 +156,6 @@ export function Footer() {
               </div>
             </div>
           </FooterReveal>
-        </div>
-      </div>
-
-      {/* ── Attribution ──
-          A first-class band, never fine print. Provenance is what makes the
-          text trustworthy, and trust is the whole product. */}
-      <div className="border-t border-border bg-muted/40">
-        <div className="site-shell px-4 py-8 sm:px-6 lg:px-8">
-          <h3 className="mb-4 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.12em] text-faint">
-            Text, audio, and data
-            <span aria-hidden className="h-px flex-1 bg-border" />
-          </h3>
-
-          <FooterReveal delay={0.1}>
-            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {CREDITS.map(({ title, detail, Icon }) => (
-                <li
-                  key={title}
-                  className="group flex items-start gap-3 rounded-xl border border-border bg-background px-3.5 py-3 transition-[border-color,box-shadow] duration-(--dur-base) ease-(--ease-out) hover:border-strong hover:shadow-sm"
-                >
-                  <span
-                    aria-hidden
-                    className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-subtle transition-[background-color,color,transform] duration-(--dur-base) ease-(--ease-out) group-hover:-rotate-6 group-hover:bg-gold-soft group-hover:text-gold"
-                  >
-                    <Icon className="size-4" strokeWidth={1.8} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-xs font-medium text-foreground">
-                      {title}
-                    </span>
-                    <span className="mt-0.5 block text-[11px] leading-relaxed text-subtle">
-                      {detail}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </FooterReveal>
-
-          <p className="mt-4 text-[11px] text-subtle">
-            Found a mistake in the text?{" "}
-            <a
-              href="mailto:corrections@rememberquran.com?subject=Quran%20text%20correction"
-              className="rounded-sm font-medium text-gold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Report it
-            </a>{" "}
-            — corrections are treated as urgent.
-          </p>
         </div>
       </div>
 
