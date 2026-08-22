@@ -1,8 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import useEmblaCarousel from "embla-carousel-react"
-import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Search, X } from "lucide-react"
 import type { Chapter } from "@/types/quran"
 import { cn } from "@/lib/utils"
 import { SurahCard } from "./SurahCard"
@@ -66,25 +65,20 @@ function SurahSearchInput({
 }
 
 /**
- * Horizontal, snap-scrolling explorer for the 114 surahs — replaces the old
- * server-rendered vertical grid. Embla needs hooks, so this is the one
- * client boundary in the surah list; `SurahListPage` (a server component)
- * just hands it the chapters it already fetched.
+ * Full-directory explorer for the 114 surahs. Chapters wrap into a
+ * responsive CSS grid instead of a single scrolling row: `auto-fill` with a
+ * `minmax` floor lets the browser pick the column count per breakpoint —
+ * one column on a phone, up to roughly ten on an ultrawide desktop — so
+ * there's no breakpoint list to maintain and no card is ever squeezed
+ * narrower than it can lay out its content.
  *
- * The revelation-place filter now lives here as plain state rather than a
- * DOM attribute: once the list itself is a client-hydrated carousel, there
- * is no server-rendered output left to preserve by filtering-by-attribute,
- * and Embla needs to `reInit()` whenever the slide count changes anyway.
+ * The revelation-place filter lives here as plain state rather than a DOM
+ * attribute: the list is already client-rendered for search, so there is no
+ * server-rendered output left to preserve by filtering-by-attribute.
  */
 export function SurahExplorer({ chapters }: { chapters: Chapter[] }) {
   const [filter, setFilter] = useState<SurahFilterValue>("all")
   const [query, setQuery] = useState("")
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "center",
-    containScroll: "trimSnaps",
-    dragFree: false,
-  })
 
   const filtered = useMemo(
     () =>
@@ -93,27 +87,6 @@ export function SurahExplorer({ chapters }: { chapters: Chapter[] }) {
         .filter((c) => matchesQuery(c, query)),
     [chapters, filter, query],
   )
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return
-    setSelectedIndex(emblaApi.selectedScrollSnap())
-  }, [emblaApi])
-
-  useEffect(() => {
-    if (!emblaApi) return
-    queueMicrotask(onSelect)
-    emblaApi.on("select", onSelect)
-    emblaApi.on("reInit", onSelect)
-    return () => {
-      emblaApi.off("select", onSelect)
-      emblaApi.off("reInit", onSelect)
-    }
-  }, [emblaApi, onSelect])
-
-  useEffect(() => {
-    emblaApi?.reInit()
-    queueMicrotask(() => setSelectedIndex(0))
-  }, [emblaApi, filter, query])
 
   return (
     <section aria-labelledby="all-surahs-heading">
@@ -132,26 +105,6 @@ export function SurahExplorer({ chapters }: { chapters: Chapter[] }) {
         <div className="flex flex-wrap items-center gap-3">
           <SurahSearchInput value={query} onChange={setQuery} />
           <SurahFilter value={filter} onChange={setFilter} />
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              aria-label="Previous surah"
-              disabled={filtered.length === 0}
-              onClick={() => emblaApi?.scrollPrev()}
-              className="flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
-            >
-              <ChevronLeft className="size-4" strokeWidth={1.8} />
-            </button>
-            <button
-              type="button"
-              aria-label="Next surah"
-              disabled={filtered.length === 0}
-              onClick={() => emblaApi?.scrollNext()}
-              className="flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
-            >
-              <ChevronRight className="size-4" strokeWidth={1.8} />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -160,26 +113,20 @@ export function SurahExplorer({ chapters }: { chapters: Chapter[] }) {
           No surahs match &ldquo;{query}&rdquo;.
         </p>
       ) : (
-      <div className="overflow-hidden" ref={emblaRef}>
         <div
-          className="flex touch-pan-y gap-2.5 py-2"
+          className={cn(
+            "grid gap-3",
+            "[grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))]",
+          )}
           role="list"
           aria-label="List of surahs"
         >
-          {filtered.map((chapter, index) => (
-            <div
-              key={chapter.id}
-              role="listitem"
-              className={cn(
-                "w-[280px] shrink-0 grow-0 rounded-xl transition-shadow duration-(--dur-base) ease-(--ease-out) sm:w-[320px]",
-                index === selectedIndex && "gold-leaf-glow",
-              )}
-            >
+          {filtered.map((chapter) => (
+            <div key={chapter.id} role="listitem">
               <SurahCard chapter={chapter} />
             </div>
           ))}
         </div>
-      </div>
       )}
     </section>
   )
