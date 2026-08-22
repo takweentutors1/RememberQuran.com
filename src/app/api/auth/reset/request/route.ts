@@ -2,8 +2,8 @@ import { createHash, randomBytes } from "node:crypto"
 import { Resend } from "resend"
 import { privateJson } from "@/lib/auth/api-response"
 import { validateEmail } from "@/lib/auth/credentials"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { getUserByEmail, setPasswordResetToken, clearPasswordResetToken } from "@/lib/firestore/users"
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit"
 
 export const runtime = "nodejs"
 
@@ -12,7 +12,47 @@ const RESEND_COOLDOWN_MS = 60 * 1000
 const GENERIC_MESSAGE =
   "If an account exists for that email, a reset link has been sent."
 
+// The existing per-user 60s cooldown below only kicks in once an account is
+// found — it does nothing to stop someone spraying this endpoint with many
+// different emails (enumeration / mail-bombing an inbox). This IP limit
+// covers that: checked before any account lookup, so it applies regardless
+// of whether the target email exists.
+const RESET_IP_WINDOW_MS = 15 * 60 * 1000
+const RESET_IP_LIMIT = 5
+
+// The "account found, first request" branch below awaits a Firestore write
+// and a Resend API call before responding, while the "invalid email" /
+// "account not found" / "cooldown active" branches return almost instantly.
+// Even though every branch's response body is identical, that timing gap is
+// itself an enumeration side-channel — pad every enumeration-sensitive
+// branch out to the same floor so response time stops leaking whether the
+// email exists.
+const MIN_RESPONSE_MS = 500
+
+async function enforceMinDelay(startedAt: number) {
+  const elapsed = Date.now() - startedAt
+  if (elapsed < MIN_RESPONSE_MS) {
+    await new Promise((resolve) => setTimeout(resolve, MIN_RESPONSE_MS - elapsed))
+  }
+}
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request)
+  const ipCheck = await checkRateLimit(
+    `reset-request:ip:${ip}`,
+    RESET_IP_LIMIT,
+    RESET_IP_WINDOW_MS,
+  )
+  if (!ipCheck.allowed) {
+    return privateJson(
+      { error: "Too many requests. Please try again later." },
+      429,
+      { "Retry-After": String(ipCheck.retryAfterSeconds) },
+    )
+  }
+
+  const startedAt = Date.now()
+
   let body: { email?: unknown }
   try {
     body = (await request.json()) as { email?: unknown }
@@ -23,6 +63,7 @@ export async function POST(request: Request) {
   const parsed = validateEmail(body.email)
   if (!parsed.success) {
     // Same outward result avoids turning this route into an account lookup.
+    await enforceMinDelay(startedAt)
     return privateJson({ ok: true, message: GENERIC_MESSAGE })
   }
 
@@ -37,28 +78,28 @@ export async function POST(request: Request) {
     )
   }
 
-  await connectToDatabase()
-  const user = await User.findOne({ email: parsed.email })
-    .select("+passwordResetRequestedAt")
-    .exec()
-
+  const user = await getUserByEmail(parsed.email)
   if (!user) {
+    await enforceMinDelay(startedAt)
     return privateJson({ ok: true, message: GENERIC_MESSAGE })
   }
 
   const now = Date.now()
   const lastRequest = user.passwordResetRequestedAt?.getTime() ?? 0
   if (now - lastRequest < RESEND_COOLDOWN_MS) {
+    await enforceMinDelay(startedAt)
     return privateJson({ ok: true, message: GENERIC_MESSAGE })
   }
 
   const rawToken = randomBytes(32).toString("base64url")
-  user.passwordResetToken = createHash("sha256")
-    .update(rawToken)
-    .digest("hex")
-  user.passwordResetExpires = new Date(now + RESET_TTL_MS)
-  user.passwordResetRequestedAt = new Date(now)
-  await user.save()
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex")
+  const expires = new Date(now + RESET_TTL_MS)
+
+  await setPasswordResetToken(user.id, {
+    tokenHash,
+    expires,
+    requestedAt: new Date(now),
+  })
 
   const baseUrl = process.env.AUTH_URL?.trim() || "http://localhost:3000"
   const resetUrl = new URL(`/reset/${rawToken}`, baseUrl).toString()
@@ -91,10 +132,8 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Reset email failed", error)
-      user.passwordResetToken = null
-      user.passwordResetExpires = null
-      user.passwordResetRequestedAt = null
-      await user.save()
+      await clearPasswordResetToken(user.id)
+      await enforceMinDelay(startedAt)
       return privateJson(
         { error: "Could not send the reset email. Please try again." },
         502,
@@ -102,6 +141,7 @@ export async function POST(request: Request) {
     }
   }
 
+  await enforceMinDelay(startedAt)
   return privateJson({
     ok: true,
     message: GENERIC_MESSAGE,

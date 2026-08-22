@@ -1,0 +1,22 @@
+<svg width="240" height="220" viewBox="0 0 240 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="120" cy="200" rx="70" ry="10" fill="#B07C22" opacity="0.10"/>
+
+  <path d="M120 195 C 60 195, 20 165, 20 100 C 20 55, 55 40, 95 45 C 110 47, 118 55, 120 70 Z" fill="#FAF0DC" stroke="#B07C22" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M120 195 C 180 195, 220 165, 220 100 C 220 55, 185 40, 145 45 C 130 47, 122 55, 120 70 Z" fill="#FAF0DC" stroke="#B07C22" stroke-width="3" stroke-linejoin="round"/>
+
+  <path d="M42 95 C 60 105, 80 108, 96 100" stroke="#B07C22" stroke-width="2.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M50 120 C 66 128, 82 130, 96 124" stroke="#B07C22" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+  <path d="M198 95 C 180 105, 160 108, 144 100" stroke="#B07C22" stroke-width="2.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M190 120 C 174 128, 158 130, 144 124" stroke="#B07C22" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+
+  <rect x="104" y="40" width="32" height="156" rx="15" fill="#B07C22"/>
+  <rect x="104" y="40" width="32" height="156" rx="15" fill="#0D0E11" opacity="0.06"/>
+
+  <path d="M111 40 L129 40 L129 128 L120 116 L111 128 Z" fill="#C0392B"/>
+
+  <g id="face">
+    <path d="M107.5 76 C 109.5 78, 116.5 78, 118.5 76" stroke="#0D0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M121.5 76 C 123.5 78, 130.5 78, 132.5 76" stroke="#0D0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M113 92 C 117 96, 123 96, 127 92" stroke="#0D0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

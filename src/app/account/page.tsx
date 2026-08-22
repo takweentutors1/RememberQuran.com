@@ -11,12 +11,12 @@ import {
   TrendingUp,
 } from "lucide-react"
 import { ContinuePrompt } from "@/components/account/ContinuePrompt"
-import { connectToDatabase } from "@/lib/db"
-import { evaluateGoalAndStreak } from "@/lib/goals/evaluate"
-import { Bookmark as BookmarkModel } from "@/lib/models/Bookmark"
-import { MemorisedAyah } from "@/lib/models/MemorisedAyah"
-import { Note } from "@/lib/models/Note"
-import { ProgressEvent } from "@/lib/models/ProgressEvent"
+import { evaluateGoalAndStreak } from "@/lib/firestore/goals"
+import { countBookmarks } from "@/lib/firestore/bookmarks"
+import { countMemorisedAyahs } from "@/lib/firestore/hifz"
+import { countNotes } from "@/lib/firestore/notes"
+import { getUserById } from "@/lib/firestore/users"
+import { getRequestTimeZone } from "@/lib/progress/serverTimezone"
 
 export const metadata: Metadata = {
   title: "Account",
@@ -35,15 +35,16 @@ export default async function AccountPage() {
     session.user.email?.split("@")[0] ||
     "friend"
 
-  await connectToDatabase()
-  const [bookmarkCount, noteCount, hifzCount, viewedSurahs, goals] =
+  const timeZone = await getRequestTimeZone()
+  const [bookmarkCount, noteCount, hifzCount, user, goals] =
     await Promise.all([
-      BookmarkModel.countDocuments({ userId: session.user.id }),
-      Note.countDocuments({ userId: session.user.id }),
-      MemorisedAyah.countDocuments({ userId: session.user.id }),
-      ProgressEvent.distinct("surah", { userId: session.user.id }),
-      evaluateGoalAndStreak(session.user.id),
+      countBookmarks(session.user.id),
+      countNotes(session.user.id),
+      countMemorisedAyahs(session.user.id),
+      getUserById(session.user.id),
+      evaluateGoalAndStreak(session.user.id, timeZone),
     ])
+  const viewedSurahs = user?.viewedSurahs ?? []
 
   const summaries = [
     {

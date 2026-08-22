@@ -1,30 +1,26 @@
 import { NextResponse } from "next/server"
-import mongoose from "mongoose"
-import {
-  connectToDatabase,
-  getDbReadyState,
-  isDbConnected,
-} from "@/lib/db"
+import { getDb } from "@/lib/firestore/admin"
 
 /**
- * Liveness / readiness for M4 infrastructure.
+ * Liveness / readiness for account infrastructure.
  * Always dynamic — never cache health across deploys or cold starts.
  */
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const READY_STATE_LABEL: Record<number, string> = {
-  0: "disconnected",
-  1: "connected",
-  2: "connecting",
-  3: "disconnecting",
+function isConfigured(): boolean {
+  if (process.env.FIRESTORE_EMULATOR_HOST) return true
+  return Boolean(
+    process.env.FIREBASE_PROJECT_ID?.trim() &&
+      process.env.FIREBASE_CLIENT_EMAIL?.trim() &&
+      process.env.FIREBASE_PRIVATE_KEY?.trim(),
+  )
 }
 
 export async function GET() {
   const started = Date.now()
-  const hasUri = Boolean(process.env.MONGODB_URI?.trim())
 
-  if (!hasUri) {
+  if (!isConfigured()) {
     return NextResponse.json(
       {
         ok: false,
@@ -32,8 +28,7 @@ export async function GET() {
         database: {
           configured: false,
           connected: false,
-          readyState: READY_STATE_LABEL[0],
-          error: "MONGODB_URI is not set",
+          error: "Firebase credentials are not set (see .env.example)",
         },
         durationMs: Date.now() - started,
         timestamp: new Date().toISOString(),
@@ -46,26 +41,15 @@ export async function GET() {
   }
 
   try {
-    await connectToDatabase()
-
-    // Cheap round-trip so we know the socket works, not just that connect() resolved
-    const db = mongoose.connection.db
-    if (!db) {
-      throw new Error("MongoDB connection has no database handle")
-    }
-    await db.admin().ping()
-
-    const readyState = getDbReadyState()
+    // Cheap round-trip: a read for a doc that need not exist still proves
+    // the socket/credentials work, same as Mongo's admin().ping() did.
+    await getDb().doc("_health/ping").get()
 
     return NextResponse.json(
       {
         ok: true,
         service: "rememberquran",
-        database: {
-          configured: true,
-          connected: isDbConnected(),
-          readyState: READY_STATE_LABEL[readyState] ?? String(readyState),
-        },
+        database: { configured: true, connected: true },
         durationMs: Date.now() - started,
         timestamp: new Date().toISOString(),
       },
@@ -75,19 +59,13 @@ export async function GET() {
       },
     )
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown database error"
+    const message = error instanceof Error ? error.message : "Unknown database error"
 
     return NextResponse.json(
       {
         ok: false,
         service: "rememberquran",
-        database: {
-          configured: true,
-          connected: false,
-          readyState: READY_STATE_LABEL[getDbReadyState()] ?? "unknown",
-          error: message,
-        },
+        database: { configured: true, connected: false, error: message },
         durationMs: Date.now() - started,
         timestamp: new Date().toISOString(),
       },

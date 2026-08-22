@@ -1,17 +1,15 @@
 "use client"
 
+import { Fragment } from "react"
 import type { Verse } from "@/types/quran"
 import { useHighlightedWord } from "@/lib/playbackStore"
 import { ArabicWord } from "./ArabicWord"
 import { AyahEndMarker } from "./AyahEndMarker"
-import { TranslationBlock } from "./TranslationBlock"
 import { HideableArabic } from "./HideableArabic"
 import { cn } from "@/lib/utils"
 
 interface ReadingModeViewProps {
   verses: Verse[]
-  showTranslation: boolean
-  activeTranslationIds: number[]
   targetAyahId?: number
 }
 
@@ -56,60 +54,49 @@ function ReadingVerse({ verse, isTarget }: { verse: Verse; isTarget: boolean }) 
   )
 }
 
-/**
- * Continuous Arabic flow (quran.com "Reading" preference).
- * Words stream RTL; end-of-ayah glyphs mark verse boundaries.
- * Optional translations appear as a compact list below the mushaf block.
- */
-export function ReadingModeView({
-  verses,
-  showTranslation,
-  activeTranslationIds,
-  targetAyahId,
-}: ReadingModeViewProps) {
+/** Juz boundary divider — mirrors comparable Quran sites, which mark the
+ * juz a reader is currently in rather than leaving continuous mode as one
+ * undifferentiated block of text. */
+function JuzMarker({ juz }: { juz: number }) {
   return (
-    <div className="space-y-10">
-      <div
-        dir="rtl"
-        lang="ar"
-        className="quran-arabic text-justify leading-[2.15]"
-      >
-        {verses.map((verse) => (
-          <ReadingVerse
-            key={verse.id}
-            verse={verse}
-            isTarget={targetAyahId === verse.verse_number}
-          />
-        ))}
-      </div>
+    <div
+      dir="ltr"
+      role="separator"
+      aria-label={`Juz ${juz}`}
+      className="my-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+    >
+      <span aria-hidden className="h-px flex-1 bg-border/50" />
+      <span className="shrink-0 tabular-nums">Juz {juz}</span>
+      <span aria-hidden className="h-px flex-1 bg-border/50" />
+    </div>
+  )
+}
 
-      {showTranslation && (
-        <div className="space-y-6 border-t border-border/40 pt-8" dir="ltr">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Translation
-          </p>
-          {verses.map((verse) => {
-            const active = verse.translations.filter((t) =>
-              activeTranslationIds.includes(t.resource_id),
-            )
-            if (!active.length) return null
-            return (
-              <div
-                key={verse.id}
-                className="scroll-mt-28"
-                id={`ayah-trans-${verse.verse_number}`}
-              >
-                <p className="mb-1 text-xs tabular-nums text-muted-foreground/70">
-                  {verse.verse_key}
-                </p>
-                {active.map((t) => (
-                  <TranslationBlock key={t.resource_id} translation={t} />
-                ))}
-              </div>
-            )
-          })}
-        </div>
-      )}
+/**
+ * Continuous Arabic flow (quran.com "Reading" preference) — Quran text
+ * only, deliberately, regardless of the reader's translation setting.
+ * "Verse by verse" is the annotated/study mode where translations belong;
+ * Reading mode's whole promise (see its description in DisplayModeToggle)
+ * is an unbroken mushaf-style page. Words stream RTL; end-of-ayah glyphs
+ * mark verse boundaries; juz dividers break up the flow at each boundary
+ * crossed within the surah.
+ */
+export function ReadingModeView({ verses, targetAyahId }: ReadingModeViewProps) {
+  return (
+    <div dir="rtl" lang="ar" className="quran-arabic text-justify leading-[2.15]">
+      {verses.map((verse, index) => {
+        const prevJuz = index > 0 ? verses[index - 1].juz_number : null
+        const showJuzMarker = verse.juz_number !== prevJuz
+        return (
+          <Fragment key={verse.id}>
+            {showJuzMarker && <JuzMarker juz={verse.juz_number} />}
+            <ReadingVerse
+              verse={verse}
+              isTarget={targetAyahId === verse.verse_number}
+            />
+          </Fragment>
+        )
+      })}
     </div>
   )
 }

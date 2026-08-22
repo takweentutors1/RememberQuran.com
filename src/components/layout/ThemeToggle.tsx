@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTheme } from "next-themes"
 import { Monitor, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useHasMounted } from "@/hooks/useHasMounted"
 
 function nextTheme(current: string | undefined): "light" | "dark" | "system" {
   if (current === "dark") return "system"
@@ -13,16 +14,18 @@ function nextTheme(current: string | undefined): "light" | "dark" | "system" {
 
 export function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const mounted = useHasMounted()
   const [pendingMode, setPendingMode] = useState<
     "light" | "dark" | "system" | null
   >(null)
 
-  useEffect(() => setMounted(true), [])
-
-  useEffect(() => {
+  // Once `theme` catches up to the optimistic click, clear the override —
+  // done during render (not an effect) so there's no extra round trip.
+  const [trackedTheme, setTrackedTheme] = useState(theme)
+  if (theme !== trackedTheme) {
+    setTrackedTheme(theme)
     setPendingMode(null)
-  }, [theme])
+  }
 
   if (!mounted) {
     return <div className="size-9" aria-hidden />

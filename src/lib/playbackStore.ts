@@ -69,6 +69,22 @@ export function useIsVerseActive(verseKey: string): boolean {
   )
 }
 
+/**
+ * True once playback has started and this isn't the verse being recited —
+ * drives the reader's "dim everything but the active ayah" treatment. Like
+ * `useIsVerseActive`, this is a per-verse boolean selector rather than the
+ * raw verse key: when the active verse moves on, exactly two subscribers
+ * flip (the one losing focus, the one gaining it) instead of every ayah in
+ * the surah re-rendering.
+ */
+export function useIsVerseDimmed(verseKey: string): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => position.verseKey !== null && position.verseKey !== verseKey,
+    () => false,
+  )
+}
+
 /** Elapsed playback time rounded to seconds (1 Hz re-render, bar only) */
 export function useElapsedSeconds(): number {
   return useSyncExternalStore(

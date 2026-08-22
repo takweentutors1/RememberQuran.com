@@ -63,6 +63,7 @@
   --color-gold: var(--brand-gold);
   --color-gold-strong: var(--brand-gold-strong);
   --color-gold-soft: var(--brand-gold-soft);
+  --color-gold-leaf: var(--gold-leaf);
   --color-reader-ink: var(--reader-ink);
 
   --shadow-sm: var(--elev-sm);
@@ -83,6 +84,13 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-overshoot: cubic-bezier(0.3, 1.5, 0.5, 1);
+
+  /* Illuminated gold-leaf motif — a literal gilding accent for decorative
+     shadows (mihrab-shadow, gold-leaf-glow). Deliberately theme-independent:
+     unlike --brand-gold (the per-theme interactive accent, which is green in
+     Spotify and blue in Airtable), this ornament always reads as gold. */
+  --gold-leaf: #d4af37;
+  --gold-leaf-soft: rgb(212 175 55 / 0.35);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -190,6 +198,198 @@
   --elev-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 28px 60px -20px rgb(0 0 0 / 0.8);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   APPLE THEME
+   ═══════════════════════════════════════════════════════════════════════════ */
+.apple,
+[data-theme="apple"] {
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --card: #fafafc;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
+  --primary: #0066cc;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #7a7a7a;
+  --accent: #d2d2d7;
+  --accent-foreground: #1d1d1f;
+  --destructive: oklch(0.52 0.16 27);
+  --border: #f0f0f0;
+  --input: #e0e0e0;
+  --ring: #0071e3;
+  --radius: 0.75rem;
+
+  --sidebar: #f5f5f7;
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-primary: #0066cc;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d2d2d7;
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: #f0f0f0;
+  --sidebar-ring: #0071e3;
+
+  --surface-sunk: #f0f0f0;
+  --foreground-subtle: #7a7a7a;
+  --foreground-faint: #cccccc;
+  --border-strong: #e0e0e0;
+
+  --brand-gold: #0066cc;
+  --brand-gold-strong: #0071e3;
+  --brand-gold-soft: #f5f5f7;
+
+  --reader-ink: #1d1d1f;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPOTIFY THEME
+   ═══════════════════════════════════════════════════════════════════════════ */
+.spotify,
+[data-theme="spotify"] {
+  --background: #121212;
+  --foreground: #ffffff;
+  --card: #181818;
+  --card-foreground: #ffffff;
+  --popover: #282828;
+  --popover-foreground: #ffffff;
+  --primary: #1ed760;
+  --primary-foreground: #000000;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #ffffff;
+  --muted: #121212;
+  --muted-foreground: #b3b3b3;
+  --accent: #2a2a2a;
+  --accent-foreground: #ffffff;
+  --destructive: #f3727f;
+  --border: #282828;
+  --input: #2a2a2a;
+  --ring: #1ed760;
+  --radius: 9999px;
+
+  --sidebar: #000000;
+  --sidebar-foreground: #b3b3b3;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #000000;
+  --sidebar-ring: #1ed760;
+
+  --surface-sunk: #000000;
+  --foreground-subtle: #b3b3b3;
+  --foreground-faint: #cbcbcb;
+  --border-strong: #3e3e3e;
+
+  --brand-gold: #1ed760;
+  --brand-gold-strong: #1db954;
+  --brand-gold-soft: #121212;
+
+  --reader-ink: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AIRTABLE THEME
+   ═══════════════════════════════════════════════════════════════════════════ */
+.airtable,
+[data-theme="airtable"] {
+  --background: #ffffff;
+  --foreground: #181d26;
+  --card: #f8fafc;
+  --card-foreground: #181d26;
+  --popover: #ffffff;
+  --popover-foreground: #181d26;
+  --primary: #181d26;
+  --primary-foreground: #ffffff;
+  --secondary: #e0e2e6;
+  --secondary-foreground: #181d26;
+  --muted: #f8fafc;
+  --muted-foreground: #41454d;
+  --accent: #e0e2e6;
+  --accent-foreground: #181d26;
+  --destructive: #aa2d00;
+  --border: #dddddd;
+  --input: #dddddd;
+  --ring: #1b61c9;
+  --radius: 0.5rem;
+
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #41454d;
+  --sidebar-primary: #181d26;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0e2e6;
+  --sidebar-accent-foreground: #181d26;
+  --sidebar-border: #dddddd;
+  --sidebar-ring: #1b61c9;
+
+  --surface-sunk: #f8fafc;
+  --foreground-subtle: #41454d;
+  --foreground-faint: #9297a0;
+  --border-strong: #9297a0;
+
+  --brand-gold: #1b61c9;
+  --brand-gold-strong: #1a3866;
+  --brand-gold-soft: #f8fafc;
+
+  --reader-ink: #181d26;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODERN THEME
+   Dark, high-contrast glass surfaces with indigo/cyan accents, built for the
+   glassmorphism and Islamic-motif utilities below (glass-panel,
+   mihrab-shadow, gold-leaf-glow — the gold-leaf ornament itself stays gold
+   via --gold-leaf, independent of this theme's indigo/cyan accent).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.modern,
+[data-theme="modern"] {
+  --background: #05060a;
+  --foreground: #eef0f8;
+  --card: #0d0f1a;
+  --card-foreground: #eef0f8;
+  --popover: #10121f;
+  --popover-foreground: #eef0f8;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #161827;
+  --secondary-foreground: #eef0f8;
+  --muted: #12131f;
+  --muted-foreground: #9297b3;
+  --accent: #1b1e30;
+  --accent-foreground: #eef0f8;
+  --destructive: oklch(0.65 0.17 27);
+  --border: #1f2233;
+  --input: #262a3f;
+  --ring: #22d3ee;
+  --radius: 1rem;
+
+  --sidebar: #04050a;
+  --sidebar-foreground: #b7bcd4;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #161827;
+  --sidebar-accent-foreground: #eef0f8;
+  --sidebar-border: #1f2233;
+  --sidebar-ring: #22d3ee;
+
+  --surface-sunk: #020306;
+  --foreground-subtle: #9297b3;
+  --foreground-faint: #52566e;
+  --border-strong: #33374d;
+
+  --brand-gold: #6366f1;
+  --brand-gold-strong: #22d3ee;
+  --brand-gold-soft: #171933;
+
+  --reader-ink: #f5f6fb;
+
+  --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
+  --elev-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 28px 60px -20px rgb(0 0 0 / 0.8);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -200,6 +400,12 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Prevent aggressive pill-radius clipping on containers in Spotify theme */
+  [data-slot$="-content"],
+  .card {
+    --radius: 0.5rem;
   }
 }
 
@@ -235,7 +441,8 @@
 .study-prose {
   font-family:
     var(--font-source-serif), ui-serif, Georgia,
-    var(--font-uthmani), var(--font-amiri-quran), var(--font-amiri), serif;
+    var(--reader-arabic-font, var(--font-uthmani)), var(--font-amiri-quran),
+    var(--font-amiri), serif;
   font-size: 0.9375rem;
   line-height: 1.8;
   overflow-wrap: break-word;
@@ -611,6 +818,26 @@
   animation: shimmer 1.6s linear infinite;
 }
 
+/* ── Gold shimmer line ──
+   A slow gold sweep along a thin divider — decorative, not a loading state.
+   Distinct from `.shimmer` above (skeleton placeholders, fast + grey). */
+@keyframes gold-shimmer-sweep {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@utility gold-shimmer-line {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold-leaf) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: gold-shimmer-sweep 3.5s ease-in-out infinite;
+}
+
 /* ── Attribute-driven list filter ──
    The 114-surah grid stays fully server-rendered; SurahFilter only writes
    `data-filter` on the container and these two rules do the work. No client
@@ -659,5 +886,38 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODERN LAYOUT UTILITIES & ISLAMIC ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Premium Glassmorphism */
+  .glass-panel {
+    @apply bg-background/70 backdrop-blur-xl border border-white/10 shadow-lg dark:border-white/5;
+  }
+
+  /* Traditional Islamic Touches */
+  .mihrab-shadow {
+    box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px -1px rgba(0, 0, 0, 0.06), inset 0 10px 15px -3px var(--gold-leaf-soft);
+  }
+
+  .gold-leaf-glow {
+    box-shadow: 0 0 20px 2px var(--gold-leaf-soft), inset 0 0 10px 1px var(--gold-leaf);
+  }
+
+  /* Rotating Geometric Arabesque */
+  .animate-slow-spin {
+    animation: slow-spin 60s linear infinite;
+  }
+}
+
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

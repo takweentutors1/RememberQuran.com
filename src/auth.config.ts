@@ -25,6 +25,10 @@ export const authConfig = {
       if (user) {
         token.sub = user.id
         token.roles = user.roles
+        token.pwChangedAt =
+          typeof user.passwordChangedAt === "number" ? user.passwordChangedAt : null
+        token.pwCheckedAt = Date.now()
+        delete token.error
       }
       if (
         trigger === "update" &&
@@ -37,6 +41,14 @@ export const authConfig = {
     },
     session({ session, token }) {
       if (session.user && token.sub) {
+        // A stale/pre-password-change session — real revalidation happens
+        // Node-side in src/auth.ts (Firestore isn't reachable from edge);
+        // this just honours whatever that check already flagged on the token.
+        if (token.error === "PasswordChanged") {
+          session.user.id = ""
+          session.user.roles = []
+          return session
+        }
         session.user.id = token.sub
         session.user.name = token.name ?? null
         session.user.roles = Array.isArray(token.roles)

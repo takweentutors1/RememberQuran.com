@@ -1,6 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useReaderSettings } from "@/context/ReaderSettingsContext"
 import { FontSizeSelector } from "./FontSizeSelector"
 import { FontTypeSelector } from "./FontTypeSelector"
 import { DisplayModeToggle } from "./DisplayModeToggle"
@@ -34,6 +35,9 @@ export function ReaderSettingsPanel({
   /** Close the settings sheet (e.g. after starting a hide-range session). */
   onRequestClose?: () => void
 } = {}) {
+  const { displayMode } = useReaderSettings()
+  const isReadingMode = displayMode === "reading"
+
   return (
     <div className="space-y-6">
       <Section title="View">
@@ -59,11 +63,15 @@ export function ReaderSettingsPanel({
         <FontSizeSelector />
       </Section>
 
-      <div className="h-px bg-border/60" />
+      {!isReadingMode && (
+        <>
+          <div className="h-px bg-border/60" />
 
-      <Section title="Translation">
-        <TranslationSelector />
-      </Section>
+          <Section title="Translation">
+            <TranslationSelector />
+          </Section>
+        </>
+      )}
 
       <div className="h-px bg-border/60" />
 

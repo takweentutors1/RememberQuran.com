@@ -17,13 +17,22 @@ export function WordDetailView({ verseKey, wordPosition }: WordDetailViewProps) 
   const [entry, setEntry] = useState<MorphologyEntry | null>(null)
   const [status, setStatus] = useState<Status>("loading")
 
+  // Reset during render (not the effect below) when the word changes — the
+  // React-endorsed way to derive state from props without an extra
+  // render+effect round trip. The fetch effect still owns the async part.
+  const currentKey = `${verseKey}:${wordPosition}`
+  const [trackedKey, setTrackedKey] = useState(currentKey)
+  if (currentKey !== trackedKey) {
+    setTrackedKey(currentKey)
+    setStatus("loading")
+    setEntry(null)
+  }
+
   useEffect(() => {
     const surahId = Number(verseKey.split(":")[0])
     prefetchSurahMorphology(surahId)
 
     let cancelled = false
-    setStatus("loading")
-    setEntry(null)
 
     getWordMorphology(verseKey, wordPosition)
       .then((result) => {

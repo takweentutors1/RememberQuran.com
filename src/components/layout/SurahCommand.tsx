@@ -15,9 +15,12 @@ export function SurahCommand() {
   const { commandOpen, setCommandOpen } = useUI()
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    if (commandOpen) setMounted(true)
-  }, [commandOpen])
+  // Latch true the first time commandOpen goes true — setState during
+  // render (not in an effect) is the React-endorsed way to derive state
+  // from a prop/context value without an extra render+effect round trip.
+  if (commandOpen && !mounted) {
+    setMounted(true)
+  }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

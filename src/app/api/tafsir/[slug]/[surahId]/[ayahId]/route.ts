@@ -28,7 +28,11 @@ function sanitizeTafsirHtml(html: string): string {
       "br",
       "a",
     ],
-    allowedAttributes: { a: ["href"] },
+    // `dir`/`lang` are safe on any allowed tag and preserve RTL direction on
+    // inline Arabic ayah quotes embedded in English-language tafsir HTML —
+    // without them, upstream RTL markup was stripped and quotes fell back to
+    // the surrounding LTR flow.
+    allowedAttributes: { a: ["href"], "*": ["dir", "lang"] },
     allowedSchemes: ["http", "https"],
     // Demote headings so tafsir content never outranks the panel title
     transformTags: {

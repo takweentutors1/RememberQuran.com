@@ -6,11 +6,9 @@ import {
   type BookmarkDto,
   type CollectionDto,
 } from "@/components/account/BookmarksView"
-import { connectToDatabase } from "@/lib/db"
-import { getOrCreateFavourites } from "@/lib/bookmarks/favourites"
+import { getOrCreateFavourites, listCollections } from "@/lib/firestore/bookmarkCollections"
+import { listBookmarks } from "@/lib/firestore/bookmarks"
 import { getChapters } from "@/lib/quranApi"
-import { Bookmark } from "@/lib/models/Bookmark"
-import { BookmarkCollection } from "@/lib/models/BookmarkCollection"
 
 export const metadata: Metadata = {
   title: "Bookmarks",
@@ -25,23 +23,20 @@ export default async function BookmarksPage() {
   }
   const userId = session.user.id
 
-  await connectToDatabase()
   // Seed Favourites in parallel with bookmarks/chapters; collections after seed
   const [, bookmarks, chapters] = await Promise.all([
     getOrCreateFavourites(userId),
-    Bookmark.find({ userId }).lean(),
+    listBookmarks(userId),
     getChapters(),
   ])
-  const collections = await BookmarkCollection.find({ userId })
-    .sort({ isDefault: -1, createdAt: 1 })
-    .lean()
+  const collections = await listCollections(userId)
 
   const chapterById = new Map(chapters.map((c) => [c.id, c]))
 
   const collectionDtos: CollectionDto[] = collections.map((c) => ({
-    id: c._id.toString(),
+    id: c.id,
     name: c.name,
-    isDefault: c.isDefault ?? false,
+    isDefault: c.isDefault,
   }))
 
   const bookmarkDtos: BookmarkDto[] = bookmarks
@@ -52,7 +47,7 @@ export default async function BookmarksPage() {
         verseKey: b.verseKey,
         surahId,
         ayahId,
-        collectionId: b.collectionId.toString(),
+        collectionId: b.collectionId,
         surahName: chapter?.name_simple ?? `Surah ${surahId}`,
         surahArabic: chapter?.name_arabic ?? "",
       }

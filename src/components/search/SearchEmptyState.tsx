@@ -45,7 +45,7 @@ export function SearchEmptyState({
       <div className="py-8 text-center">
         <Search className="mx-auto mb-3 size-8 text-muted-foreground/40" />
         <p className="text-sm text-muted-foreground">
-          No results for <span className="font-medium text-foreground">"{query}"</span>
+          No results for <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           Try a different word, or search in Arabic without diacritics.

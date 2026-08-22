@@ -2,10 +2,8 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { ProgressView } from "@/components/account/ProgressView"
-import { connectToDatabase } from "@/lib/db"
 import { getChapters } from "@/lib/quranApi"
-import { ProgressEvent } from "@/lib/models/ProgressEvent"
-import { User } from "@/lib/models/User"
+import { getUserById } from "@/lib/firestore/users"
 import { TOTAL_SURAHS } from "@/lib/progress/date"
 import { parseVerseKey } from "@/lib/quran/verse-key"
 
@@ -22,11 +20,8 @@ export default async function ProgressPage() {
   }
   const userId = session.user.id
 
-  await connectToDatabase()
-
-  const [user, surahIds, chapters] = await Promise.all([
-    User.findById(userId).select("lastPosition").lean(),
-    ProgressEvent.distinct("surah", { userId }),
+  const [user, chapters] = await Promise.all([
+    getUserById(userId),
     getChapters(),
   ])
 
@@ -45,15 +40,12 @@ export default async function ProgressPage() {
         verseKey: `${parsed.surahId}:${parsed.ayahId}`,
         surahId: parsed.surahId,
         ayahId: parsed.ayahId,
-        updatedAt:
-          raw.updatedAt instanceof Date
-            ? raw.updatedAt.toISOString()
-            : String(raw.updatedAt ?? ""),
+        updatedAt: raw.updatedAt.toISOString(),
       }
     }
   }
 
-  const viewedSurahIds = (surahIds as number[])
+  const viewedSurahIds = (user?.viewedSurahs ?? [])
     .filter((n) => Number.isInteger(n) && n >= 1 && n <= TOTAL_SURAHS)
     .sort((a, b) => a - b)
 

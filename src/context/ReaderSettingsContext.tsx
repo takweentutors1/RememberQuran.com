@@ -37,6 +37,15 @@ import {
 /** verse = translation/verse-by-verse view; reading = continuous Arabic (mushaf-like) */
 export type DisplayMode = "verse" | "reading"
 
+/**
+ * Page chrome around the ayahs — distinct from `DisplayMode`, which only
+ * governs verse flow. classic = today's sidebar + toolbar shell; single-page
+ * = immersive mushaf-style page with chrome minimized; child = simplified
+ * controls + larger type for younger readers; flow = distraction-free,
+ * audio-first hybrid layout.
+ */
+export type LayoutMode = "classic" | "single-page" | "child" | "flow"
+
 /** @deprecated Use FontScale — kept for migration from older localStorage */
 export type FontSize = "small" | "medium" | "large" | "xlarge"
 
@@ -45,6 +54,7 @@ export interface ReaderSettings {
   arabicFontScale: FontScale
   translationFontScale: FontScale
   displayMode: DisplayMode
+  layoutMode: LayoutMode
   activeTranslations: number[]
   showTranslation: boolean
   /** Active tafsir book (M3) — must be a slug from TAFSIR_RESOURCES */
@@ -64,6 +74,7 @@ interface ReaderSettingsContextValue extends ReaderSettings {
   increaseTranslationFontScale: () => void
   decreaseTranslationFontScale: () => void
   setDisplayMode: (mode: DisplayMode) => void
+  setLayoutMode: (mode: LayoutMode) => void
   setActiveTranslations: (ids: number[]) => void
   toggleTranslation: (id: number) => void
   setShowTranslation: (show: boolean) => void
@@ -97,11 +108,14 @@ const LEGACY_SIZE_MAP: Record<FontSize, FontScale> = {
   xlarge: 5,
 }
 
+const LAYOUT_MODES: LayoutMode[] = ["classic", "single-page", "child", "flow"]
+
 const DEFAULT_SETTINGS: ReaderSettings = {
   quranFont: "uthmani",
   arabicFontScale: DEFAULT_ARABIC_SCALE,
   translationFontScale: DEFAULT_TRANSLATION_SCALE,
-  displayMode: "verse",
+  displayMode: "reading",
+  layoutMode: "classic",
   activeTranslations: DEFAULT_TRANSLATIONS,
   showTranslation: true,
   tafsirSlug: DEFAULT_TAFSIR_SLUG,
@@ -155,11 +169,18 @@ function migrateSettings(raw: unknown): ReaderSettings {
       ? s.displayMode
       : DEFAULT_SETTINGS.displayMode
 
+  const layoutMode =
+    typeof s.layoutMode === "string" &&
+    LAYOUT_MODES.includes(s.layoutMode as LayoutMode)
+      ? (s.layoutMode as LayoutMode)
+      : DEFAULT_SETTINGS.layoutMode
+
   return {
     quranFont,
     arabicFontScale,
     translationFontScale,
     displayMode,
+    layoutMode,
     activeTranslations: migrateActiveTranslations(s.activeTranslations),
     showTranslation:
       typeof s.showTranslation === "boolean"
@@ -275,6 +296,11 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
 
   const setDisplayMode = useCallback(
     (displayMode: DisplayMode) => setSettings((p) => ({ ...p, displayMode })),
+    [setSettings],
+  )
+
+  const setLayoutMode = useCallback(
+    (layoutMode: LayoutMode) => setSettings((p) => ({ ...p, layoutMode })),
     [setSettings],
   )
 
@@ -409,6 +435,7 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
         increaseTranslationFontScale,
         decreaseTranslationFontScale,
         setDisplayMode,
+        setLayoutMode,
         setActiveTranslations,
         toggleTranslation,
         setShowTranslation,

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useRipple } from "@/hooks/useRipple"
 import { cn } from "@/lib/utils"
 
@@ -13,24 +12,21 @@ const OPTIONS: { value: SurahFilterValue; label: string }[] = [
 ]
 
 /**
- * Revelation-place filter for the 114-surah grid.
+ * Revelation-place filter for the Surah Explorer carousel.
  *
- * Deliberately does *not* own the list. It writes `data-filter` onto the grid
- * container and CSS does the hiding (see globals.css). That keeps all 114
- * cards as server-rendered RSC output — no hydration of the list, no client
- * re-render on filter change, and the filter costs one attribute write.
- *
- * Filtering by attribute also means the DOM order is stable, so browser
- * find-in-page and back/forward scroll restoration keep working.
+ * Controlled: the carousel now lives in a client component (`SurahExplorer`,
+ * required for the Embla instance), so there is no longer a server-rendered
+ * list to filter by attribute — the filter value lives in the parent and
+ * drives which chapters are passed to Embla as slides.
  */
-export function SurahFilter({ targetId }: { targetId: string }) {
-  const [active, setActive] = useState<SurahFilterValue>("all")
+export function SurahFilter({
+  value,
+  onChange,
+}: {
+  value: SurahFilterValue
+  onChange: (value: SurahFilterValue) => void
+}) {
   const ripple = useRipple<HTMLButtonElement>()
-
-  function apply(value: SurahFilterValue) {
-    setActive(value)
-    document.getElementById(targetId)?.setAttribute("data-filter", value)
-  }
 
   return (
     <div
@@ -38,14 +34,14 @@ export function SurahFilter({ targetId }: { targetId: string }) {
       aria-label="Filter surahs by place of revelation"
       className="flex flex-wrap gap-1.5"
     >
-      {OPTIONS.map(({ value, label }) => {
-        const selected = active === value
+      {OPTIONS.map(({ value: optionValue, label }) => {
+        const selected = value === optionValue
         return (
           <button
-            key={value}
+            key={optionValue}
             type="button"
             aria-pressed={selected}
-            onClick={() => apply(value)}
+            onClick={() => onChange(optionValue)}
             onPointerDown={ripple.onPointerDown}
             className={cn(
               "ripple-host rounded-full border px-3 py-1.5 text-xs font-medium",

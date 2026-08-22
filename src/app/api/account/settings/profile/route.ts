@@ -1,7 +1,6 @@
 import { auth } from "@/auth"
 import { privateJson } from "@/lib/auth/api-response"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { updateDisplayName, getUserById } from "@/lib/firestore/users"
 
 export const runtime = "nodejs"
 
@@ -30,17 +29,10 @@ export async function PATCH(request: Request) {
     )
   }
 
-  await connectToDatabase()
-  const user = await User.findByIdAndUpdate(
-    session.user.id,
-    { $set: { "profile.displayName": displayName } },
-    { new: true, runValidators: true },
-  ).lean()
+  const existing = await getUserById(session.user.id)
+  if (!existing) return privateJson({ error: "Account not found." }, 404)
 
-  if (!user) return privateJson({ error: "Account not found." }, 404)
+  await updateDisplayName(session.user.id, displayName)
 
-  return privateJson({
-    ok: true,
-    profile: { displayName: user.profile?.displayName ?? "" },
-  })
+  return privateJson({ ok: true, profile: { displayName } })
 }

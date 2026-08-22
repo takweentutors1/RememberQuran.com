@@ -2,8 +2,7 @@ import { createHash } from "node:crypto"
 import { hash } from "bcryptjs"
 import { privateJson } from "@/lib/auth/api-response"
 import { validatePassword } from "@/lib/auth/credentials"
-import { connectToDatabase } from "@/lib/db"
-import { User } from "@/lib/models/User"
+import { getUserByResetToken, updatePasswordHash } from "@/lib/firestore/users"
 
 export const runtime = "nodejs"
 
@@ -36,25 +35,13 @@ export async function POST(
 
   const tokenHash = createHash("sha256").update(token).digest("hex")
 
-  await connectToDatabase()
-  const user = await User.findOne({
-    passwordResetToken: tokenHash,
-    passwordResetExpires: { $gt: new Date() },
-  })
-    .select(
-      "+passwordHash +passwordResetToken +passwordResetExpires +passwordResetRequestedAt",
-    )
-    .exec()
-
+  const user = await getUserByResetToken(tokenHash)
   if (!user) {
     return privateJson({ error: "This reset link is invalid or expired." }, 400)
   }
 
-  user.passwordHash = await hash(password.password, 12)
-  user.passwordResetToken = null
-  user.passwordResetExpires = null
-  user.passwordResetRequestedAt = null
-  await user.save()
+  const passwordHash = await hash(password.password, 12)
+  await updatePasswordHash(user.id, passwordHash)
 
   return privateJson({ ok: true })
 }

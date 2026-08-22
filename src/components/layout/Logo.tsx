@@ -55,6 +55,7 @@ export function LogoWordmark({ className, size = "md" }: LogoWordmarkProps) {
         height={height}
         className={cn("w-auto dark:hidden", cls)}
         decoding="async"
+        fetchPriority="high"
       />
       {/* Dark mode: light wordmark — slight lift on near-black chrome */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -66,6 +67,7 @@ export function LogoWordmark({ className, size = "md" }: LogoWordmarkProps) {
         className={cn("hidden w-auto dark:block dark:brightness-110", cls)}
         aria-hidden="true"
         decoding="async"
+        fetchPriority="high"
       />
     </span>
   )

@@ -5,8 +5,8 @@ import {
   GoalsView,
   type GoalsSnapshot,
 } from "@/components/account/GoalsView"
-import { connectToDatabase } from "@/lib/db"
-import { evaluateGoalAndStreak } from "@/lib/goals/evaluate"
+import { evaluateGoalAndStreak } from "@/lib/firestore/goals"
+import { getRequestTimeZone } from "@/lib/progress/serverTimezone"
 
 export const metadata: Metadata = {
   title: "Goals & streaks",
@@ -20,9 +20,9 @@ export default async function GoalsPage() {
     redirect("/login?next=/account/goals")
   }
 
-  await connectToDatabase()
   const snapshot = (await evaluateGoalAndStreak(
     session.user.id,
+    await getRequestTimeZone(),
   )) as GoalsSnapshot
 
   return (

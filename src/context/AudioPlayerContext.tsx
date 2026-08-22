@@ -223,7 +223,9 @@ interface LoadIntent {
 export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const chapters = useChapters()
   const chaptersRef = useRef(chapters)
-  chaptersRef.current = chapters
+  useEffect(() => {
+    chaptersRef.current = chapters
+  }, [chapters])
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
   const [rawPrefs, setRawPrefs] = useLocalStorage<unknown>(
     "rq-audio-settings",
@@ -307,10 +309,14 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     [clearRepeatPause],
   )
   const scheduleRepeatRestartRef = useRef(scheduleRepeatRestart)
-  scheduleRepeatRestartRef.current = scheduleRepeatRestart
+  useEffect(() => {
+    scheduleRepeatRestartRef.current = scheduleRepeatRestart
+  }, [scheduleRepeatRestart])
 
   const clearRepeatPauseRef = useRef(clearRepeatPause)
-  clearRepeatPauseRef.current = clearRepeatPause
+  useEffect(() => {
+    clearRepeatPauseRef.current = clearRepeatPause
+  }, [clearRepeatPause])
 
   const tickBody = useCallback(() => {
     const audio = audioRef.current
@@ -345,7 +351,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       }
 
       const rep = repeatRef.current
-      if (rep.mode !== "off" && !repeatGapRef.current) {
+      if (modeRef.current !== "radio" && rep.mode !== "off" && !repeatGapRef.current) {
         const startTiming = timings[rep.start - 1]
         const endTiming = timings[rep.end - 1]
         if (startTiming && endTiming && t >= endTiming.to) {
@@ -414,6 +420,14 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       const timing = timingsRef.current[clampVerse(verseNumber) - 1]
       const audio = audioRef.current
       if (!timing || !audio) return
+      // A manual jump elsewhere in the chapter invalidates any active
+      // repeat — otherwise the next tick sees playback past the repeat
+      // range's end and snaps straight back to it, hijacking navigation.
+      if (repeatRef.current.mode !== "off") {
+        clearRepeatPause()
+        repeatRef.current = REPEAT_OFF
+        dispatch({ type: "SET_REPEAT", repeat: REPEAT_OFF })
+      }
       if (audio.readyState >= 1) {
         audio.currentTime = timing.from / 1000
       } else {
@@ -427,7 +441,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         timeMs: timing.from,
       })
     },
-    [clampVerse],
+    [clampVerse, clearRepeatPause],
   )
 
   /** Load a chapter's audio + timings; returns whether it succeeded */
@@ -435,11 +449,16 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     async (intent: LoadIntent): Promise<boolean> => {
       const token = ++loadTokenRef.current
       const chapterChanged = chapterIdRef.current !== intent.chapterId
+      // A surah->radio (or radio->surah) transition must also drop any
+      // leftover repeat config, even if it happens to land on the same
+      // chapterId — otherwise radio mode can inherit a stale repeat range
+      // and loop the same chapter forever instead of advancing.
+      const modeChanged = modeRef.current !== intent.mode
       modeRef.current = intent.mode
       chapterIdRef.current = intent.chapterId
       prefetchedNextRef.current = null
       lastIntentRef.current = intent
-      if (chapterChanged) {
+      if (chapterChanged || modeChanged) {
         clearRepeatPauseRef.current()
         repeatRef.current = REPEAT_OFF
       }
@@ -448,7 +467,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         chapterId: intent.chapterId,
         mode: intent.mode,
         loadingVerseKey: `${intent.chapterId}:${intent.seekToVerse}`,
-        resetRepeat: chapterChanged,
+        resetRepeat: chapterChanged || modeChanged,
       })
 
       try {
@@ -573,9 +592,14 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const togglePlayPause = useCallback(() => {
     const audio = audioRef.current
     if (!audio || !audio.currentSrc) return
+    // Mid-repeat-gap, audio.paused is already true and status still reads
+    // "playing" — cancel the pending auto-resume timer so it can't fire
+    // later and yank playback back to the range start out from under the
+    // user's own play/pause action.
+    clearRepeatPause()
     if (audio.paused) safePlay()
     else audio.pause()
-  }, [safePlay])
+  }, [safePlay, clearRepeatPause])
 
   const nextAyah = useCallback(() => {
     const idx = Math.max(lastVerseIdxRef.current, 0)
@@ -614,6 +638,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const seekToTime = useCallback((ms: number) => {
     const audio = audioRef.current
     if (!audio || !audio.currentSrc) return
+    // Same reasoning as togglePlayPause — a scrubber seek during a repeat
+    // gap must cancel the pending auto-resume timer, not race it.
+    clearRepeatPause()
     const clamped = Math.max(0, ms)
     if (audio.readyState >= 1) {
       audio.currentTime = clamped / 1000
@@ -630,7 +657,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     })
     if (timing) requestScrollToVerse(timing.verseKey)
     syncMediaPosition()
-  }, [syncMediaPosition])
+  }, [syncMediaPosition, clearRepeatPause])
 
   const setReciter = useCallback(
     (id: number) => {
@@ -762,6 +789,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     stopLoop()
     if (repeatGapRef.current) return // memorisation inter-loop pause
     if (!audioRef.current?.currentSrc) return // src cleared by stop()
+    // Reassigning `audio.src` (loadChapter, e.g. switching surahs while one
+    // is already playing) can itself fire a native `pause` for the outgoing
+    // source. Without this guard that clobbers the "loading" status LOAD_START
+    // just set, leaving the bar stuck on "paused" instead of transitioning to
+    // "playing" once the new chapter's audio actually starts.
+    if (statusRef.current === "loading") return
     dispatch({ type: "PAUSED" })
   }, [stopLoop])
 
@@ -770,7 +803,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     // tick check can fire — honour the repeat here, not just in tickBody
     const rep = repeatRef.current
     const audio = audioRef.current
-    if (rep.mode !== "off" && audio && !repeatGapRef.current) {
+    // Repeat is a surah-mode feature — radio must always advance on end,
+    // even if a repeat config somehow survived a mode transition.
+    if (modeRef.current !== "radio" && rep.mode !== "off" && audio && !repeatGapRef.current) {
       const startTiming = timingsRef.current[rep.start - 1]
       if (rep.remaining > 1 && startTiming) {
         rep.remaining -= 1

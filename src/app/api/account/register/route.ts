@@ -1,10 +1,7 @@
 import { hash } from "bcryptjs"
-import mongoose from "mongoose"
 import { NextResponse } from "next/server"
 import { validateCredentials } from "@/lib/auth/credentials"
-import { connectToDatabase } from "@/lib/db"
-import { BookmarkCollection } from "@/lib/models/BookmarkCollection"
-import { User } from "@/lib/models/User"
+import { createUser } from "@/lib/firestore/users"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -59,56 +56,31 @@ export async function POST(request: Request) {
   }
 
   try {
-    await connectToDatabase()
-
-    // Ensure unique indexes exist before first registration (idempotent).
-    await Promise.all([User.init(), BookmarkCollection.init()])
-
-    const existingUser = await User.exists({ email: parsed.data.email })
-    if (existingUser) {
-      return json({ error: "An account with this email already exists." }, 409)
-    }
-
     const passwordHash = await hash(parsed.data.password, 12)
 
-    // Avoid multi-document transactions — they can hang indefinitely on some
-    // Atlas / serverless setups and leave the Create account button stuck.
-    const user = await User.create({
+    // Email reservation, user doc, and default "Favourites" collection are
+    // created atomically in one Firestore transaction — see createUser().
+    const result = await createUser({
       email: parsed.data.email,
       passwordHash,
-      profile: { displayName },
+      displayName,
     })
 
-    try {
-      await BookmarkCollection.create({
-        userId: user._id,
-        name: "Favourites",
-        isDefault: true,
-      })
-    } catch (collectionError) {
-      // Best-effort cleanup so a half-created account does not block re-register
-      await User.deleteOne({ _id: user._id }).catch(() => undefined)
-      throw collectionError
+    if (!result.ok) {
+      return json({ error: "An account with this email already exists." }, 409)
     }
 
     return json(
       {
         user: {
-          id: user._id.toString(),
-          email: parsed.data.email,
+          id: result.user.id,
+          email: result.user.email,
           name: displayName || null,
         },
       },
       201,
     )
   } catch (error) {
-    if (
-      error instanceof mongoose.mongo.MongoServerError &&
-      error.code === 11000
-    ) {
-      return json({ error: "An account with this email already exists." }, 409)
-    }
-
     console.error("Registration failed", error)
     return json(
       { error: "Could not create your account. Please try again." },

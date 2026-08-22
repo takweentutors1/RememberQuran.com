@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
 import { Monitor, Moon, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useHasMounted } from "@/hooks/useHasMounted"
 
 const OPTIONS = [
   { value: "light", label: "Light", Icon: Sun },
@@ -24,9 +24,7 @@ const OPTIONS = [
  */
 export function ThemeSegmented({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
+  const mounted = useHasMounted()
 
   const active = mounted ? (theme ?? "system") : null
 

@@ -2,9 +2,8 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { HifzView, type HifzAyahDto } from "@/components/account/HifzView"
-import { connectToDatabase } from "@/lib/db"
 import { getChapters } from "@/lib/quranApi"
-import { MemorisedAyah } from "@/lib/models/MemorisedAyah"
+import { listMemorisedAyahs } from "@/lib/firestore/hifz"
 
 export const metadata: Metadata = {
   title: "Hifz",
@@ -19,9 +18,8 @@ export default async function HifzPage() {
   }
   const userId = session.user.id
 
-  await connectToDatabase()
   const [rows, chapters] = await Promise.all([
-    MemorisedAyah.find({ userId }).sort({ surahId: 1, ayahId: 1 }).lean(),
+    listMemorisedAyahs(userId),
     getChapters(),
   ])
 
@@ -35,10 +33,7 @@ export default async function HifzPage() {
       ayahId: r.ayahId,
       surahName: chapter?.name_simple ?? `Surah ${r.surahId}`,
       surahArabic: chapter?.name_arabic ?? "",
-      memorisedAt:
-        r.memorisedAt instanceof Date
-          ? r.memorisedAt.toISOString()
-          : String(r.memorisedAt),
+      memorisedAt: r.memorisedAt.toISOString(),
     }
   })
 

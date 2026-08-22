@@ -34,7 +34,6 @@ export function SearchPageClient({ initialQuery }: SearchPageClientProps) {
 
   // Refs to prevent stale closures and race conditions
   const latestQuery = useRef(query)
-  const abortRef = useRef<AbortController | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isFirstSearch = useRef(true)
 
@@ -58,10 +57,6 @@ export function SearchPageClient({ initialQuery }: SearchPageClientProps) {
         setNextPage(null)
         return
       }
-
-      // Cancel any in-flight request
-      abortRef.current?.abort()
-      abortRef.current = new AbortController()
 
       if (!append) setStatus("loading")
       else setLoadingMore(true)
@@ -143,7 +138,7 @@ export function SearchPageClient({ initialQuery }: SearchPageClientProps) {
       {status === "done" && results.length > 0 && (
         <p className="mb-4 text-xs text-muted-foreground">
           {totalCount.toLocaleString()} result{totalCount !== 1 ? "s" : ""} for{" "}
-          <span className="font-medium text-foreground">"{query}"</span>
+          <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>
         </p>
       )}
 
