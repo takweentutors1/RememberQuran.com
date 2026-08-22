@@ -7,7 +7,7 @@ import type { Verse } from "@/types/quran"
 import { PlayAyahButton } from "@/components/audio/PlayAyahButton"
 import { useStudyPanel } from "@/context/StudyPanelContext"
 import { hasAsbab } from "@/lib/asbabIndex"
-import { useHighlightedWord } from "@/lib/playbackStore"
+import { useHighlightedWord, useIsVerseDimmed } from "@/lib/playbackStore"
 import { ArabicLine } from "./ArabicLine"
 import { BookmarkButton } from "./BookmarkButton"
 import { NoteButton } from "./NoteButton"
@@ -43,6 +43,7 @@ export function AyahBlock({
   const chapterId = Number(verse.verse_key.split(":")[0])
   // Null for every verse except the one being recited — no re-renders while idle
   const highlightedPosition = useHighlightedWord(verse.verse_key)
+  const dimmed = useIsVerseDimmed(verse.verse_key)
 
   const activeTranslations = verse.translations.filter((t) =>
     activeTranslationIds.includes(t.resource_id),
@@ -84,8 +85,9 @@ export function AyahBlock({
       data-slot="study-panel"
       data-verse-key={verse.verse_key}
       className={cn(
-        "group scroll-mt-28 px-1 py-7 transition-colors duration-[1500ms]",
+        "group scroll-mt-28 px-1 py-7 transition-[background-color,opacity] duration-[1500ms]",
         isTarget && "bg-primary/5",
+        dimmed && "opacity-60",
       )}
     >
       {/* Meta bar — quran.com TranslationView TopActions pattern */}

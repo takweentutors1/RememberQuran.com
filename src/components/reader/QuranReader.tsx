@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { Chapter, Verse } from "@/types/quran"
 import { useReaderSettings } from "@/context/ReaderSettingsContext"
+import { useUI } from "@/context/UIContext"
 import { usePlaybackVerseKey, useVerseScrollRequest } from "@/lib/playbackStore"
 import { BismillahHeader } from "./BismillahHeader"
 import { AyahBlock } from "./AyahBlock"
@@ -80,6 +81,50 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
   const clearRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const articleRef = useRef<HTMLElement>(null)
   const targetHandledRef = useRef<number | null>(null)
+  const { setFocusMode } = useUI()
+
+  // Focus mode: hide the navbar and bottom nav while the reader is
+  // scrolling, so the page gets full-screen reading space with zero taps.
+  // Scrolling back up (or near the top) brings the chrome back. Mirrors the
+  // rAF-throttled pattern used by `BottomNav`'s own scroll listener,
+  // including the settle window — this route auto-scrolls to the target
+  // ayah / last position on mount, and without it that one big jump reads as
+  // "the user flicked down" and hides the nav before the page has even
+  // settled.
+  useEffect(() => {
+    let lastY = window.scrollY
+    let frame = 0
+    const settleUntil = Date.now() + 600
+
+    function measure() {
+      frame = 0
+      const y = window.scrollY
+      const delta = y - lastY
+      lastY = y
+
+      if (Date.now() < settleUntil) return
+
+      if (y < 80) {
+        setFocusMode(false)
+      } else if (delta > 4) {
+        setFocusMode(true)
+      } else if (delta < -4) {
+        setFocusMode(false)
+      }
+    }
+
+    function onScroll() {
+      if (frame) return
+      frame = window.requestAnimationFrame(measure)
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame)
+      window.removeEventListener("scroll", onScroll)
+      setFocusMode(false)
+    }
+  }, [setFocusMode])
 
   // Track the topmost visible ayah so a mode switch can re-anchor to it —
   // verse-by-verse blocks and continuous reading text have very different

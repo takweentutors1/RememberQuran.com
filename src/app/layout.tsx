@@ -9,9 +9,10 @@ import { Footer } from "@/components/layout/Footer"
 import { TimezoneSync } from "@/components/TimezoneSync"
 import "./globals.css"
 
-const AudioPlayerBar = dynamic(() => import("@/components/audio/AudioPlayerBar").then(mod => mod.AudioPlayerBar))
+const MiniPlayer = dynamic(() => import("@/components/audio/MiniPlayer").then(mod => mod.MiniPlayer))
 const SurahSheet = dynamic(() => import("@/components/layout/SurahSheet").then(mod => mod.SurahSheet))
 const SurahCommand = dynamic(() => import("@/components/layout/SurahCommand").then(mod => mod.SurahCommand))
+const BottomNav = dynamic(() => import("@/components/layout/BottomNav").then(mod => mod.BottomNav))
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rememberquran.com"),
@@ -83,13 +84,18 @@ export default async function RootLayout({
         <Providers chapters={chapters}>
           <TimezoneSync />
           <Navbar />
-          <main id="main" tabIndex={-1} className="min-w-0 outline-none">
+          <main
+            id="main"
+            tabIndex={-1}
+            className="min-w-0 pb-24 outline-none md:pb-0"
+          >
             {children}
           </main>
           <Footer />
           <SurahSheet />
           <SurahCommand />
-          <AudioPlayerBar />
+          <MiniPlayer />
+          <BottomNav />
         </Providers>
       </body>
     </html>
