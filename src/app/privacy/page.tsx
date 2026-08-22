@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "How RememberQuran collects, uses, and protects your information.",
 }
 
-const SITE = "https://remember-quran-com.vercel.app"
+const SITE = "https://rememberquran.com"
 const CONTACT = "privacy@rememberquran.com"
 
 export default function PrivacyPage() {

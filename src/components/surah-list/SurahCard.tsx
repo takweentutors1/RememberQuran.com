@@ -9,11 +9,13 @@ interface SurahCardProps {
 /**
  * Home chapter tile.
  *
- * The surah number sits inside a diamond frame — a manuscript ornament that
- * rotates 45° → 90° and takes on gold as the pointer approaches. The frame is
- * a `::before` pseudo-element (see the `diamond-frame` utility in globals.css)
- * rather than an inline SVG: it costs no DOM nodes, and with 114 of these on
- * the page that difference is measurable.
+ * The surah number sits inside an 8-point rosette — the classic "rub el
+ * hizb" star (two overlapping squares) used to mark divisions in the mushaf
+ * — rendered as a real SVG so its two squares can bloom independently on
+ * hover rather than a single frame flipping in place. `size-10` keeps the
+ * ornament at a fixed 40×40 badge that scales with the root font size (zoom,
+ * user font-size preferences) exactly like every other rem-sized control on
+ * the page, so it stays correct at any viewport.
  *
  * The Arabic name is the visual anchor on the trailing edge.
  */
@@ -28,11 +30,45 @@ export function SurahCard({ chapter }: SurahCardProps) {
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       )}
     >
-      <span
-        data-numeric
-        className="diamond-frame size-10 shrink-0 text-xs font-medium text-muted-foreground transition-colors duration-(--dur-slow) ease-(--ease-out) group-hover:text-gold"
-      >
-        {chapter.id}
+      <span className="relative grid size-10 shrink-0 place-items-center">
+        <svg
+          aria-hidden
+          viewBox="0 0 40 40"
+          className="absolute inset-0 size-full text-muted-foreground transition-colors duration-(--dur-slow) ease-(--ease-out) group-hover:text-gold"
+        >
+          <rect
+            x="8"
+            y="8"
+            width="24"
+            height="24"
+            rx="4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            style={{ transformOrigin: "20px 20px" }}
+            className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:-rotate-[14deg]"
+          />
+          <g transform="rotate(45 20 20)">
+            <rect
+              x="8"
+              y="8"
+              width="24"
+              height="24"
+              rx="4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.25"
+              style={{ transformOrigin: "20px 20px" }}
+              className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:rotate-[59deg]"
+            />
+          </g>
+        </svg>
+        <span
+          data-numeric
+          className="relative text-xs font-medium text-muted-foreground transition-colors duration-(--dur-slow) ease-(--ease-out) group-hover:text-gold"
+        >
+          {chapter.id}
+        </span>
       </span>
 
       <span className="min-w-0 flex-1">

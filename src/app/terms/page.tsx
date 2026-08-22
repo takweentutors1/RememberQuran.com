@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Terms governing use of the RememberQuran website and services.",
 }
 
-const SITE = "https://remember-quran-com.vercel.app"
+const SITE = "https://rememberquran.com"
 const CONTACT = "privacy@rememberquran.com"
 
 export default function TermsPage() {

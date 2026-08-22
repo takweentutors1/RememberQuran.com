@@ -88,7 +88,7 @@ class SearchResponse {
 }
 
 class SearchRemoteDs {
-  final String _baseUrl = 'https://remember-quran-com.vercel.app/api/search';
+  final String _baseUrl = 'https://rememberquran.com/api/search';
   final http.Client client;
 
   SearchRemoteDs({required this.client});

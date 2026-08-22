@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -32,6 +33,10 @@ class _RadioViewState extends State<RadioView> {
   final RxInt _currentFactIndex = 0.obs;
   bool _isPlayPressed = false;
 
+  Timer? _smoothTicker;
+  Worker? _playingWorker;
+  Duration? _dragPosition;
+
   @override
   void initState() {
     super.initState();
@@ -43,11 +48,29 @@ class _RadioViewState extends State<RadioView> {
       _currentFactIndex.value =
           (_currentFactIndex.value + 1) % radioFacts.length;
     });
+
+    _playingWorker = ever<bool>(
+      _audioController.rxIsPlaying,
+      _syncSmoothTicker,
+    );
+    _syncSmoothTicker(_audioController.rxIsPlaying.value);
+  }
+
+  void _syncSmoothTicker(bool isPlaying) {
+    _smoothTicker?.cancel();
+    _smoothTicker = null;
+    if (!isPlaying) return;
+    _smoothTicker = Timer.periodic(const Duration(milliseconds: 33), (_) {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _factsTimer.cancel();
+    _smoothTicker?.cancel();
+    _playingWorker?.dispose();
     super.dispose();
   }
 
@@ -603,6 +626,17 @@ class _RadioViewState extends State<RadioView> {
     });
   }
 
+  String _formatDuration(Duration d) {
+    if (d.isNegative) d = Duration.zero;
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60);
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:$seconds';
+    }
+    return '$minutes:$seconds';
+  }
+
   /// Subtle "how far through the Quran" indicator — reflects the surah
   /// actually loaded/playing (rxCurrentSurahId), not just the one selected
   /// in the picker, so it tracks real listening progress.
@@ -610,31 +644,89 @@ class _RadioViewState extends State<RadioView> {
     final theme = Theme.of(context);
     final nurColors = theme.extension<NurColorsExtension>();
     final brandGold = nurColors?.brandGold ?? theme.colorScheme.primary;
-    final surahId = _audioController.rxCurrentSurahId.value;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: (surahId / 114).clamp(0.0, 1.0),
-              minHeight: 4,
-              backgroundColor: brandGold.withOpacity(0.12),
-              color: brandGold.withOpacity(0.55),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Surah $surahId of 114',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 11,
-              color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
-            ),
-          ),
-        ],
-      ),
+    return StreamBuilder<MediaItem?>(
+      stream: _audioController.mediaItemStream,
+      initialData: _audioController.currentMediaItem,
+      builder: (context, mediaSnap) {
+        final duration = mediaSnap.data?.duration ?? Duration.zero;
+        return StreamBuilder<PlaybackState>(
+          stream: _audioController.playbackStateStream,
+          initialData: _audioController.currentPlaybackState,
+          builder: (context, stateSnap) {
+            final livePosition = _audioController.currentPlaybackState.position;
+            final position = _dragPosition ?? livePosition;
+            final totalMs = duration.inMilliseconds.toDouble();
+            final hasDuration = totalMs > 0;
+            final clampedMs = hasDuration
+                ? position.inMilliseconds.toDouble().clamp(0, totalMs).toDouble()
+                : 0.0;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 3,
+                      activeTrackColor: brandGold.withOpacity(0.55),
+                      inactiveTrackColor: brandGold.withOpacity(0.12),
+                      thumbColor: brandGold,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 6,
+                      ),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 14,
+                      ),
+                    ),
+                    child: Slider(
+                      value: clampedMs,
+                      max: hasDuration ? totalMs : 1,
+                      onChanged: hasDuration
+                          ? (v) => setState(
+                              () => _dragPosition = Duration(
+                                milliseconds: v.toInt(),
+                              ),
+                            )
+                          : null,
+                      onChangeEnd: hasDuration
+                          ? (v) {
+                              _audioController.seek(
+                                Duration(milliseconds: v.toInt()),
+                              );
+                              setState(() => _dragPosition = null);
+                            }
+                          : null,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatDuration(Duration(milliseconds: clampedMs.toInt())),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                          ),
+                        ),
+                        Text(
+                          _formatDuration(duration),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

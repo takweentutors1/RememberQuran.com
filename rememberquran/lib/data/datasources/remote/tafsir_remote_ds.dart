@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class TafsirRemoteDataSource {
-  final String _baseUrl = 'https://remember-quran-com.vercel.app/api/tafsir';
+  final String _baseUrl = 'https://rememberquran.com/api/tafsir';
 
   Future<Map<String, dynamic>> getTafsir(String slug, int surahId, int ayahId) async {
     final url = Uri.parse('$_baseUrl/$slug/$surahId/$ayahId');
