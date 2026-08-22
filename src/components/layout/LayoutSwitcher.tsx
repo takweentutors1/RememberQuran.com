@@ -53,12 +53,17 @@ export function LayoutSwitcher() {
     OPTIONS.find((o) => o.value === layoutMode)?.icon ?? LayoutPanelLeft
 
   function selectLayout(value: LayoutMode) {
+    if (value === "single-page") {
+      router.push("/landing")
+      return
+    }
     setLayoutMode(value)
     // These are reader-chrome layouts — nothing on this page would visibly
     // change if we're not already in the reader, so hop to Al-Fatihah
     // (same default the homepage's own "Start reading" CTA uses) to show it.
     if (!isSurahRoute) router.push("/1")
   }
+
 
   return (
     <DropdownMenu>

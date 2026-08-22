@@ -21,6 +21,14 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  async rewrites() {
+    return [
+      {
+        source: "/landing",
+        destination: "/landing/index.html",
+      },
+    ]
+  },
 }
 
 export default nextConfig
