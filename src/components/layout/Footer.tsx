@@ -11,7 +11,9 @@ import {
   Waypoints,
 } from "lucide-react"
 import { LogoWordmark } from "@/components/layout/Logo"
+import { ArabesquePattern } from "@/components/layout/ArabesquePattern"
 import { FooterAccountLinks } from "@/components/layout/FooterAccountLinks"
+import { FooterReveal } from "@/components/layout/FooterReveal"
 import { ThemeSegmented } from "@/components/layout/ThemeSegmented"
 import { BackToTop } from "@/components/layout/BackToTop"
 import { cn } from "@/lib/utils"
@@ -139,84 +141,64 @@ function FooterLinkColumn({
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-border bg-background">
-      {/* ── Closing dua ──
-          The page ends the way a study session should, not with a call to
-          action. */}
-      <section className="relative isolate overflow-hidden px-4 py-12 text-center sm:px-6">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-40 bg-[radial-gradient(50%_100%_at_50%_0%,var(--brand-gold-soft)_0%,transparent_72%)]"
-        />
-
-        <div aria-hidden className="mb-5 flex items-center justify-center gap-3">
-          <span className="block h-px w-12 bg-gradient-to-r from-transparent to-strong" />
-          <span className="size-2 rotate-45 rounded-[2px] border border-gold" />
-          <span className="block h-px w-12 bg-gradient-to-l from-transparent to-strong" />
-        </div>
-
-        <p
-          className="font-uthmani text-3xl leading-[1.9] text-reader-ink sm:text-4xl"
-          dir="rtl"
-          lang="ar"
-        >
-          رَبِّ زِدْنِى عِلْمًا
-        </p>
-        <p className="mt-3 font-serif text-base font-light text-muted-foreground">
-          &ldquo;My Lord, increase me in knowledge.&rdquo;
-        </p>
-        <p className="mt-1.5 text-xs tracking-wide text-subtle">Ta-Ha 20:114</p>
-      </section>
+    <footer className="relative mt-16 border-t border-border bg-background">
+      <div aria-hidden className="gold-shimmer-line absolute inset-x-0 top-0 h-px" />
 
       {/* ── Columns ── */}
-      <div className="site-shell border-t border-border px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="sm:col-span-2">
-            <Link
-              href="/"
-              aria-label="RememberQuran — home"
-              className="inline-flex rounded-sm transition-opacity duration-(--dur-base) hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <LogoWordmark size="md" />
-            </Link>
+      <div className="relative overflow-hidden">
+        <ArabesquePattern
+          id="footer"
+          className="text-gold-leaf/[0.05] [animation-duration:150s]"
+        />
+        <div className="site-shell px-4 py-10 sm:px-6 lg:px-8">
+          <FooterReveal className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="sm:col-span-2">
+              <Link
+                href="/"
+                aria-label="RememberQuran — home"
+                className="inline-flex rounded-sm transition-opacity duration-(--dur-base) hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <LogoWordmark size="md" />
+              </Link>
 
-            <p className="mt-4 max-w-[34ch] text-sm leading-relaxed text-subtle">
-              A quiet place to read, listen to, and memorise the Quran. Built
-              with care, kept free, no advertising.
-            </p>
+              <p className="mt-4 max-w-[34ch] text-sm leading-relaxed text-subtle">
+                A quiet place to read, listen to, and memorise the Quran. Built
+                with care, kept free, no advertising.
+              </p>
 
-            <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-gold-soft px-3 py-1.5 text-[11px] font-medium text-gold-strong">
-              <Heart className="size-3.5" strokeWidth={1.8} aria-hidden />
-              Free forever · no ads · no tracking
-            </p>
-          </div>
-
-          <FooterLinkColumn {...COLUMNS[0]} />
-          <FooterLinkColumn {...COLUMNS[1]} />
-
-          <div>
-            <FooterHeading>Your account</FooterHeading>
-            <FooterAccountLinks />
-
-            <div className="mt-6">
-              <FooterHeading>{COLUMNS[2].heading}</FooterHeading>
-              <ul className="flex flex-col gap-0.5">
-                {COLUMNS[2].links.map(({ label, href }) => (
-                  <li key={href}>
-                    <Link href={href} className={FOOTER_LINK_CLASS}>
-                      {label}
-                      <ArrowRight
-                        data-arrow
-                        aria-hidden
-                        className="size-3 shrink-0"
-                        strokeWidth={2.2}
-                      />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-gold-soft px-3 py-1.5 text-[11px] font-medium text-gold-strong">
+                <Heart className="size-3.5" strokeWidth={1.8} aria-hidden />
+                Free forever · no ads · no tracking
+              </p>
             </div>
-          </div>
+
+            <FooterLinkColumn {...COLUMNS[0]} />
+            <FooterLinkColumn {...COLUMNS[1]} />
+
+            <div>
+              <FooterHeading>Your account</FooterHeading>
+              <FooterAccountLinks />
+
+              <div className="mt-6">
+                <FooterHeading>{COLUMNS[2].heading}</FooterHeading>
+                <ul className="flex flex-col gap-0.5">
+                  {COLUMNS[2].links.map(({ label, href }) => (
+                    <li key={href}>
+                      <Link href={href} className={FOOTER_LINK_CLASS}>
+                        {label}
+                        <ArrowRight
+                          data-arrow
+                          aria-hidden
+                          className="size-3 shrink-0"
+                          strokeWidth={2.2}
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </FooterReveal>
         </div>
       </div>
 
@@ -230,29 +212,31 @@ export function Footer() {
             <span aria-hidden className="h-px flex-1 bg-border" />
           </h3>
 
-          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {CREDITS.map(({ title, detail, Icon }) => (
-              <li
-                key={title}
-                className="group flex items-start gap-3 rounded-xl border border-border bg-background px-3.5 py-3 transition-[border-color,box-shadow] duration-(--dur-base) ease-(--ease-out) hover:border-strong hover:shadow-sm"
-              >
-                <span
-                  aria-hidden
-                  className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-subtle transition-[background-color,color,transform] duration-(--dur-base) ease-(--ease-out) group-hover:-rotate-6 group-hover:bg-gold-soft group-hover:text-gold"
+          <FooterReveal delay={0.1}>
+            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {CREDITS.map(({ title, detail, Icon }) => (
+                <li
+                  key={title}
+                  className="group flex items-start gap-3 rounded-xl border border-border bg-background px-3.5 py-3 transition-[border-color,box-shadow] duration-(--dur-base) ease-(--ease-out) hover:border-strong hover:shadow-sm"
                 >
-                  <Icon className="size-4" strokeWidth={1.8} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-xs font-medium text-foreground">
-                    {title}
+                  <span
+                    aria-hidden
+                    className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-subtle transition-[background-color,color,transform] duration-(--dur-base) ease-(--ease-out) group-hover:-rotate-6 group-hover:bg-gold-soft group-hover:text-gold"
+                  >
+                    <Icon className="size-4" strokeWidth={1.8} />
                   </span>
-                  <span className="mt-0.5 block text-[11px] leading-relaxed text-subtle">
-                    {detail}
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium text-foreground">
+                      {title}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-relaxed text-subtle">
+                      {detail}
+                    </span>
                   </span>
-                </span>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          </FooterReveal>
 
           <p className="mt-4 text-[11px] text-subtle">
             Found a mistake in the text?{" "}

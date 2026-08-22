@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import type { LucideIcon } from "lucide-react"
 import { BookOpenText, Headphones, ImagePlus, Search } from "lucide-react"
+import { ArabesquePattern } from "@/components/layout/ArabesquePattern"
 import { AuthNav } from "@/components/auth/AuthNav"
 import { LogoWordmark } from "@/components/layout/Logo"
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher"
@@ -62,14 +63,22 @@ function NavLinks({ pathname }: { pathname: string }) {
             aria-label={label}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "underline-grow flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs",
+              "relative flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs",
               "transition-colors duration-(--dur-base) ease-(--ease-out)",
               active
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground",
+              !active && "underline-grow",
               FOCUS,
             )}
           >
+            {active && (
+              <motion.span
+                layoutId="navbar-active-pill"
+                className="absolute inset-0 -z-10 rounded-lg bg-accent"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
             <Icon className="size-3.5" strokeWidth={1.75} />
             {hideLabel ? (
               <span className="sr-only">{label}</span>
@@ -90,13 +99,16 @@ function LogoLink({ className }: { className?: string }) {
     <Link
       href="/"
       aria-label="RememberQuran — home"
-      className={cn(
-        "rounded-sm transition-opacity duration-150 hover:opacity-80",
-        FOCUS,
-        className,
-      )}
+      className={cn("rounded-sm", FOCUS, className)}
     >
-      <LogoWordmark size="md" />
+      <motion.span
+        className="inline-flex"
+        whileHover={{ scale: 1.035, rotate: -1 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 400, damping: 22 }}
+      >
+        <LogoWordmark size="md" />
+      </motion.span>
     </Link>
   )
 }
@@ -140,7 +152,7 @@ export function Navbar() {
         transition={{ type: "spring", stiffness: 380, damping: 30 }}
         style={{ transformOrigin: "top center" }}
         className={cn(
-          "backdrop-blur-xl",
+          "relative overflow-hidden backdrop-blur-xl",
           "transition-[background-color,box-shadow,border-color,backdrop-filter] duration-300 ease-out",
           scrolled ? "bg-background/90 backdrop-blur-2xl" : "bg-background/60",
           floating
@@ -158,6 +170,12 @@ export function Navbar() {
               ),
         )}
       >
+        {floating && (
+          <ArabesquePattern
+            id="navbar"
+            className="text-gold-leaf/[0.05] [animation-duration:120s]"
+          />
+        )}
         {isSurahRoute ? (
           /* Reader: logo sits in w-72 above the sidebar — no border-r so the
              sidebar divider starts below the navbar (clean corner, no line

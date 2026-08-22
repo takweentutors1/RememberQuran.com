@@ -818,6 +818,26 @@
   animation: shimmer 1.6s linear infinite;
 }
 
+/* ── Gold shimmer line ──
+   A slow gold sweep along a thin divider — decorative, not a loading state.
+   Distinct from `.shimmer` above (skeleton placeholders, fast + grey). */
+@keyframes gold-shimmer-sweep {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@utility gold-shimmer-line {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold-leaf) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: gold-shimmer-sweep 3.5s ease-in-out infinite;
+}
+
 /* ── Attribute-driven list filter ──
    The 114-surah grid stays fully server-rendered; SurahFilter only writes
    `data-filter` on the container and these two rules do the work. No client
