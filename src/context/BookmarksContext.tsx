@@ -17,17 +17,30 @@ interface BookmarkEntry {
   collectionId: string
 }
 
+export interface CollectionSummary {
+  id: string
+  name: string
+  isDefault: boolean
+}
+
 interface BookmarksContextValue {
-  /** True once the signed-in user's bookmarks have loaded */
+  /** True once the signed-in user's bookmarks + collections have loaded */
   loaded: boolean
+  collections: CollectionSummary[]
   isBookmarked: (verseKey: string) => boolean
   isPending: (verseKey: string) => boolean
+  /** Quick toggle: saves to Favourites, or removes if already saved. */
   toggle: (verseKey: string) => Promise<void>
+  /** Save (or move, if already saved) an ayah into a specific collection. */
+  saveTo: (verseKey: string, collectionId: string | null) => Promise<boolean>
+  createCollection: (name: string) => Promise<CollectionSummary | null>
   /** Re-sync reader icons after account-page mutations */
   refresh: () => Promise<void>
 }
 
 const BookmarksContext = createContext<BookmarksContextValue | null>(null)
+
+const EMPTY_COLLECTIONS: CollectionSummary[] = []
 
 async function fetchBookmarkKeys(): Promise<Set<string>> {
   const res = await fetch("/api/account/bookmarks")
@@ -36,18 +49,27 @@ async function fetchBookmarkKeys(): Promise<Set<string>> {
   return new Set((data.bookmarks ?? []).map((b) => b.verseKey))
 }
 
+async function fetchCollections(): Promise<CollectionSummary[]> {
+  const res = await fetch("/api/account/collections")
+  if (!res.ok) return []
+  const data = (await res.json()) as { collections?: CollectionSummary[] }
+  return data.collections ?? []
+}
+
 /**
- * One GET per session holds every saved verseKey in memory (2000 cap — a few
- * KB), so ayah icons render instantly with no per-verse requests.
+ * One GET per session holds every saved verseKey (and the collection list)
+ * in memory, so ayah icons — and the "save to…" picker — render instantly
+ * with no per-verse or per-open requests.
  *
- * The effect uses Promise.then() chaining so setKeys is always called inside a
- * microtask callback, never synchronously in the effect body.
+ * The effect uses Promise.then() chaining so setState is always called
+ * inside a microtask callback, never synchronously in the effect body.
  */
 export function BookmarksProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
   const userId = session?.user?.id ?? null
 
   const [keys, setKeys] = useState<Set<string> | null>(null)
+  const [collections, setCollections] = useState<CollectionSummary[]>([])
   /** Which user `keys` belongs to — prevents showing the previous account briefly */
   const [keysUserId, setKeysUserId] = useState<string | null>(null)
   const [pending, setPending] = useState<Set<string>>(new Set())
@@ -55,9 +77,14 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
   // Only expose keys when they match the signed-in user
   const effectiveKeys =
     userId && keysUserId === userId ? keys : null
+  // Stable reference when empty — a `[]` literal here would be a new array
+  // every render, defeating the `value` useMemo below.
+  const effectiveCollections =
+    userId && keysUserId === userId ? collections : EMPTY_COLLECTIONS
 
-  // Synced after every render via useEffect so toggle always reads the latest
-  // value without stale closures — written only in effects, never during render.
+  // Synced after every render via useEffect so toggle/saveTo always read the
+  // latest value without stale closures — written only in effects, never
+  // during render.
   const effectiveKeysRef = useRef<Set<string> | null>(null)
   const pendingRef = useRef<Set<string>>(new Set())
   useEffect(() => {
@@ -78,13 +105,16 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
         if (cancelled) return
         setKeys(null)
         setKeysUserId(null)
+        setCollections([])
         setPending(new Set())
         if (!fetchFor) return
-        return fetchBookmarkKeys()
+        return Promise.all([fetchBookmarkKeys(), fetchCollections()])
       })
-      .then((newKeys) => {
-        if (cancelled || !newKeys || !fetchFor) return
+      .then((result) => {
+        if (cancelled || !result || !fetchFor) return
+        const [newKeys, newCollections] = result
         setKeys(newKeys)
+        setCollections(newCollections)
         setKeysUserId(fetchFor)
       })
       .catch(() => {})
@@ -97,8 +127,12 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!userId) return
     try {
-      const newKeys = await fetchBookmarkKeys()
+      const [newKeys, newCollections] = await Promise.all([
+        fetchBookmarkKeys(),
+        fetchCollections(),
+      ])
       setKeys(newKeys)
+      setCollections(newCollections)
       setKeysUserId(userId)
     } catch {
       // Reader stays usable — icons show unsaved state until next refresh
@@ -160,15 +194,93 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  /**
+   * Save into a specific collection (the fix for "no way to choose which
+   * collection a bookmark goes into" — this is a POST when the ayah isn't
+   * saved yet, and a PATCH move when it already is, in either case ending
+   * with the ayah filed under `collectionId`).
+   */
+  const saveTo = useCallback(
+    async (verseKey: string, collectionId: string | null) => {
+      if (effectiveKeysRef.current === null) return false
+      if (pendingRef.current.has(verseKey)) return false
+      const wasSaved = effectiveKeysRef.current.has(verseKey)
+
+      setPending((prev) => new Set(prev).add(verseKey))
+      setKeys((prev) => new Set(prev ?? []).add(verseKey))
+
+      try {
+        const res = wasSaved
+          ? await fetch("/api/account/bookmarks", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ verseKey, collectionId }),
+            })
+          : await fetch("/api/account/bookmarks", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ verseKey, collectionId }),
+            })
+        if (!res.ok) throw new Error(`Save to collection failed: ${res.status}`)
+        return true
+      } catch {
+        if (!wasSaved) {
+          setKeys((prev) => {
+            const next = new Set(prev ?? [])
+            next.delete(verseKey)
+            return next
+          })
+        }
+        return false
+      } finally {
+        setPending((prev) => {
+          const next = new Set(prev)
+          next.delete(verseKey)
+          return next
+        })
+      }
+    },
+    [],
+  )
+
+  const createCollection = useCallback(async (name: string) => {
+    try {
+      const res = await fetch("/api/account/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      })
+      if (!res.ok) return null
+      const data = (await res.json()) as { collection?: CollectionSummary }
+      if (!data.collection) return null
+      setCollections((prev) => [...prev, data.collection!])
+      return data.collection
+    } catch {
+      return null
+    }
+  }, [])
+
   const value = useMemo(
     () => ({
       loaded: effectiveKeys !== null,
+      collections: effectiveCollections,
       isBookmarked,
       isPending,
       toggle,
+      saveTo,
+      createCollection,
       refresh,
     }),
-    [effectiveKeys, isBookmarked, isPending, toggle, refresh],
+    [
+      effectiveKeys,
+      effectiveCollections,
+      isBookmarked,
+      isPending,
+      toggle,
+      saveTo,
+      createCollection,
+      refresh,
+    ],
   )
 
   return (
