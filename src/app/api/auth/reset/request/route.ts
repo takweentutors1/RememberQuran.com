@@ -1,14 +1,14 @@
 import { createHash, randomBytes } from "node:crypto"
-import { Resend } from "resend"
 import { privateJson } from "@/lib/auth/api-response"
 import { validateEmail } from "@/lib/auth/credentials"
+import { getDb } from "@/lib/firestore/admin"
 import { getUserByEmail, setPasswordResetToken, clearPasswordResetToken } from "@/lib/firestore/users"
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit"
 
 export const runtime = "nodejs"
 
 const RESET_TTL_MS = 60 * 60 * 1000
-const RESEND_COOLDOWN_MS = 60 * 1000
+const EMAIL_COOLDOWN_MS = 60 * 1000
 const GENERIC_MESSAGE =
   "If an account exists for that email, a reset link has been sent."
 
@@ -20,10 +20,11 @@ const GENERIC_MESSAGE =
 const RESET_IP_WINDOW_MS = 15 * 60 * 1000
 const RESET_IP_LIMIT = 5
 
-// The "account found, first request" branch below awaits a Firestore write
-// and a Resend API call before responding, while the "invalid email" /
-// "account not found" / "cooldown active" branches return almost instantly.
-// Even though every branch's response body is identical, that timing gap is
+// A valid reset request incurs a bcrypt hash, a Firestore write,
+// and a Firebase Trigger Email call before responding, while the "invalid email" /
+// "cooldown" early-returns are very fast. A malicious actor could use
+// response timing to enumerate which emails exist. Even though every 
+// branch's response body is identical, that timing gap is
 // itself an enumeration side-channel — pad every enumeration-sensitive
 // branch out to the same floor so response time stops leaking whether the
 // email exists.
@@ -68,15 +69,7 @@ export async function POST(request: Request) {
   }
 
   const isProduction = process.env.NODE_ENV === "production"
-  const resendKey = process.env.RESEND_API_KEY?.trim()
-  const emailFrom = process.env.EMAIL_FROM?.trim()
-
-  if (isProduction && (!resendKey || !emailFrom)) {
-    return privateJson(
-      { error: "Password reset email is temporarily unavailable." },
-      503,
-    )
-  }
+  const emailFrom = process.env.EMAIL_FROM?.trim() || "noreply@rememberquran.com"
 
   const user = await getUserByEmail(parsed.email)
   if (!user) {
@@ -86,7 +79,7 @@ export async function POST(request: Request) {
 
   const now = Date.now()
   const lastRequest = user.passwordResetRequestedAt?.getTime() ?? 0
-  if (now - lastRequest < RESEND_COOLDOWN_MS) {
+  if (now - lastRequest < EMAIL_COOLDOWN_MS) {
     await enforceMinDelay(startedAt)
     return privateJson({ ok: true, message: GENERIC_MESSAGE })
   }
@@ -101,51 +94,48 @@ export async function POST(request: Request) {
     requestedAt: new Date(now),
   })
 
-  const baseUrl = process.env.AUTH_URL?.trim() || "http://localhost:3000"
+  const baseUrl = process.env.AUTH_URL?.trim() || "https://rememberquran.com"
   const resetUrl = new URL(`/reset/${rawToken}`, baseUrl).toString()
 
-  if (resendKey && emailFrom) {
-    const resend = new Resend(resendKey)
-    const { error } = await resend.emails.send({
-      from: emailFrom,
+  try {
+    await getDb().collection("mail").add({
       to: user.email,
-      subject: "Reset your RememberQuran password",
-      text: `Reset your RememberQuran password: ${resetUrl}\n\nThis link expires in one hour. If you did not request it, you can ignore this email.`,
-      html: `
-        <div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#25231f">
-          <p style="color:#237c68;font-size:14px">RememberQuran</p>
-          <h1 style="font-size:24px;font-weight:500">Reset your password</h1>
-          <p style="font-family:Arial,sans-serif;line-height:1.6">
-            Use the link below to choose a new password. It expires in one hour.
-          </p>
-          <p style="margin:28px 0">
-            <a href="${resetUrl}" style="background:#237c68;color:white;padding:12px 18px;border-radius:8px;text-decoration:none;font-family:Arial,sans-serif">
-              Reset password
-            </a>
-          </p>
-          <p style="font-family:Arial,sans-serif;color:#6b6963;font-size:13px">
-            If you did not request this, you can safely ignore this email.
-          </p>
-        </div>
-      `,
+      message: {
+        subject: "Reset your RememberQuran password",
+        text: `Reset your RememberQuran password: ${resetUrl}\n\nThis link expires in one hour. If you did not request it, you can ignore this email.`,
+        html: `
+          <div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#25231f">
+            <p style="color:#237c68;font-size:14px">RememberQuran</p>
+            <h1 style="font-size:24px;font-weight:500">Reset your password</h1>
+            <p style="font-family:Arial,sans-serif;line-height:1.6">
+              Use the link below to choose a new password. It expires in one hour.
+            </p>
+            <p style="margin:28px 0">
+              <a href="${resetUrl}" style="background:#237c68;color:white;padding:12px 18px;border-radius:8px;text-decoration:none;font-family:Arial,sans-serif">
+                Reset password
+              </a>
+            </p>
+            <p style="font-family:Arial,sans-serif;color:#6b6963;font-size:13px">
+              If you did not request this, you can safely ignore this email.
+            </p>
+          </div>
+        `,
+      },
     })
-
-    if (error) {
-      console.error("Reset email failed", error)
-      await clearPasswordResetToken(user.id)
-      await enforceMinDelay(startedAt)
-      return privateJson(
-        { error: "Could not send the reset email. Please try again." },
-        502,
-      )
-    }
+  } catch (error) {
+    console.error("Firebase mail trigger failed", error)
+    await clearPasswordResetToken(user.id)
+    await enforceMinDelay(startedAt)
+    return privateJson(
+      { error: "Could not queue the reset email. Please try again." },
+      502,
+    )
   }
 
   await enforceMinDelay(startedAt)
   return privateJson({
     ok: true,
-    message: GENERIC_MESSAGE,
-    // Local-only escape hatch so the flow is testable before Resend DNS is set.
+    message: GENERIC_MESSAGE,    // Local-only escape hatch so the flow is testable before Firebase Email is setup.
     ...(isProduction ? {} : { devResetUrl: resetUrl }),
   })
 }

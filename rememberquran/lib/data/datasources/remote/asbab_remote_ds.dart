@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class AsbabRemoteDataSource {
-  final String _baseUrl = 'https://remember-quran-com.vercel.app/api/asbab';
+  final String _baseUrl = 'https://rememberquran.com/api/asbab';
   Map<String, dynamic>? _indexCache;
 
   Future<void> _loadIndexIfNeeded() async {

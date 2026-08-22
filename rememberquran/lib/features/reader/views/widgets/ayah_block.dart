@@ -178,7 +178,7 @@ class AyahBlock extends StatelessWidget {
                           icon: const Icon(Icons.share_outlined),
                           onPressed: () async {
                             final text =
-                                '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://remember-quran-com.vercel.app/surah/${verse.chapterId}/${verse.verseNumber})';
+                                '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://rememberquran.com/surah/${verse.chapterId}/${verse.verseNumber})';
                             await Share.share(text);
                           },
                           iconSize: 20,
