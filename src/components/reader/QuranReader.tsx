@@ -263,8 +263,6 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
       {displayMode === "reading" ? (
         <ReadingModeView
           verses={verses}
-          showTranslation={showTranslation}
-          activeTranslationIds={activeTranslations}
           targetAyahId={highlightActive ? targetAyahId : undefined}
         />
       ) : (
