@@ -9,6 +9,7 @@ import {
   Settings2,
   Maximize,
   Minimize,
+  Focus,
 } from "lucide-react"
 import {
   Sheet,
@@ -41,7 +42,14 @@ function parseSurahId(pathname: string): number | null {
 
 export function ReaderControls() {
   const pathname = usePathname()
-  const { mobileNavOpen, setMobileNavOpen, sidebarOpen, toggleSidebar } = useUI()
+  const {
+    mobileNavOpen,
+    setMobileNavOpen,
+    sidebarOpen,
+    toggleSidebar,
+    focusMode,
+    toggleFocusMode,
+  } = useUI()
   const { chapter, pendingSurahId, isLoading } = useSurahContent()
   const player = useAudioPlayer()
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -93,7 +101,13 @@ export function ReaderControls() {
 
   return (
     <>
-      <div className="sticky top-14 z-30 border-b border-border/50 bg-background/98 backdrop-blur-sm">
+      <div
+        className={cn(
+          "sticky z-30 border-b border-border/50 bg-background/98 backdrop-blur-sm",
+          "transition-[top] duration-200 ease-out",
+          focusMode ? "top-0" : "top-14",
+        )}
+      >
         <div className="flex h-11 items-center justify-between gap-2 px-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-0.5">
             <SurahPickerTrigger
@@ -133,6 +147,17 @@ export function ReaderControls() {
             </button>
 
             <div className="mx-1 hidden h-4 w-px bg-border/50 sm:block" aria-hidden="true" />
+
+            <button
+              type="button"
+              title={focusMode ? "Exit focus mode" : "Focus mode"}
+              aria-label={focusMode ? "Exit focus mode" : "Focus mode"}
+              aria-pressed={focusMode}
+              onClick={toggleFocusMode}
+              className={cn(iconBtn, focusMode && "text-primary")}
+            >
+              <Focus className="size-4" strokeWidth={1.75} />
+            </button>
 
             <button
               type="button"

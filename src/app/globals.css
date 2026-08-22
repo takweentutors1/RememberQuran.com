@@ -63,6 +63,7 @@
   --color-gold: var(--brand-gold);
   --color-gold-strong: var(--brand-gold-strong);
   --color-gold-soft: var(--brand-gold-soft);
+  --color-gold-leaf: var(--gold-leaf);
   --color-reader-ink: var(--reader-ink);
 
   --shadow-sm: var(--elev-sm);
@@ -83,6 +84,13 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-overshoot: cubic-bezier(0.3, 1.5, 0.5, 1);
+
+  /* Illuminated gold-leaf motif — a literal gilding accent for decorative
+     shadows (mihrab-shadow, gold-leaf-glow). Deliberately theme-independent:
+     unlike --brand-gold (the per-theme interactive accent, which is green in
+     Spotify and blue in Airtable), this ornament always reads as gold. */
+  --gold-leaf: #d4af37;
+  --gold-leaf-soft: rgb(212 175 55 / 0.35);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -326,6 +334,60 @@
   --brand-gold-soft: #f8fafc;
 
   --reader-ink: #181d26;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODERN THEME
+   Dark, high-contrast glass surfaces with indigo/cyan accents, built for the
+   glassmorphism and Islamic-motif utilities below (glass-panel,
+   mihrab-shadow, gold-leaf-glow — the gold-leaf ornament itself stays gold
+   via --gold-leaf, independent of this theme's indigo/cyan accent).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.modern,
+[data-theme="modern"] {
+  --background: #05060a;
+  --foreground: #eef0f8;
+  --card: #0d0f1a;
+  --card-foreground: #eef0f8;
+  --popover: #10121f;
+  --popover-foreground: #eef0f8;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #161827;
+  --secondary-foreground: #eef0f8;
+  --muted: #12131f;
+  --muted-foreground: #9297b3;
+  --accent: #1b1e30;
+  --accent-foreground: #eef0f8;
+  --destructive: oklch(0.65 0.17 27);
+  --border: #1f2233;
+  --input: #262a3f;
+  --ring: #22d3ee;
+  --radius: 1rem;
+
+  --sidebar: #04050a;
+  --sidebar-foreground: #b7bcd4;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #161827;
+  --sidebar-accent-foreground: #eef0f8;
+  --sidebar-border: #1f2233;
+  --sidebar-ring: #22d3ee;
+
+  --surface-sunk: #020306;
+  --foreground-subtle: #9297b3;
+  --foreground-faint: #52566e;
+  --border-strong: #33374d;
+
+  --brand-gold: #6366f1;
+  --brand-gold-strong: #22d3ee;
+  --brand-gold-soft: #171933;
+
+  --reader-ink: #f5f6fb;
+
+  --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
+  --elev-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 28px 60px -20px rgb(0 0 0 / 0.8);
 }
 
 @layer base {
@@ -804,5 +866,38 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODERN LAYOUT UTILITIES & ISLAMIC ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Premium Glassmorphism */
+  .glass-panel {
+    @apply bg-background/70 backdrop-blur-xl border border-white/10 shadow-lg dark:border-white/5;
+  }
+
+  /* Traditional Islamic Touches */
+  .mihrab-shadow {
+    box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px -1px rgba(0, 0, 0, 0.06), inset 0 10px 15px -3px var(--gold-leaf-soft);
+  }
+
+  .gold-leaf-glow {
+    box-shadow: 0 0 20px 2px var(--gold-leaf-soft), inset 0 0 10px 1px var(--gold-leaf);
+  }
+
+  /* Rotating Geometric Arabesque */
+  .animate-slow-spin {
+    animation: slow-spin 60s linear infinite;
+  }
+}
+
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

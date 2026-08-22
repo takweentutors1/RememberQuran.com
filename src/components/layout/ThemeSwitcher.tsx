@@ -36,6 +36,9 @@ export function ThemeSwitcher() {
         <DropdownMenuItem onClick={() => setTheme("airtable")}>
           Airtable {theme === "airtable" && "✓"}
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("modern")}>
+          Modern Sleek {theme === "modern" && "✓"}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
