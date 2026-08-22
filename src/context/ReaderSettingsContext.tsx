@@ -101,7 +101,7 @@ const DEFAULT_SETTINGS: ReaderSettings = {
   quranFont: "uthmani",
   arabicFontScale: DEFAULT_ARABIC_SCALE,
   translationFontScale: DEFAULT_TRANSLATION_SCALE,
-  displayMode: "verse",
+  displayMode: "reading",
   activeTranslations: DEFAULT_TRANSLATIONS,
   showTranslation: true,
   tafsirSlug: DEFAULT_TAFSIR_SLUG,
