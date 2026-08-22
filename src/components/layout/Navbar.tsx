@@ -53,13 +53,7 @@ const NAV: {
   },
 ]
 
-function NavLinks({
-  pathname,
-  isSurahRoute,
-}: {
-  pathname: string
-  isSurahRoute: boolean
-}) {
+function NavLinks({ pathname }: { pathname: string }) {
   return (
     <nav className="flex items-center gap-0.5">
       {NAV.map(({ href, label, icon: Icon, match, hideLabel }) => {
@@ -96,7 +90,7 @@ function NavLinks({
           </Link>
         )
       })}
-      {isSurahRoute && <LayoutSwitcher />}
+      <LayoutSwitcher />
       <ThemeSwitcher />
       <AuthNav />
     </nav>
@@ -204,13 +198,13 @@ export function Navbar() {
               <LogoLink />
             </div>
             <div className="flex min-w-0 flex-1 items-center justify-end px-3 sm:px-4">
-              <NavLinks pathname={pathname} isSurahRoute={isSurahRoute} />
+              <NavLinks pathname={pathname} />
             </div>
           </div>
         ) : (
           <div className="site-shell flex h-14 items-center gap-2 px-3 sm:px-4">
             <LogoLink className="mr-auto" />
-            <NavLinks pathname={pathname} isSurahRoute={false} />
+            <NavLinks pathname={pathname} />
           </div>
         )}
       </motion.div>
