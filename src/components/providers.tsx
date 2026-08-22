@@ -28,7 +28,7 @@ export default function Providers({
     <SessionProvider>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
+        defaultTheme="spotify"
         themes={['light', 'dark', 'apple', 'spotify', 'airtable', 'modern']}
         enableSystem
         disableTransitionOnChange
