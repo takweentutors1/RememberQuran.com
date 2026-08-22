@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter, usePathname } from "next/navigation"
 import { LayoutPanelLeft, BookOpen, Baby, Wind, Check } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -45,8 +46,19 @@ const OPTIONS: {
 
 export function LayoutSwitcher() {
   const { layoutMode, setLayoutMode } = useReaderSettings()
+  const router = useRouter()
+  const pathname = usePathname()
+  const isSurahRoute = /^\/\d+/.test(pathname)
   const ActiveIcon =
     OPTIONS.find((o) => o.value === layoutMode)?.icon ?? LayoutPanelLeft
+
+  function selectLayout(value: LayoutMode) {
+    setLayoutMode(value)
+    // These are reader-chrome layouts — nothing on this page would visibly
+    // change if we're not already in the reader, so hop to Al-Fatihah
+    // (same default the homepage's own "Start reading" CTA uses) to show it.
+    if (!isSurahRoute) router.push("/1")
+  }
 
   return (
     <DropdownMenu>
@@ -66,7 +78,7 @@ export function LayoutSwitcher() {
           return (
             <DropdownMenuItem
               key={value}
-              onClick={() => setLayoutMode(value)}
+              onClick={() => selectLayout(value)}
               className="items-start gap-2.5 py-2"
             >
               <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
