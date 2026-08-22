@@ -39,6 +39,9 @@ ui-debug.log
 # firebase local emulator state
 .firebase/
 
+# one-off migration reports (contain user emails — never commit)
+/scripts/reports/
+
 # firebase/GCP service account keys — never commit these
 *firebase-adminsdk*.json
 *service-account*.json

@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   title: "Choose a new password",
 }
 
-export default async function ResetPasswordPage({
-  params,
+export default async function ResetPasswordConfirmPage({
+  searchParams,
 }: {
-  params: Promise<{ token: string }>
+  searchParams: Promise<{ oobCode?: string }>
 }) {
-  const { token } = await params
+  const { oobCode } = await searchParams
 
   return (
     <AuthShell
@@ -27,7 +27,7 @@ export default async function ResetPasswordPage({
         </Link>
       }
     >
-      <ResetPasswordForm token={token} />
+      <ResetPasswordForm oobCode={oobCode ?? null} />
     </AuthShell>
   )
 }

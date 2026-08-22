@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { compare } from "bcryptjs"
 import { authConfig } from "@/auth.config"
+import { verifyPassword } from "@/lib/auth/firebase-credentials"
 import { validateCredentials } from "@/lib/auth/credentials"
 import { getUserByEmail, getUserById } from "@/lib/firestore/users"
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit"
@@ -85,10 +85,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           if (!user || user.moderation.suspended) return null
 
-          const passwordMatches = await compare(
-            parsed.data.password,
-            user.passwordHash,
-          )
+          const passwordMatches = await verifyPassword(user, parsed.data.password)
           if (!passwordMatches) return null
 
           return {

@@ -7,16 +7,23 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { validatePassword } from "@/lib/auth/credentials"
 
-export function ResetPasswordForm({ token }: { token: string }) {
+export function ResetPasswordForm({ oobCode }: { oobCode: string | null }) {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    oobCode ? null : "This reset link is invalid or expired.",
+  )
   const [complete, setComplete] = useState(false)
   const [pending, setPending] = useState(false)
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setError(null)
+
+    if (!oobCode) {
+      setError("This reset link is invalid or expired.")
+      return
+    }
 
     const parsed = validatePassword(password)
     if (!parsed.success) {
@@ -30,10 +37,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
     setPending(true)
     try {
-      const res = await fetch(`/api/auth/reset/${encodeURIComponent(token)}`, {
+      const res = await fetch("/api/auth/reset/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          oobCode,
           password: parsed.password,
           confirmPassword,
         }),
@@ -86,7 +94,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           minLength={8}
           className="h-11 bg-card/60 px-3"
           required
-          disabled={pending}
+          disabled={pending || !oobCode}
         />
       </div>
       <div>
@@ -105,7 +113,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           minLength={8}
           className="h-11 bg-card/60 px-3"
           required
-          disabled={pending}
+          disabled={pending || !oobCode}
         />
       </div>
 
@@ -118,7 +126,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
         </p>
       )}
 
-      <Button type="submit" size="lg" className="h-11 w-full" disabled={pending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="h-11 w-full"
+        disabled={pending || !oobCode}
+      >
         {pending ? "Changing…" : "Set new password"}
       </Button>
     </form>

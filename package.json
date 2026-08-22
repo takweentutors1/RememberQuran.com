@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "firebase:emulators": "firebase emulators:start --only firestore --project demo-rememberquran"
+    "firebase:emulators": "firebase emulators:start --only firestore,auth --project demo-rememberquran",
+    "migrate:firebase-auth": "tsx scripts/migrate-users-to-firebase-auth.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -40,6 +41,7 @@
     "firebase-tools": "^14.13.0",
     "shadcn": "^4.13.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }
