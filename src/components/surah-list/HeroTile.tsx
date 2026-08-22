@@ -10,9 +10,10 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion"
-import { ArrowRight, BookOpenText, Sparkles } from "lucide-react"
+import { ArrowRight, BookOpenText, ImagePlus, Sparkles } from "lucide-react"
 import { useChapterMeta } from "@/context/ChaptersContext"
 import { useSafeReducedMotion } from "@/hooks/useSafeReducedMotion"
+import { getAyahOfTheDay } from "@/lib/quran/ayah-of-the-day"
 import { getHistoryFactsFrom } from "@/lib/islamic-history"
 import { cn } from "@/lib/utils"
 import type { LastPositionDto } from "@/components/account/ContinuePrompt"
@@ -20,16 +21,27 @@ import type { LastPositionDto } from "@/components/account/ContinuePrompt"
 const TICKER_INTERVAL_MS = 6000
 const FACTS = getHistoryFactsFrom()
 
+const AYAH_ACTION_CLASS = cn(
+  "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium",
+  "transition-[transform,background-color,border-color,box-shadow] duration-(--dur-base) ease-(--ease-out)",
+  "hover:-translate-y-px hover:shadow-sm active:translate-y-0 active:scale-[.98]",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+)
+
 /**
- * The homepage's large feature tile: a "resume reading" call to action, plus
- * an auto-sliding "on this day in Islamic history" ticker, over a faint
- * calligraphy watermark that drifts slightly with the pointer.
+ * The homepage's large feature tile: a "resume reading" call to action, the
+ * ayah of the day, and an auto-sliding "on this day in Islamic history"
+ * ticker, over a faint calligraphy watermark that drifts slightly with the
+ * pointer. Three content beats in one card — personal (resume reading),
+ * daily (the ayah), historical (the ticker) — separated by dividers rather
+ * than three separate sections competing for the fold.
  *
  * Self-fetches the reader's last position (same endpoint as
  * `ContinuePrompt`) rather than taking it as a prop, so this stays a
  * self-contained island: the parent (`SurahListPage`, a server component)
  * doesn't need to know this tile exists to keep rendering the rest of the
- * page statically.
+ * page statically. `getAyahOfTheDay` is a pure UTC-day function, so calling
+ * it here doesn't risk a hydration mismatch the way a client-only value would.
  */
 export function HeroTile() {
   const { data: session, status } = useSession()
@@ -37,6 +49,7 @@ export function HeroTile() {
   const [loaded, setLoaded] = useState(false)
   const chapter = useChapterMeta(position?.surahId)
   const prefersReducedMotion = useSafeReducedMotion()
+  const ayah = getAyahOfTheDay()
 
   useEffect(() => {
     if (status === "loading") return
@@ -127,6 +140,51 @@ export function HeroTile() {
             {loaded && position ? "Continue reading" : "Start reading"}
             <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden />
           </Link>
+        </div>
+
+        <div className="mt-8 border-t border-border pt-8 text-center">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-gold">
+            Ayah of the day
+          </p>
+
+          <p
+            className="mx-auto mt-4 max-w-2xl font-uthmani text-2xl leading-[1.9] text-reader-ink sm:text-[1.75rem]"
+            dir="rtl"
+            lang="ar"
+          >
+            {ayah.arabic}
+          </p>
+
+          <p className="mx-auto mt-4 max-w-lg font-serif text-base font-light leading-relaxed text-muted-foreground">
+            &ldquo;{ayah.translation}&rdquo;
+          </p>
+
+          <p className="mt-2 text-xs tracking-wide text-subtle">
+            {ayah.surah} {ayah.verseKey} · Dr. Mustafa Khattab
+          </p>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <Link
+              href={`/${ayah.surahId}/${ayah.ayahId}`}
+              className={cn(
+                AYAH_ACTION_CLASS,
+                "border-primary bg-primary text-primary-foreground hover:bg-primary/90",
+              )}
+            >
+              <BookOpenText className="size-3.5" strokeWidth={1.8} aria-hidden />
+              Read in context
+            </Link>
+            <Link
+              href={`/media-maker?verse=${encodeURIComponent(ayah.verseKey)}`}
+              className={cn(
+                AYAH_ACTION_CLASS,
+                "border-gold bg-transparent text-gold hover:bg-gold-soft",
+              )}
+            >
+              <ImagePlus className="size-3.5" strokeWidth={1.8} aria-hidden />
+              Make a card
+            </Link>
+          </div>
         </div>
 
         <div className="mt-8 border-t border-border pt-6">

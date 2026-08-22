@@ -1,6 +1,5 @@
 import { getChapters } from "@/lib/quranApi"
 import { HeroTile } from "./HeroTile"
-import { HomeHero } from "./HomeHero"
 import { QuickAccess } from "./QuickAccess"
 import { SurahExplorer } from "./SurahExplorer"
 
@@ -12,15 +11,14 @@ export async function SurahListPage() {
       {/* Bento: the resume-reading feature tile takes 3/4 of the row; the
           remaining column is quick access, which grid's default
           `align-items: stretch` matches to the hero's height, so the two
-          columns always read as one deliberate block. */}
+          columns always read as one deliberate block. Ayah of the day lives
+          inside HeroTile itself now, not as a separate section. */}
       <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-4">
         <div className="lg:col-span-3">
           <HeroTile />
         </div>
         <QuickAccess className="lg:col-span-1" />
       </div>
-
-      <HomeHero />
 
       <SurahExplorer chapters={chapters} />
     </div>
