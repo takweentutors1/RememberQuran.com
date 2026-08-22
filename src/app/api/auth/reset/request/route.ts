@@ -100,6 +100,7 @@ export async function POST(request: Request) {
   try {
     await getDb().collection("mail").add({
       to: user.email,
+      from: emailFrom,
       message: {
         subject: "Reset your RememberQuran password",
         text: `Reset your RememberQuran password: ${resetUrl}\n\nThis link expires in one hour. If you did not request it, you can ignore this email.`,
