@@ -5,10 +5,15 @@ import type { Chapter, Verse } from "@/types/quran"
 import { useReaderSettings } from "@/context/ReaderSettingsContext"
 import { useUI } from "@/context/UIContext"
 import { usePlaybackVerseKey, useVerseScrollRequest } from "@/lib/playbackStore"
+import { ARABIC_FONT_SIZES, TRANSLATION_FONT_SIZES, MAX_FONT_SCALE } from "@/lib/readerFonts"
+import { cn } from "@/lib/utils"
 import { BismillahHeader } from "./BismillahHeader"
 import { AyahBlock } from "./AyahBlock"
 import { ReadingModeView } from "./ReadingModeView"
 import { ProgressTracker } from "./ProgressTracker"
+
+/** Child layout reads best one step larger than whatever the user has picked. */
+const CHILD_SCALE_BUMP = 1
 
 function subscribeReduceMotion(callback: () => void) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -66,12 +71,23 @@ function scrollToRecitedAyah(
 export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps) {
   const {
     displayMode,
+    layoutMode,
     activeTranslations,
     showTranslation,
+    arabicFontScale,
+    translationFontScale,
     arabicFontSize,
     translationFontSize,
     arabicFontFamily,
   } = useReaderSettings()
+
+  const isChild = layoutMode === "child"
+  const effectiveArabicFontSize = isChild
+    ? ARABIC_FONT_SIZES[Math.min(MAX_FONT_SCALE, arabicFontScale + CHILD_SCALE_BUMP) as typeof arabicFontScale]
+    : arabicFontSize
+  const effectiveTranslationFontSize = isChild
+    ? TRANSLATION_FONT_SIZES[Math.min(MAX_FONT_SCALE, translationFontScale + CHILD_SCALE_BUMP) as typeof translationFontScale]
+    : translationFontSize
   const shouldReduceMotion = useSyncExternalStore(
     subscribeReduceMotion,
     getReduceMotionSnapshot,
@@ -229,11 +245,18 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
       ref={articleRef}
       aria-label={`Surah ${chapter.name_simple}`}
       aria-busy={false}
-      className="mx-auto max-w-6xl px-6 py-8 sm:px-10 sm:py-10"
+      className={cn(
+        "mx-auto px-6 py-8 sm:px-10 sm:py-10",
+        layoutMode === "single-page"
+          ? "max-w-3xl my-6 rounded-2xl border border-border/60 bg-card shadow-sm sm:my-10"
+          : layoutMode === "flow"
+            ? "max-w-5xl"
+            : "max-w-6xl",
+      )}
       style={
         {
-          "--arabic-font-size": arabicFontSize,
-          "--translation-font-size": translationFontSize,
+          "--arabic-font-size": effectiveArabicFontSize,
+          "--translation-font-size": effectiveTranslationFontSize,
           "--reader-arabic-font": arabicFontFamily,
         } as React.CSSProperties
       }

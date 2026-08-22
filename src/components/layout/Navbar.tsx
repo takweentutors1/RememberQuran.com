@@ -9,8 +9,10 @@ import { BookOpenText, Headphones, ImagePlus, Search } from "lucide-react"
 import { ArabesquePattern } from "@/components/layout/ArabesquePattern"
 import { AuthNav } from "@/components/auth/AuthNav"
 import { LogoWordmark } from "@/components/layout/Logo"
+import { LayoutSwitcher } from "@/components/layout/LayoutSwitcher"
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher"
 import { useUI } from "@/context/UIContext"
+import { useReaderSettings } from "@/context/ReaderSettingsContext"
 import { useSafeReducedMotion } from "@/hooks/useSafeReducedMotion"
 import { cn } from "@/lib/utils"
 
@@ -51,7 +53,13 @@ const NAV: {
   },
 ]
 
-function NavLinks({ pathname }: { pathname: string }) {
+function NavLinks({
+  pathname,
+  isSurahRoute,
+}: {
+  pathname: string
+  isSurahRoute: boolean
+}) {
   return (
     <nav className="flex items-center gap-0.5">
       {NAV.map(({ href, label, icon: Icon, match, hideLabel }) => {
@@ -88,6 +96,7 @@ function NavLinks({ pathname }: { pathname: string }) {
           </Link>
         )
       })}
+      {isSurahRoute && <LayoutSwitcher />}
       <ThemeSwitcher />
       <AuthNav />
     </nav>
@@ -116,9 +125,12 @@ function LogoLink({ className }: { className?: string }) {
 export function Navbar() {
   const pathname = usePathname()
   const { sidebarOpen, focusMode } = useUI()
+  const { layoutMode } = useReaderSettings()
   const [scrolled, setScrolled] = useState(false)
   const prefersReducedMotion = useSafeReducedMotion()
   const isSurahRoute = /^\/\d+/.test(pathname)
+  // single-page/child/flow force the sidebar collapsed (see SidebarContainer)
+  const sidebarEffectivelyOpen = sidebarOpen && layoutMode === "classic"
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4)
@@ -186,19 +198,19 @@ export function Navbar() {
                 "flex h-full shrink-0 items-center px-3",
                 "transition-[width] duration-200 ease-out",
                 "w-auto",
-                sidebarOpen && "md:w-72",
+                sidebarEffectivelyOpen && "md:w-72",
               )}
             >
               <LogoLink />
             </div>
             <div className="flex min-w-0 flex-1 items-center justify-end px-3 sm:px-4">
-              <NavLinks pathname={pathname} />
+              <NavLinks pathname={pathname} isSurahRoute={isSurahRoute} />
             </div>
           </div>
         ) : (
           <div className="site-shell flex h-14 items-center gap-2 px-3 sm:px-4">
             <LogoLink className="mr-auto" />
-            <NavLinks pathname={pathname} />
+            <NavLinks pathname={pathname} isSurahRoute={false} />
           </div>
         )}
       </motion.div>
