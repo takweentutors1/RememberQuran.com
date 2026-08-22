@@ -1,11 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { Bookmark, ImagePlus, Radio, Target } from "lucide-react"
+import { useSafeReducedMotion } from "@/hooks/useSafeReducedMotion"
 import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
 import { useSoftGate } from "@/context/SoftGateContext"
 import type { SoftGateReason } from "@/lib/auth/safe-next"
+
+const MotionLink = motion.create(Link)
 
 interface Tile {
   href: string
@@ -50,24 +54,36 @@ const TILES: Tile[] = [
 ]
 
 /** Four shortcut tiles surfacing the app's key features from the home page. */
-export function QuickAccess() {
+export function QuickAccess({ className }: { className?: string }) {
   const { status } = useSession()
   const { requireAuth } = useSoftGate()
+  const prefersReducedMotion = useSafeReducedMotion()
 
   return (
-    <section aria-label="Quick access" className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+    <section
+      aria-label="Quick access"
+      className={cn(
+        "grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-2 lg:grid-rows-2",
+        className,
+      )}
+    >
       {TILES.map(({ href, label, hint, icon: Icon, tone, authReason }) => (
-        <Link
+        <MotionLink
           key={href}
           href={href}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent) => {
             if (authReason && status === "unauthenticated") {
               e.preventDefault()
               requireAuth(authReason, href)
             }
           }}
+          whileHover={
+            prefersReducedMotion ? undefined : { y: -6, scale: 1.02 }
+          }
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 420, damping: 22 }}
           className={cn(
-            "card group lift flex flex-col items-start gap-2.5 rounded-xl border border-border bg-card px-4 py-4",
+            "card group glass-panel mihrab-shadow flex h-full flex-col items-start justify-between gap-2.5 rounded-xl !border-gold-leaf/20 px-4 py-4",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           )}
         >
@@ -90,7 +106,7 @@ export function QuickAccess() {
             </span>
             <span className="mt-0.5 block text-xs text-subtle">{hint}</span>
           </span>
-        </Link>
+        </MotionLink>
       ))}
     </section>
   )
