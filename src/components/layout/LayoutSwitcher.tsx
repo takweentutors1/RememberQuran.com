@@ -17,30 +17,35 @@ const OPTIONS: {
   label: string
   description: string
   icon: typeof LayoutPanelLeft
+  route: string
 }[] = [
   {
     value: "classic",
     label: "Classic",
     description: "Sidebar navigation with the full toolbar",
     icon: LayoutPanelLeft,
+    route: "/",
   },
   {
     value: "single-page",
     label: "Single page",
     description: "Immersive mushaf-style page, chrome tucked away",
     icon: BookOpen,
+    route: "/single-page",
   },
   {
     value: "child",
     label: "Child",
     description: "Bigger text, simpler controls for young readers",
     icon: Baby,
+    route: "/child",
   },
   {
     value: "flow",
     label: "Flow",
     description: "Distraction-free, audio-first reading",
     icon: Wind,
+    route: "/flow",
   },
 ]
 
@@ -54,10 +59,9 @@ export function LayoutSwitcher() {
 
   function selectLayout(value: LayoutMode) {
     setLayoutMode(value)
-    // These are reader-chrome layouts — nothing on this page would visibly
-    // change if we're not already in the reader, so hop to Al-Fatihah
-    // (same default the homepage's own "Start reading" CTA uses) to show it.
-    if (!isSurahRoute) router.push("/1")
+    // If not in the reader, navigate to the specific layout's home page
+    const route = OPTIONS.find((o) => o.value === value)?.route ?? "/"
+    if (!isSurahRoute) router.push(route)
   }
 
   return (
