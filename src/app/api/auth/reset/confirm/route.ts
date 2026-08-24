@@ -35,7 +35,16 @@ export async function POST(request: Request) {
   // revalidation in src/auth.ts).
   const user = await getUserByEmail(result.email)
   if (user) {
-    await touchPasswordChangedAt(user.id)
+    // If the user hasn't been fully migrated to Firebase Auth in Firestore,
+    // their login flow still relies on the legacy bcrypt hash. We must update it.
+    if (!user.firebaseUid) {
+      const { hash } = await import("bcryptjs")
+      const { updatePasswordHash } = await import("@/lib/firestore/users")
+      const passwordHash = await hash(body.password as string, 12)
+      await updatePasswordHash(user.id, passwordHash)
+    } else {
+      await touchPasswordChangedAt(user.id)
+    }
   }
 
   return privateJson({ ok: true })
