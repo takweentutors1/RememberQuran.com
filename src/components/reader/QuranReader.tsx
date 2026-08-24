@@ -7,6 +7,8 @@ import { useUI } from "@/context/UIContext"
 import { usePlaybackVerseKey, useVerseScrollRequest } from "@/lib/playbackStore"
 import { ARABIC_FONT_SIZES, TRANSLATION_FONT_SIZES, MAX_FONT_SCALE } from "@/lib/readerFonts"
 import { cn } from "@/lib/utils"
+import { Play, Pause, Loader2 } from "lucide-react"
+import { useAudioPlayer } from "@/context/AudioPlayerContext"
 import { BismillahHeader } from "./BismillahHeader"
 import { AyahBlock } from "./AyahBlock"
 import { ReadingModeView } from "./ReadingModeView"
@@ -98,6 +100,19 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
   const articleRef = useRef<HTMLElement>(null)
   const targetHandledRef = useRef<number | null>(null)
   const { setFocusMode } = useUI()
+  const player = useAudioPlayer()
+
+  const isThisChapter = player.chapterId === chapter.id
+  const isPlayingThis = isThisChapter && player.status === "playing"
+  const isLoadingThis = isThisChapter && player.status === "loading"
+
+  function handlePlayFullSurah() {
+    if (isThisChapter && (player.status === "playing" || player.status === "paused")) {
+      player.togglePlayPause()
+    } else {
+      player.playChapter(chapter.id)
+    }
+  }
 
   // Focus mode: hide the navbar and bottom nav while the reader is
   // scrolling, so the page gets full-screen reading space with zero taps.
@@ -279,6 +294,33 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
           {chapter.verses_count} ayahs ·{" "}
           {chapter.revelation_place === "makkah" ? "Makki" : "Madani"}
         </p>
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={handlePlayFullSurah}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
+              isPlayingThis
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                : "bg-primary text-primary-foreground hover:bg-primary/90",
+            )}
+          >
+            {isLoadingThis ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : isPlayingThis ? (
+              <Pause className="size-4" fill="currentColor" />
+            ) : (
+              <Play className="size-4" fill="currentColor" />
+            )}
+            <span>
+              {isLoadingThis
+                ? "Loading..."
+                : isPlayingThis
+                  ? "Pause Surah"
+                  : "Play Surah"}
+            </span>
+          </button>
+        </div>
       </header>
 
       {chapter.bismillah_pre && <BismillahHeader />}

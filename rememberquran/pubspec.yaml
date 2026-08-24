@@ -92,7 +92,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/data/asbab-index.json
-    - assets/data/morphology/
+    - assets/data/morphology/v1/
     - assets/icon/
     - assets/illustrations/
   #   - images/a_dot_burr.jpeg

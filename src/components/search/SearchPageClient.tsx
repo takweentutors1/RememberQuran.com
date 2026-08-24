@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Search } from "lucide-react"
 import { searchQuran } from "@/lib/searchApi"
+import { ArrowUpRight, Search } from "lucide-react"
+import Link from "next/link"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import type { SearchResult } from "@/types/study"
 import { SearchResultItem } from "./SearchResultItem"
@@ -22,6 +23,7 @@ export function SearchPageClient({ initialQuery }: SearchPageClientProps) {
   const router = useRouter()
   const [query, setQuery] = useState(initialQuery)
   const [results, setResults] = useState<SearchResult[]>([])
+  const [directJump, setDirectJump] = useState<{ surahId: number, ayahId: number } | null>(null)
   const [status, setStatus] = useState<Status>(initialQuery ? "loading" : "idle")
   const [totalCount, setTotalCount] = useState(0)
   const [nextPage, setNextPage] = useState<number | null>(null)
@@ -93,6 +95,19 @@ export function SearchPageClient({ initialQuery }: SearchPageClientProps) {
       scroll: false,
     })
 
+    const jumpMatch = query.trim().match(/^(\d+):(\d+)$/)
+    if (jumpMatch) {
+      const s = parseInt(jumpMatch[1], 10)
+      const a = parseInt(jumpMatch[2], 10)
+      if (s >= 1 && s <= 114 && a >= 1) {
+        setDirectJump({ surahId: s, ayahId: a })
+      } else {
+        setDirectJump(null)
+      }
+    } else {
+      setDirectJump(null)
+    }
+
     const delay =
       isFirstSearch.current && initialQuery && query === initialQuery
         ? 0
@@ -148,6 +163,24 @@ export function SearchPageClient({ initialQuery }: SearchPageClientProps) {
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-20 animate-pulse rounded-lg bg-muted/60" />
           ))}
+        </div>
+      )}
+
+      {/* Direct Jump */}
+      {directJump && (
+        <div className="mb-6">
+          <Link
+            href={`/${directJump.surahId}/${directJump.ayahId}`}
+            className="group flex items-center gap-4 rounded-xl border border-brand-gold/30 bg-brand-gold/5 p-4 transition-colors hover:bg-brand-gold/10"
+          >
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-gold/20 text-brand-gold transition-colors group-hover:bg-brand-gold/30">
+              <ArrowUpRight className="size-5" />
+            </div>
+            <div>
+              <div className="font-bold text-foreground">Jump directly to {directJump.surahId}:{directJump.ayahId}</div>
+              <div className="text-sm text-muted-foreground">Navigate to this specific ayah in the reader</div>
+            </div>
+          </Link>
         </div>
       )}
 

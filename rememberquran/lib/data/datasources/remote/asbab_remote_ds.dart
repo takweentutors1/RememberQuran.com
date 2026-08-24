@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class AsbabRemoteDataSource {
   final String _baseUrl = 'https://rememberquran.com/api/asbab';
-  Map<String, dynamic>? _indexCache;
+  static Map<String, dynamic>? _indexCache;
 
   Future<void> _loadIndexIfNeeded() async {
     if (_indexCache != null) return;

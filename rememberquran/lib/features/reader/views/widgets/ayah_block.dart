@@ -13,6 +13,7 @@ import 'hideable_arabic.dart';
 import '../../controllers/reader_settings_controller.dart';
 import '../../../study/views/widgets/tafsir_sheet.dart';
 import '../../../study/views/widgets/asbab_sheet.dart';
+import '../../../../data/datasources/remote/asbab_remote_ds.dart';
 import 'note_sheet.dart';
 import '../../../../core/models/translation.dart';
 import '../../../audio/controllers/audio_controller.dart';
@@ -150,17 +151,25 @@ class AyahBlock extends StatelessWidget {
                           iconSize: 20,
                           tooltip: 'Tafsir',
                         ),
-                        AnimatedActionButton(
-                          icon: const Icon(Icons.history_edu),
-                          onPressed: () async {
-                            AsbabSheet.show(
-                              context,
-                              verse.chapterId,
-                              verse.verseNumber,
-                            );
+                        FutureBuilder<bool>(
+                          future: AsbabRemoteDataSource().hasAsbab(verse.chapterId, verse.verseNumber),
+                          builder: (context, snapshot) {
+                            if (snapshot.data == true) {
+                              return AnimatedActionButton(
+                                icon: const Icon(Icons.history_edu),
+                                onPressed: () async {
+                                  AsbabSheet.show(
+                                    context,
+                                    verse.chapterId,
+                                    verse.verseNumber,
+                                  );
+                                },
+                                iconSize: 20,
+                                tooltip: 'Asbab al-Nuzul',
+                              );
+                            }
+                            return const SizedBox.shrink();
                           },
-                          iconSize: 20,
-                          tooltip: 'Asbab al-Nuzul',
                         ),
                         AnimatedActionButton(
                           icon: const Icon(Icons.edit_note),

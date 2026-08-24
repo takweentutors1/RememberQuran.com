@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -25,7 +26,9 @@ class AppFeedback {
       title: title,
       message: message,
       mood: MascotMood.success,
-      background: isDark ? AppColors.darkBrandGoldSoft : AppColors.lightBrandGoldSoft,
+      background: isDark
+          ? AppColors.darkBrandGoldSoft.withOpacity(0.2)
+          : AppColors.lightBrandGoldSoft.withOpacity(0.4),
       foreground: isDark ? AppColors.darkForeground : AppColors.lightForeground,
     );
   }
@@ -41,8 +44,12 @@ class AppFeedback {
       title: title,
       message: message,
       mood: MascotMood.error,
-      background: isDark ? AppColors.darkDestructive.withOpacity(0.16) : AppColors.lightDestructive.withOpacity(0.10),
-      foreground: isDark ? AppColors.darkDestructive : AppColors.lightDestructive,
+      background: isDark
+          ? AppColors.darkDestructive.withOpacity(0.15)
+          : AppColors.lightDestructive.withOpacity(0.15),
+      foreground: isDark
+          ? AppColors.darkDestructive
+          : AppColors.lightDestructive,
       onRetry: onRetry,
       retryLabel: retryLabel,
     );
@@ -175,63 +182,97 @@ class _CenteredToastState extends State<_CenteredToast>
                 behavior: HitTestBehavior.opaque,
                 onTap: _dismiss,
                 child: FadeTransition(
-                  opacity: CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+                  opacity: CurvedAnimation(
+                    parent: _controller,
+                    curve: Curves.easeOut,
+                  ),
                   child: ScaleTransition(
                     scale: Tween(begin: 0.9, end: 1.0).animate(
-                      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+                      CurvedAnimation(
+                        parent: _controller,
+                        curve: Curves.easeOutBack,
+                      ),
                     ),
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 340),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 32),
-                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
-                        decoration: BoxDecoration(
-                          color: widget.background,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.18),
-                              blurRadius: 28,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 44,
-                              height: 44,
-                              child: AppMascot(mood: widget.mood, size: 44),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              widget.title,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: widget.foreground,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              widget.message,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: widget.foreground.withOpacity(0.9),
-                                fontSize: 13,
-                                height: 1.4,
-                              ),
-                            ),
-                            if (widget.onRetry != null) ...[
-                              const SizedBox(height: 12),
-                              TextButton(
-                                onPressed: widget.onRetry,
-                                child: Text(widget.retryLabel),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.12),
+                                blurRadius: 40,
+                                offset: const Offset(0, 16),
                               ),
                             ],
-                          ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(
+                                sigmaX: 16.0,
+                                sigmaY: 16.0,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 24,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: widget.background,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: widget.foreground.withOpacity(0.15),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 44,
+                                      height: 44,
+                                      child: AppMascot(
+                                        mood: widget.mood,
+                                        size: 44,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      widget.title,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: widget.foreground,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      widget.message,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: widget.foreground.withOpacity(
+                                          0.9,
+                                        ),
+                                        fontSize: 13,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    if (widget.onRetry != null) ...[
+                                      const SizedBox(height: 12),
+                                      TextButton(
+                                        onPressed: widget.onRetry,
+                                        child: Text(widget.retryLabel),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
