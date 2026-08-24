@@ -22,7 +22,7 @@ export default async function AuthActionPage({
         footer={
           <Link
             href="/login?next=/account"
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline"
           >
             Return to sign in
           </Link>
@@ -41,7 +41,7 @@ export default async function AuthActionPage({
       footer={
         <Link
           href="/login"
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline"
         >
           Return to sign in
         </Link>
