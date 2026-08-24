@@ -1,7 +1,5 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 /**
  * Sends a beautifully designed HTML password reset email to the user.
  */
@@ -10,6 +8,8 @@ export async function sendPasswordResetEmailAction(email: string, resetUrl: stri
     console.warn("RESEND_API_KEY is not set. Simulating email send:", resetUrl)
     return { ok: true }
   }
+
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   try {
     const { error } = await resend.emails.send({
