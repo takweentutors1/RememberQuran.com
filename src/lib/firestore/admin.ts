@@ -1,4 +1,5 @@
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app"
+import { getAuth, type Auth } from "firebase-admin/auth"
 import { getFirestore, type Firestore } from "firebase-admin/firestore"
 
 /**
@@ -59,4 +60,14 @@ export function getDb(): Firestore {
     cachedDb = getFirestore(getApp())
   }
   return cachedDb
+}
+
+let cachedAuth: Auth | null = null
+
+/** Firebase Auth Admin handle — same cached `App` as `getDb()`. */
+export function getAdminAuth(): Auth {
+  if (!cachedAuth) {
+    cachedAuth = getAuth(getApp())
+  }
+  return cachedAuth
 }

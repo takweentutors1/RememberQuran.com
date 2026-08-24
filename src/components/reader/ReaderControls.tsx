@@ -51,7 +51,6 @@ export function ReaderControls() {
     focusMode,
     toggleFocusMode,
   } = useUI()
-  const { layoutMode } = useReaderSettings()
   const { chapter, pendingSurahId, isLoading } = useSurahContent()
   const player = useAudioPlayer()
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -92,51 +91,31 @@ export function ReaderControls() {
   if (!toolbarChapter) return null
 
   function toggleSurahNav() {
-    // single-page/child/flow keep the sidebar rail collapsed at every
-    // viewport (see SidebarContainer) — fall back to the overlay sheet
-    // instead of toggling a rail that won't actually appear.
-    if (layoutMode === "classic" && window.matchMedia("(min-width: 768px)").matches) {
+    if (window.matchMedia("(min-width: 768px)").matches) {
       toggleSidebar()
     } else {
       setMobileNavOpen(!mobileNavOpen)
     }
   }
 
-  const pickerExpanded = (sidebarOpen && layoutMode === "classic") || mobileNavOpen
-  const isChild = layoutMode === "child"
-  const isFlow = layoutMode === "flow"
-  // Fullscreen/focus-mode are power-user affordances — keep the child
-  // toolbar down to play/settings so there's less to accidentally tap.
-  const showAdvancedControls = !isChild
+  const pickerExpanded = sidebarOpen || mobileNavOpen
 
   return (
     <>
       <div
         className={cn(
-          "z-30 transition-[top] duration-200 ease-out",
-          isFlow
-            ? "sticky mx-auto mt-2 w-fit max-w-[calc(100%-1.5rem)] rounded-full border border-border/60 bg-background/95 shadow-md backdrop-blur-sm"
-            : "sticky border-b border-border/50 bg-background/98 backdrop-blur-sm",
-          focusMode ? "top-0" : isFlow ? "top-16" : "top-14",
+          "z-30 transition-[top] duration-200 ease-out sticky border-b border-border/50 bg-background/98 backdrop-blur-sm",
+          focusMode ? "top-0" : "top-14",
         )}
       >
-        <div
-          className={cn(
-            "flex items-center justify-between gap-2",
-            isFlow ? "h-10 px-2" : "h-11 px-3 sm:px-4",
-            isChild && "h-14",
-          )}
-        >
+        <div className="flex h-11 items-center justify-between gap-2 px-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-0.5">
             <SurahPickerTrigger
               chapter={toolbarChapter}
               expanded={pickerExpanded}
               isLoading={isLoading}
               onClick={toggleSurahNav}
-              className={cn(
-                "max-w-[min(100%,14rem)] sm:max-w-none md:group-data-[sidebar=open]:hidden",
-                isChild && "text-base",
-              )}
+              className="max-w-[min(100%,14rem)] sm:max-w-none md:group-data-[sidebar=open]:hidden"
             />
           </div>
 
@@ -149,16 +128,14 @@ export function ReaderControls() {
               className={cn(
                 iconBtn,
                 isPlayingThis && "text-primary",
-                isChild && "size-11",
-                isFlow && "text-primary",
               )}
             >
               {isLoadingThis ? (
-                <Loader2 className={cn("size-4 animate-spin", isChild && "size-5")} strokeWidth={1.75} />
+                <Loader2 className="size-4 animate-spin" strokeWidth={1.75} />
               ) : isPlayingThis ? (
-                <Pause className={cn("size-4", isChild && "size-5")} strokeWidth={1.75} />
+                <Pause className="size-4" strokeWidth={1.75} />
               ) : (
-                <Play className={cn("size-4", isChild && "size-5")} strokeWidth={1.75} />
+                <Play className="size-4" strokeWidth={1.75} />
               )}
             </button>
 
@@ -167,40 +144,36 @@ export function ReaderControls() {
               title="Settings"
               aria-label="Settings"
               onClick={() => setSettingsOpen(true)}
-              className={cn(iconBtn, isChild && "size-11")}
+              className={iconBtn}
             >
-              <Settings2 className={cn("size-4", isChild && "size-5")} strokeWidth={1.75} />
+              <Settings2 className="size-4" strokeWidth={1.75} />
             </button>
 
-            {showAdvancedControls && (
-              <>
-                <div className="mx-1 hidden h-4 w-px bg-border/50 sm:block" aria-hidden="true" />
+              <div className="mx-1 hidden h-4 w-px bg-border/50 sm:block" aria-hidden="true" />
 
-                <button
-                  type="button"
-                  title={focusMode ? "Exit focus mode" : "Focus mode"}
-                  aria-label={focusMode ? "Exit focus mode" : "Focus mode"}
-                  aria-pressed={focusMode}
-                  onClick={toggleFocusMode}
-                  className={cn(iconBtn, focusMode && "text-primary")}
-                >
-                  <Focus className="size-4" strokeWidth={1.75} />
-                </button>
+              <button
+                type="button"
+                title={focusMode ? "Exit focus mode" : "Focus mode"}
+                aria-label={focusMode ? "Exit focus mode" : "Focus mode"}
+                aria-pressed={focusMode}
+                onClick={toggleFocusMode}
+                className={cn(iconBtn, focusMode && "text-primary")}
+              >
+                <Focus className="size-4" strokeWidth={1.75} />
+              </button>
 
-                <button
-                  type="button"
-                  title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                  onClick={toggleFullscreen}
-                  className={cn(iconBtn, "hidden sm:flex")}
-                >
-                  {isFullscreen ? (
-                    <Minimize className="size-4" strokeWidth={1.75} />
-                  ) : (
-                    <Maximize className="size-4" strokeWidth={1.75} />
-                  )}
-                </button>
-              </>
-            )}
+              <button
+                type="button"
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                onClick={toggleFullscreen}
+                className={cn(iconBtn, "hidden sm:flex")}
+              >
+                {isFullscreen ? (
+                  <Minimize className="size-4" strokeWidth={1.75} />
+                ) : (
+                  <Maximize className="size-4" strokeWidth={1.75} />
+                )}
+              </button>
           </div>
         </div>
       </div>

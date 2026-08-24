@@ -105,9 +105,10 @@ export function AyahBlock({
               type="button"
               title="Tafsir"
               onClick={() => openTafsir(verse.verse_key)}
-              className={metaBtn}
+              className={cn(metaBtn, "w-auto px-2.5 gap-1.5")}
             >
               <BookOpen className="size-3.5" strokeWidth={1.75} />
+              <span className="text-xs font-medium">Tafsir</span>
             </button>
             {/* Only covered ayahs show this icon — presence signals availability,
                 so the ~5,800 uncovered ayahs stay uncluttered */}

@@ -70,7 +70,7 @@ export function ForgotPasswordForm() {
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="h-11 bg-card/60 px-3"
+          className="h-11 bg-background px-3 shadow-sm"
           required
           disabled={pending}
         />

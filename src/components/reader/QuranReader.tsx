@@ -7,13 +7,14 @@ import { useUI } from "@/context/UIContext"
 import { usePlaybackVerseKey, useVerseScrollRequest } from "@/lib/playbackStore"
 import { ARABIC_FONT_SIZES, TRANSLATION_FONT_SIZES, MAX_FONT_SCALE } from "@/lib/readerFonts"
 import { cn } from "@/lib/utils"
+import { Play, Pause, Loader2 } from "lucide-react"
+import { useAudioPlayer } from "@/context/AudioPlayerContext"
 import { BismillahHeader } from "./BismillahHeader"
 import { AyahBlock } from "./AyahBlock"
 import { ReadingModeView } from "./ReadingModeView"
 import { ProgressTracker } from "./ProgressTracker"
 
-/** Child layout reads best one step larger than whatever the user has picked. */
-const CHILD_SCALE_BUMP = 1
+
 
 function subscribeReduceMotion(callback: () => void) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -71,23 +72,13 @@ function scrollToRecitedAyah(
 export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps) {
   const {
     displayMode,
-    layoutMode,
     activeTranslations,
     showTranslation,
-    arabicFontScale,
-    translationFontScale,
     arabicFontSize,
     translationFontSize,
     arabicFontFamily,
   } = useReaderSettings()
 
-  const isChild = layoutMode === "child"
-  const effectiveArabicFontSize = isChild
-    ? ARABIC_FONT_SIZES[Math.min(MAX_FONT_SCALE, arabicFontScale + CHILD_SCALE_BUMP) as typeof arabicFontScale]
-    : arabicFontSize
-  const effectiveTranslationFontSize = isChild
-    ? TRANSLATION_FONT_SIZES[Math.min(MAX_FONT_SCALE, translationFontScale + CHILD_SCALE_BUMP) as typeof translationFontScale]
-    : translationFontSize
   const shouldReduceMotion = useSyncExternalStore(
     subscribeReduceMotion,
     getReduceMotionSnapshot,
@@ -98,6 +89,19 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
   const articleRef = useRef<HTMLElement>(null)
   const targetHandledRef = useRef<number | null>(null)
   const { setFocusMode } = useUI()
+  const player = useAudioPlayer()
+
+  const isThisChapter = player.chapterId === chapter.id
+  const isPlayingThis = isThisChapter && player.status === "playing"
+  const isLoadingThis = isThisChapter && player.status === "loading"
+
+  function handlePlayFullSurah() {
+    if (isThisChapter && (player.status === "playing" || player.status === "paused")) {
+      player.togglePlayPause()
+    } else {
+      player.playChapter(chapter.id)
+    }
+  }
 
   // Focus mode: hide the navbar and bottom nav while the reader is
   // scrolling, so the page gets full-screen reading space with zero taps.
@@ -245,18 +249,11 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
       ref={articleRef}
       aria-label={`Surah ${chapter.name_simple}`}
       aria-busy={false}
-      className={cn(
-        "mx-auto px-6 py-8 sm:px-10 sm:py-10",
-        layoutMode === "single-page"
-          ? "max-w-3xl my-6 rounded-2xl border border-border/60 bg-card shadow-sm sm:my-10"
-          : layoutMode === "flow"
-            ? "max-w-5xl"
-            : "max-w-6xl",
-      )}
+      className="mx-auto px-6 py-8 sm:px-10 sm:py-10 max-w-6xl"
       style={
         {
-          "--arabic-font-size": effectiveArabicFontSize,
-          "--translation-font-size": effectiveTranslationFontSize,
+          "--arabic-font-size": arabicFontSize,
+          "--translation-font-size": translationFontSize,
           "--reader-arabic-font": arabicFontFamily,
         } as React.CSSProperties
       }
@@ -279,6 +276,33 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
           {chapter.verses_count} ayahs ·{" "}
           {chapter.revelation_place === "makkah" ? "Makki" : "Madani"}
         </p>
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={handlePlayFullSurah}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
+              isPlayingThis
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                : "bg-primary text-primary-foreground hover:bg-primary/90",
+            )}
+          >
+            {isLoadingThis ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : isPlayingThis ? (
+              <Pause className="size-4" fill="currentColor" />
+            ) : (
+              <Play className="size-4" fill="currentColor" />
+            )}
+            <span>
+              {isLoadingThis
+                ? "Loading..."
+                : isPlayingThis
+                  ? "Pause Surah"
+                  : "Play Surah"}
+            </span>
+          </button>
+        </div>
       </header>
 
       {chapter.bismillah_pre && <BismillahHeader />}

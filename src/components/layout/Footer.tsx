@@ -1,3 +1,5 @@
+"use client"
+
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { ArrowRight, Heart } from "lucide-react"
@@ -74,22 +76,22 @@ function FooterLinkColumn({
       <FooterHeading>{heading}</FooterHeading>
       <ul className="flex flex-col gap-0.5">
         {links.map(({ label, href, badge }) => (
-          <li key={href}>
-            <Link href={href} className={FOOTER_LINK_CLASS}>
-              {label}
-              {badge ? (
-                <span className="rounded-full bg-gold-soft px-1.5 py-px text-[10px] font-medium text-gold-strong">
-                  {badge}
-                </span>
-              ) : null}
-              <ArrowRight
-                data-arrow
-                aria-hidden
-                className="size-3 shrink-0"
-                strokeWidth={2.2}
-              />
-            </Link>
-          </li>
+            <li key={href}>
+              <Link href={href} className={FOOTER_LINK_CLASS}>
+                {label}
+                {badge ? (
+                  <span className="rounded-full bg-gold-soft px-1.5 py-px text-[10px] font-medium text-gold-strong">
+                    {badge}
+                  </span>
+                ) : null}
+                <ArrowRight
+                  data-arrow
+                  aria-hidden
+                  className="size-3 shrink-0"
+                  strokeWidth={2.2}
+                />
+              </Link>
+            </li>
         ))}
       </ul>
     </div>
@@ -119,18 +121,17 @@ export function Footer() {
               </Link>
 
               <p className="mt-4 max-w-[34ch] text-sm leading-relaxed text-subtle">
-                A quiet place to read, listen to, and memorise the Quran. Built
-                with care, kept free, no advertising.
+                A quiet place to read, listen to, and memorise the Quran. Built with care, kept free, no advertising.
               </p>
 
-              <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-gold-soft px-3 py-1.5 text-[11px] font-medium text-gold-strong">
+              <p className="mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-medium bg-gold-soft text-gold-strong">
                 <Heart className="size-3.5" strokeWidth={1.8} aria-hidden />
                 Free forever · no ads · no tracking
               </p>
             </div>
 
-            <FooterLinkColumn {...COLUMNS[0]} />
-            <FooterLinkColumn {...COLUMNS[1]} />
+            <FooterLinkColumn heading={COLUMNS[0].heading} links={COLUMNS[0].links} />
+            <FooterLinkColumn heading={COLUMNS[1].heading} links={COLUMNS[1].links} />
 
             <div>
               <FooterHeading>Your account</FooterHeading>

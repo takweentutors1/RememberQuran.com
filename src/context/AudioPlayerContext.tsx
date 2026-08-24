@@ -286,7 +286,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       if (!audio) return
       clearRepeatPause()
       if (pauseMs <= 0) {
+        repeatGapRef.current = true
         audio.currentTime = fromMs / 1000
+        repeatPauseTimerRef.current = setTimeout(() => {
+          repeatPauseTimerRef.current = null
+          repeatGapRef.current = false
+        }, 100)
         return
       }
       repeatGapRef.current = true
@@ -348,6 +353,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
           wordPosition: lastWordPosRef.current,
           timeMs: t,
         })
+      } else {
+        setPosition({
+          verseKey: null,
+          wordPosition: null,
+          timeMs: t,
+        })
       }
 
       const rep = repeatRef.current
@@ -364,8 +375,25 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
             )
           } else {
             clearRepeatPauseRef.current()
-            repeatRef.current = REPEAT_OFF
-            dispatch({ type: "SET_REPEAT", repeat: REPEAT_OFF })
+            if (rep.mode === "ayah") {
+              const nextAyah = rep.start + 1
+              if (nextAyah <= timings.length) {
+                const nextRepeat = {
+                  ...rep,
+                  start: nextAyah,
+                  end: nextAyah,
+                  remaining: rep.count,
+                }
+                repeatRef.current = nextRepeat
+                dispatch({ type: "SET_REPEAT", repeat: nextRepeat })
+              } else {
+                repeatRef.current = REPEAT_OFF
+                dispatch({ type: "SET_REPEAT", repeat: REPEAT_OFF })
+              }
+            } else {
+              repeatRef.current = REPEAT_OFF
+              dispatch({ type: "SET_REPEAT", repeat: REPEAT_OFF })
+            }
           }
         }
       }
@@ -382,6 +410,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
           prefetchChapterAudio(reciterIdRef.current, next)
         }
       }
+    } else {
+      setPosition({
+        verseKey: null,
+        wordPosition: null,
+        timeMs: t,
+      })
     }
 
   }, [])
@@ -425,8 +459,20 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       // range's end and snaps straight back to it, hijacking navigation.
       if (repeatRef.current.mode !== "off") {
         clearRepeatPause()
-        repeatRef.current = REPEAT_OFF
-        dispatch({ type: "SET_REPEAT", repeat: REPEAT_OFF })
+        if (repeatRef.current.mode === "ayah") {
+          const s = clampVerse(verseNumber)
+          const nextRepeat = {
+            ...repeatRef.current,
+            start: s,
+            end: s,
+            remaining: repeatRef.current.count,
+          }
+          repeatRef.current = nextRepeat
+          dispatch({ type: "SET_REPEAT", repeat: nextRepeat })
+        } else {
+          repeatRef.current = REPEAT_OFF
+          dispatch({ type: "SET_REPEAT", repeat: REPEAT_OFF })
+        }
       }
       if (audio.readyState >= 1) {
         audio.currentTime = timing.from / 1000

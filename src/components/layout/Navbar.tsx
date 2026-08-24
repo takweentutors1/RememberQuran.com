@@ -5,14 +5,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import type { LucideIcon } from "lucide-react"
-import { BookOpenText, Headphones, ImagePlus, Search } from "lucide-react"
+import { BookOpenText, Headphones, ImagePlus, Search, Star } from "lucide-react"
 import { ArabesquePattern } from "@/components/layout/ArabesquePattern"
 import { AuthNav } from "@/components/auth/AuthNav"
 import { LogoWordmark } from "@/components/layout/Logo"
-import { LayoutSwitcher } from "@/components/layout/LayoutSwitcher"
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher"
 import { useUI } from "@/context/UIContext"
-import { useReaderSettings } from "@/context/ReaderSettingsContext"
 import { useSafeReducedMotion } from "@/hooks/useSafeReducedMotion"
 import { cn } from "@/lib/utils"
 
@@ -90,7 +88,6 @@ function NavLinks({ pathname }: { pathname: string }) {
           </Link>
         )
       })}
-      <LayoutSwitcher />
       <ThemeSwitcher />
       <AuthNav />
     </nav>
@@ -119,15 +116,24 @@ function LogoLink({ className }: { className?: string }) {
 export function Navbar() {
   const pathname = usePathname()
   const { sidebarOpen, focusMode } = useUI()
-  const { layoutMode } = useReaderSettings()
   const [scrolled, setScrolled] = useState(false)
+  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up")
   const prefersReducedMotion = useSafeReducedMotion()
   const isSurahRoute = /^\/\d+/.test(pathname)
-  // single-page/child/flow force the sidebar collapsed (see SidebarContainer)
-  const sidebarEffectivelyOpen = sidebarOpen && layoutMode === "classic"
+  // The reader uses the sidebar open state
+  const sidebarEffectivelyOpen = sidebarOpen
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4)
+    let lastScrollY = window.scrollY
+    const onScroll = () => {
+      setScrolled(window.scrollY > 4)
+      if (window.scrollY > lastScrollY && window.scrollY > 50) {
+        setScrollDirection("down")
+      } else if (window.scrollY < lastScrollY) {
+        setScrollDirection("up")
+      }
+      lastScrollY = window.scrollY
+    }
     onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
@@ -149,8 +155,9 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full",
+        "sticky top-0 z-40 w-full translate-y-0",
         floating && "px-3 pt-3 sm:px-4",
+        "transition-transform duration-300 ease-in-out",
       )}
     >
       <motion.div
@@ -160,7 +167,7 @@ export function Navbar() {
         className={cn(
           "relative overflow-hidden backdrop-blur-xl",
           "transition-[background-color,box-shadow,border-color,backdrop-filter] duration-300 ease-out",
-          scrolled ? "bg-background/90 backdrop-blur-2xl" : "bg-background/60",
+          scrolled ? "backdrop-blur-2xl bg-background/90" : "bg-background/60",
           floating
             ? cn(
                 "mx-auto max-w-6xl rounded-2xl border",

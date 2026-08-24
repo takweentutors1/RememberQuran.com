@@ -46,7 +46,7 @@ class HifzView extends GetView<HifzController> {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 380,
+        maxCrossAxisExtent: 500,
         mainAxisExtent: 112,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
@@ -141,7 +141,7 @@ class HifzView extends GetView<HifzController> {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 380,
+        maxCrossAxisExtent: 500,
         mainAxisExtent: 112,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,

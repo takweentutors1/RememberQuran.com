@@ -23,16 +23,27 @@ export interface Streak {
 export interface UserRecord {
   id: string
   email: string
+  /**
+   * Legacy bcrypt hash. Kept forever, even for users migrated to Firebase
+   * Auth — it's both the fallback verification path for `firebaseUid: null`
+   * users (unmigrated stragglers, or accounts flagged as a mobile-app email
+   * collision during migration) and the entire rollback story if the
+   * Firebase Auth integration ever needs to be reverted.
+   */
   passwordHash: string
+  /**
+   * Firebase Auth uid once this user has been imported/created there —
+   * null for accounts not yet migrated, or deliberately left unlinked
+   * because the email already had a Firebase Auth account from the mobile
+   * app (see the `firebaseUsers` collection / migration script).
+   */
+  firebaseUid: string | null
   profile: { displayName: string; avatarUrl: string | null }
   roles: string[]
   moderation: { flagged: boolean; suspended: boolean }
   settings: Record<string, unknown>
   lastPosition: LastPosition | null
   emailVerified: Date | null
-  passwordResetToken: string | null
-  passwordResetExpires: Date | null
-  passwordResetRequestedAt: Date | null
   /**
    * Bumped on password change AND email change (any credential-equivalent
    * update) — sessions issued before this are revoked.
@@ -65,8 +76,9 @@ function userEmailsCol() {
   return getDb().collection("userEmails")
 }
 
-function resetTokensCol() {
-  return getDb().collection("passwordResetTokens")
+/** Reverse lookup for Firebase Auth uid → our Firestore user id, mirroring `userEmailsCol()`. */
+function firebaseUsersCol() {
+  return getDb().collection("firebaseUsers")
 }
 
 function fromSnapshot(id: string, data: FirebaseFirestore.DocumentData): UserRecord {
@@ -74,6 +86,7 @@ function fromSnapshot(id: string, data: FirebaseFirestore.DocumentData): UserRec
     id,
     email: data.email,
     passwordHash: data.passwordHash,
+    firebaseUid: data.firebaseUid ?? null,
     profile: {
       displayName: data.profile?.displayName ?? "",
       avatarUrl: data.profile?.avatarUrl ?? null,
@@ -93,9 +106,6 @@ function fromSnapshot(id: string, data: FirebaseFirestore.DocumentData): UserRec
         }
       : null,
     emailVerified: toDate(data.emailVerified),
-    passwordResetToken: data.passwordResetToken ?? null,
-    passwordResetExpires: toDate(data.passwordResetExpires),
-    passwordResetRequestedAt: toDate(data.passwordResetRequestedAt),
     // Accounts created before this field existed fall back to createdAt, so
     // deploying this doesn't retroactively invalidate every existing session.
     passwordChangedAt:
@@ -141,12 +151,14 @@ export type CreateUserResult =
 export async function createUser(input: {
   email: string
   passwordHash: string
+  firebaseUid: string
   displayName: string
 }): Promise<CreateUserResult> {
   const db = getDb()
   const emailRef = userEmailsCol().doc(input.email)
   const userRef = usersCol().doc()
   const favouritesRef = userRef.collection("bookmarkCollections").doc()
+  const firebaseUserRef = firebaseUsersCol().doc(input.firebaseUid)
 
   const result = await db.runTransaction(async (tx) => {
     const emailSnap = await tx.get(emailRef)
@@ -154,18 +166,17 @@ export async function createUser(input: {
 
     const now = FieldValue.serverTimestamp()
     tx.set(emailRef, { userId: userRef.id })
+    tx.set(firebaseUserRef, { userId: userRef.id })
     tx.set(userRef, {
       email: input.email,
       passwordHash: input.passwordHash,
+      firebaseUid: input.firebaseUid,
       profile: { displayName: input.displayName, avatarUrl: null },
       roles: ["user"],
       moderation: { flagged: false, suspended: false },
       settings: {},
       lastPosition: null,
       emailVerified: null,
-      passwordResetToken: null,
-      passwordResetExpires: null,
-      passwordResetRequestedAt: null,
       passwordChangedAt: now,
       activeGoal: null,
       streak: DEFAULT_STREAK,
@@ -187,6 +198,29 @@ export async function createUser(input: {
   const user = await getUserById(userRef.id)
   if (!user) throw new Error("User created but could not be re-read")
   return { ok: true, user }
+}
+
+/**
+ * Links an already-existing Firestore user doc to a Firebase Auth uid —
+ * used by the one-off migration script (`scripts/migrate-users-to-firebase-auth.ts`)
+ * for users created before Firebase Auth was wired in. New signups get this
+ * relationship set directly by `createUser()` instead.
+ */
+export async function linkFirebaseUid(
+  userId: string,
+  firebaseUid: string,
+): Promise<void> {
+  const db = getDb()
+  const userRef = usersCol().doc(userId)
+  const firebaseUserRef = firebaseUsersCol().doc(firebaseUid)
+
+  await db.runTransaction(async (tx) => {
+    tx.set(firebaseUserRef, { userId })
+    tx.update(userRef, {
+      firebaseUid,
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  })
 }
 
 export type ChangeEmailResult =
@@ -237,16 +271,26 @@ export async function updateDisplayName(
   })
 }
 
+/** Legacy/fallback path only — for `firebaseUid` users, Firebase Auth owns the password. */
 export async function updatePasswordHash(
   userId: string,
   passwordHash: string,
 ): Promise<void> {
-  await clearPasswordResetInternal(userId)
   await usersCol().doc(userId).update({
     passwordHash,
-    passwordResetToken: null,
-    passwordResetExpires: null,
-    passwordResetRequestedAt: null,
+    passwordChangedAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  })
+}
+
+/**
+ * Bumps `passwordChangedAt` without touching `passwordHash` — used when
+ * Firebase Auth already owns the password change (reset-confirm, settings
+ * password change for `firebaseUid` users) but a live NextAuth JWT session
+ * still needs to be invalidated.
+ */
+export async function touchPasswordChangedAt(userId: string): Promise<void> {
+  await usersCol().doc(userId).update({
     passwordChangedAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   })
@@ -264,65 +308,3 @@ export async function updateLastPosition(
     })
 }
 
-/**
- * Reset tokens get their own top-level lookup collection keyed by the token
- * hash itself — an O(1) `get()` by document id instead of a Firestore query
- * (which would need a composite index on token + expiry). Only one token is
- * ever valid per user, mirroring the old single-field-overwrite behaviour.
- */
-export async function setPasswordResetToken(
-  userId: string,
-  input: { tokenHash: string; expires: Date; requestedAt: Date },
-): Promise<void> {
-  const db = getDb()
-  const userRef = usersCol().doc(userId)
-  const newTokenRef = resetTokensCol().doc(input.tokenHash)
-
-  await db.runTransaction(async (tx) => {
-    const userSnap = await tx.get(userRef)
-    const prevHash = userSnap.data()?.passwordResetToken as string | undefined
-    if (prevHash) tx.delete(resetTokensCol().doc(prevHash))
-
-    tx.set(newTokenRef, { userId, expires: input.expires })
-    tx.update(userRef, {
-      passwordResetToken: input.tokenHash,
-      passwordResetExpires: input.expires,
-      passwordResetRequestedAt: input.requestedAt,
-      updatedAt: FieldValue.serverTimestamp(),
-    })
-  })
-}
-
-/** Resolves a reset token to a user, checking expiry — null if invalid/expired. */
-export async function getUserByResetToken(
-  tokenHash: string,
-): Promise<UserRecord | null> {
-  const tokenSnap = await resetTokensCol().doc(tokenHash).get()
-  const data = tokenSnap.data()
-  if (!data) return null
-
-  const expires = toDate(data.expires)
-  if (!expires || expires.getTime() <= Date.now()) return null
-
-  const user = await getUserById(data.userId as string)
-  if (!user || user.passwordResetToken !== tokenHash) return null
-  return user
-}
-
-async function clearPasswordResetInternal(userId: string): Promise<void> {
-  const userRef = usersCol().doc(userId)
-  const snap = await userRef.get()
-  const hash = snap.data()?.passwordResetToken as string | undefined
-  if (hash) await resetTokensCol().doc(hash).delete()
-}
-
-/** Invalidates any outstanding reset token without touching the password — used when the reset email fails to send. */
-export async function clearPasswordResetToken(userId: string): Promise<void> {
-  await clearPasswordResetInternal(userId)
-  await usersCol().doc(userId).update({
-    passwordResetToken: null,
-    passwordResetExpires: null,
-    passwordResetRequestedAt: null,
-    updatedAt: FieldValue.serverTimestamp(),
-  })
-}
