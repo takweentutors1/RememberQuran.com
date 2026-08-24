@@ -5,6 +5,7 @@ import {
   updatePasswordHash,
   type UserRecord,
 } from "@/lib/firestore/users"
+import { sendPasswordResetEmailAction } from "@/lib/email/resend"
 import { validatePassword } from "./credentials"
 
 const BCRYPT_ROUNDS = 12
@@ -104,20 +105,37 @@ export type SendResetEmailResult =
   | { ok: false; reason: "no-firebase-account" }
 
 /**
- * Triggers Firebase's built-in password-reset email. Fails for any email
- * without a linked Firebase Auth account (not-yet-migrated users, or
- * accounts deliberately left unlinked because of a mobile-app email
- * collision — see the migration script). Callers must not let that failure
- * leak into an enumeration-distinguishable HTTP response.
+ * Generates a password-reset link using the Admin SDK, constructs a custom
+ * URL pointing to our frontend, and emails it using our Resend integration.
+ * Fails for any email without a linked Firebase Auth account. Callers must 
+ * not let that failure leak into an enumeration-distinguishable HTTP response.
  */
 export async function sendPasswordResetEmail(
   email: string,
 ): Promise<SendResetEmailResult> {
-  const result = await identityToolkitFetch("accounts:sendOobCode", {
-    requestType: "PASSWORD_RESET",
-    email,
-  })
-  return result.ok ? { ok: true } : { ok: false, reason: "no-firebase-account" }
+  try {
+    const link = await getAdminAuth().generatePasswordResetLink(email)
+    const url = new URL(link)
+    const oobCode = url.searchParams.get("oobCode")
+    
+    if (!oobCode) throw new Error("No oobCode found in generated link")
+
+    const baseUrl = process.env.AUTH_URL || "https://rememberquran.com"
+    const directLink = `${baseUrl}/auth/action?mode=resetPassword&oobCode=${oobCode}`
+
+    const sendResult = await sendPasswordResetEmailAction(email, directLink)
+    if (!sendResult.ok) {
+      console.error("Failed to deliver custom reset email:", sendResult.error)
+    }
+
+    return { ok: true }
+  } catch (err: any) {
+    if (err.code === "auth/user-not-found") {
+      return { ok: false, reason: "no-firebase-account" }
+    }
+    console.error("Error generating password reset link:", err)
+    return { ok: false, reason: "no-firebase-account" }
+  }
 }
 
 export type ConfirmResetResult =

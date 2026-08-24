@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../../app/routes/app_routes.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/models/last_position.dart';
@@ -105,20 +107,24 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       error.value = '';
-      await _auth.sendPasswordResetEmail(email: email);
+      // Trigger our custom Next.js backend flow (which uses Resend)
+      // instead of Firebase's default email sender.
+      final response = await http.post(
+        Uri.parse('https://rememberquran.com/api/auth/reset/request'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (response.statusCode >= 400 && response.statusCode != 429) {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+
       Get.back();
-      // Firebase Auth's email enumeration protection makes this call
-      // succeed even when no account exists for `email` — it never reveals
-      // that server-side, by design. Wording this as conditional ("if an
-      // account exists") plus a spam-folder nudge avoids the app claiming
-      // an email was sent to someone with no account, and covers the most
-      // common reason a genuine reset email doesn't show up (filtered to
-      // spam) — the two real explanations behind "the reset email never
-      // arrived" that no client-side code change can eliminate outright.
+      // Firebase Auth's email enumeration protection logic still applies to our
+      // backend. We show a success message either way.
       AppFeedback.showSuccess(
-        'If an account exists for $email, we\'ve sent password reset '
-        'instructions. It can take a few minutes to arrive — please '
-        'check your spam/junk folder too.',
+        'If an account exists for $email, we\'ve sent a secure reset link. '
+        'Clicking the link will securely open your mobile browser to reset your password.',
         title: 'Check Your Inbox',
       );
     } on FirebaseAuthException catch (e) {
