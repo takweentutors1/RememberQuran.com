@@ -77,7 +77,7 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
             return GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 380,
+                maxCrossAxisExtent: 500,
                 mainAxisExtent: 92,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
@@ -145,6 +145,8 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
                                 const SizedBox(height: 4),
                                 Text(
                                   bookmark.createdAt.toString(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: nurColors?.foregroundSubtle,
                                   ),

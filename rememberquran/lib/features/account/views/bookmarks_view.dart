@@ -58,7 +58,7 @@ class BookmarksView extends GetView<BookmarksController> {
           child: GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 380,
+              maxCrossAxisExtent: 500,
               mainAxisExtent: 92,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
@@ -172,7 +172,7 @@ class BookmarksView extends GetView<BookmarksController> {
           child: GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 380,
+              maxCrossAxisExtent: 500,
               mainAxisExtent: 112,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
