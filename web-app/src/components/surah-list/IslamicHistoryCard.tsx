@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { getHistoryFactsFrom } from "@/lib/islamic-history"
 import { useSafeReducedMotion } from "@/hooks/useSafeReducedMotion"
 
-const TICKER_INTERVAL_MS = 6000
+const TICKER_INTERVAL_MS = 1500
 const FACTS = getHistoryFactsFrom()
 
 export function IslamicHistoryCard() {
