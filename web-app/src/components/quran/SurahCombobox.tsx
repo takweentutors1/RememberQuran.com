@@ -52,7 +52,7 @@ export function SurahCombobox({
         <ComboboxEmpty>No surah found.</ComboboxEmpty>
         <ComboboxList>
           {(chapter) => (
-            <ComboboxItem key={chapter.id} value={chapter}>
+            <ComboboxItem key={chapter.id} value={chapter} className="border-b border-border/50 py-2 last:border-b-0">
               <span className="w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
                 {chapter.id}
               </span>

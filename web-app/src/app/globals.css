@@ -144,6 +144,7 @@
   --gold-400: #d4a843;
   --gold-500: #c49530;
   --gold-600: #b58a45;
+  --playing-indicator: var(--jade-400);
 
   /* ── Warm shadows (paper-tinted) ── */
   --shadow-paper-sm: 0 1px 2px rgba(43,41,37,0.06);
@@ -155,6 +156,7 @@
   --dur-fast: 140ms;
   --dur-base: 220ms;
   --dur-slow: 360ms;
+  --dur-ambient: 1200ms;
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -767,6 +769,19 @@ h1, h2, h3, .font-serif {
   to {
     background-position: -200% 0;
   }
+}
+
+@keyframes rqPulse {
+  0%, 100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@utility animate-pulse-ambient {
+  animation: rqPulse var(--dur-ambient) var(--ease-standard) infinite;
 }
 
 @utility shimmer {

@@ -13,7 +13,7 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { useAudioPlayer } from "@/context/AudioPlayerContext"
-import { usePlaybackVerseKey } from "@/lib/playbackStore"
+import { useElapsedSeconds, usePlaybackVerseKey } from "@/lib/playbackStore"
 import { ElapsedTime, PLAYER_SURFACE_LAYOUT_ID, SeekBar } from "./PlayerPrimitives"
 import { SpeedControl } from "./SpeedControl"
 import { RepeatControls } from "./RepeatControls"
@@ -33,10 +33,12 @@ function NowPlayingLabel({
   chapterId,
   chapterName,
   isRadio,
+  isPlaying,
 }: {
   chapterId: number | null
   chapterName: string | null
   isRadio: boolean
+  isPlaying: boolean
 }) {
   const verseKey = usePlaybackVerseKey()
 
@@ -47,6 +49,9 @@ function NowPlayingLabel({
           <RadioTower className="size-2.5" strokeWidth={1.5} />
           Radio
         </span>
+      )}
+      {isPlaying && !isRadio && (
+        <span className="shrink-0 size-1.5 rounded-full bg-[var(--playing-indicator)] animate-pulse-ambient" />
       )}
       <span className="truncate text-sm font-medium text-foreground">
         {chapterName ?? (chapterId !== null ? `Surah ${chapterId}` : "")}
@@ -74,6 +79,7 @@ function NowPlayingLabel({
  */
 export function MiniPlayer() {
   const player = useAudioPlayer()
+  const elapsed = useElapsedSeconds()
   const [expanded, setExpanded] = useState(false)
 
   if (player.status === "idle") return null
@@ -103,7 +109,12 @@ export function MiniPlayer() {
         {player.durationMs !== null &&
           player.status !== "error" &&
           player.status !== "loading" && (
-            <SeekBar durationMs={player.durationMs} onSeek={player.seekToTime} />
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-border/30">
+              <div 
+                className="h-full bg-jade-500 transition-all duration-[var(--dur-base)] ease-linear"
+                style={{ width: `${(elapsed * 1000 / player.durationMs) * 100}%` }}
+              />
+            </div>
           )}
         <div className="site-shell flex h-[72px] items-center gap-1.5 px-3 sm:gap-2 sm:px-4">
           <div className="min-w-0 flex-1">
@@ -111,6 +122,7 @@ export function MiniPlayer() {
               chapterId={player.chapterId}
               chapterName={player.chapterName}
               isRadio={player.mode === "radio"}
+              isPlaying={isPlaying}
             />
           </div>
 
