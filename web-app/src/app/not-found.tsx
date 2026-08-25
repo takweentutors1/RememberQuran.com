@@ -14,12 +14,12 @@ export default function NotFound() {
           This page does not exist in the record.
         </p>
       </div>
-      <Button asChild>
+      <Button render={
         <Link href="/">
           <BookOpen data-icon="inline-start" className="size-4" />
           Browse all surahs
         </Link>
-      </Button>
+      } />
     </div>
   )
 }
