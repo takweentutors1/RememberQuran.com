@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { newsreader, publicSans, notoNaskhArabic, jetbrainsMono, amiri, amiriQuran } from "@/lib/fonts"
+import { newsreader, publicSans, notoNaskhArabic, jetbrainsMono, amiri, amiriQuran } from "@/lib/app-fonts"
 import { getChapters } from "@/lib/quranApi"
 import Providers from "@/components/providers"
 import dynamic from "next/dynamic"

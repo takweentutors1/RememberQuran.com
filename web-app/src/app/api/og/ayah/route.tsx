@@ -6,7 +6,7 @@ import {
   getMediaPreset,
   plainTranslation,
   truncateText,
-} from "@/lib/media/presets"
+} from "@/lib/media/card-presets"
 import { parseVerseKey } from "@/lib/quran/verse-key"
 
 export const runtime = "nodejs"

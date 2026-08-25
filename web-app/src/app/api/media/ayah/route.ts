@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server"
 import { getChapter, getVerseByKey, TRANSLATION_IDS } from "@/lib/quranApi"
-import { plainTranslation } from "@/lib/media/presets"
+import { plainTranslation } from "@/lib/media/card-presets"
 import { parseVerseKey } from "@/lib/quran/verse-key"
 
 export const runtime = "nodejs"
