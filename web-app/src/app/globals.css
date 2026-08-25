@@ -1,0 +1,885 @@
+/* ── Google Fonts ─────────────────────────────────────────────────────────────
+   Newsreader  → display, long-form prose, headings (regular weight — not bold)
+   Public Sans → all UI chrome: nav, labels, buttons, metadata
+   Noto Naskh Arabic → Arabic UI text (surah names in lists, NOT revelation)
+   JetBrains Mono → verse references, ayah numbers, numerals
+   ─────────────────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Public+Sans:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* KFGQPC Uthmanic Hafs — official Madani Unicode font (Quran Foundation CDN) */
+@font-face {
+  font-family: "UthmanicHafs";
+  src:
+    url("/fonts/UthmanicHafs1Ver18.woff2") format("woff2"),
+    url("/fonts/UthmanicHafs1Ver18.ttf") format("truetype");
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "Cascadia Code", monospace;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
+  --font-arabic-ui: var(--font-noto-naskh), var(--font-amiri), serif;
+  --font-arabic: "UthmanicHafs", var(--font-amiri-quran), var(--font-amiri), serif;
+  --font-uthmani: "UthmanicHafs", var(--font-amiri-quran), var(--font-amiri), serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  /* ── Nur extensions exposed as Tailwind utilities ──
+     bg-surface-sunk · text-subtle · text-faint · border-strong
+     text-gold · bg-gold-soft · shadow-{sm,md,lg} */
+  --color-surface-sunk: var(--surface-sunk);
+  --color-subtle: var(--foreground-subtle);
+  --color-faint: var(--foreground-faint);
+  --color-strong: var(--border-strong);
+  --color-gold: var(--brand-gold);
+  --color-gold-strong: var(--brand-gold-strong);
+  --color-gold-soft: var(--brand-gold-soft);
+  --color-gold-leaf: var(--gold-leaf);
+  --color-reader-ink: var(--reader-ink);
+
+  --shadow-sm: var(--elev-sm);
+  --shadow-md: var(--elev-md);
+  --shadow-lg: var(--elev-lg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Typography scale ── */
+  --text-xs: 0.6875rem;    /* 11px */
+  --text-sm: 0.8125rem;    /* 13px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --tracking-caps: 0.09em;
+
+  /* ── Quran typography ── */
+  --quran-sm:      1.5rem;   /* 24px */
+  --quran-md:      2rem;     /* 32px */
+  --quran-lg:      2.5rem;   /* 40px */
+  --quran-display: 4.5rem;   /* 72px — media card only */
+  --quran-leading: 2.15;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-16: 64px;
+
+  /* ── Layout ── */
+  --container-sm:  640px;
+  --container-md:  820px;   /* reading view */
+  --container-lg:  1024px;
+  --container-xl:  1240px;  /* global max */
+  --measure-prose: 66ch;
+  --measure-quran: 44rem;
+
+  /* ── Fixed chrome heights ── */
+  --header-h: 56px;
+  --tab-bar-h: 60px;
+  --player-h: 72px;
+
+  /* ── Radius ── */
+  --radius-pill:   9999px;
+  --radius-field:  10px;
+  --radius-card:   14px;
+  --radius-modal:  28px;
+
+  /* ── Jade palette ── */
+  --jade-400: #4ec9a0;
+  --jade-500: #2aa583;
+  --jade-600: #1e8a6d;
+  --jade-700: #0e6b57;
+  --jade-800: #0c5f4d;
+  --jade-900: #094c3d;
+
+  /* ── Gold palette ── */
+  --gold-100: #faf5e4;
+  --gold-200: #f5ecc8;
+  --gold-300: #e6c982;
+  --gold-400: #d4a843;
+  --gold-500: #c49530;
+  --gold-600: #b58a45;
+
+  /* ── Warm shadows (paper-tinted) ── */
+  --shadow-paper-sm: 0 1px 2px rgba(43,41,37,0.06);
+  --shadow-paper-md: 0 2px 4px rgba(43,41,37,0.05), 0 8px 24px -8px rgba(43,41,37,0.14);
+  --shadow-paper-lg: 0 4px 8px rgba(43,41,37,0.06), 0 24px 56px -16px rgba(43,41,37,0.22);
+  --shadow-player:   0 -2px 12px rgba(43,41,37,0.1), 0 -1px 3px rgba(43,41,37,0.06);
+
+  /* ── Motion (strict ceiling) ── */
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 360ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Interaction ── */
+  --press-scale: 0.985;
+  --hover-lift: -1px;
+  --focus-ring: 2px solid var(--jade-600);
+  --focus-ring-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NUR — LIGHT
+   Ink on ivory with a single amber accent. Deliberately near-monochrome so
+   that gold carries real weight when it appears.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --background: #fdfbf6;
+  --foreground: #15161a;
+  --card: #ffffff;
+  --card-foreground: #15161a;
+  --popover: #ffffff;
+  --popover-foreground: #15161a;
+  --primary: #0e6b57;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f0ea;
+  --secondary-foreground: #15161a;
+  --muted: #f2f0ea;
+  --muted-foreground: #53565e;
+  --accent: #eeede8;
+  --accent-foreground: #15161a;
+  --destructive: oklch(0.52 0.16 27);
+  --border: #e8e5dd;
+  --input: #d3cfc4;
+  --ring: #0e6b57;
+  --radius: 0.625rem;
+
+  --sidebar: #f2f0ea;
+  --sidebar-foreground: #15161a;
+  --sidebar-primary: #15161a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eeede8;
+  --sidebar-accent-foreground: #15161a;
+  --sidebar-border: #e8e5dd;
+  --sidebar-ring: #b07c22;
+
+  /* ── Nur extensions ── */
+  --surface-sunk: #e9e6de;
+  --foreground-subtle: #8a8d95;
+  --foreground-faint: #b4b6bc;
+  --border-strong: #d3cfc4;
+
+  --brand-gold: #b07c22;
+  --brand-gold-strong: #8a5f16;
+  --brand-gold-soft: #faf0dc;
+
+  /* Arabic glyph colour — one step darker than body text so the mushaf
+     always reads as the foremost layer on the page. */
+  --reader-ink: #0d0e11;
+
+  --elev-sm: var(--shadow-paper-sm);
+  --elev-md: var(--shadow-paper-md);
+  --elev-lg: var(--shadow-paper-lg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NUR — DARK
+   True dark, not inverted grey. #0C0C0E page, warm off-white glyphs.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dark {
+  --background: #0b0a08;
+  --foreground: #f2f1ed;
+  --card: #131210;
+  --card-foreground: #f2f1ed;
+  --popover: #151618;
+  --popover-foreground: #f2f1ed;
+  --primary: #4ec9a0;
+  --primary-foreground: #0b0a08;
+  --secondary: #1d1e22;
+  --secondary-foreground: #f2f1ed;
+  --muted: #1d1e22;
+  --muted-foreground: #a6a8ae;
+  --accent: #1c1d20;
+  --accent-foreground: #f2f1ed;
+  --destructive: oklch(0.65 0.17 27);
+  --border: #232427;
+  --input: #33353a;
+  --ring: #2aa583;
+
+  --sidebar: #0a0a0c;
+  --sidebar-foreground: #f2f1ed;
+  --sidebar-primary: #f2f1ed;
+  --sidebar-primary-foreground: #0c0c0e;
+  --sidebar-accent: #1c1d20;
+  --sidebar-accent-foreground: #f2f1ed;
+  --sidebar-border: #232427;
+  --sidebar-ring: #e0ae55;
+
+  --surface-sunk: #08080a;
+  --foreground-subtle: #74767c;
+  --foreground-faint: #54565c;
+  --border-strong: #33353a;
+
+  --brand-gold: #e0ae55;
+  --brand-gold-strong: #f0c378;
+  --brand-gold-soft: #221a0c;
+
+  --reader-ink: #f7f5f0;
+
+  --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
+  --elev-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 28px 60px -20px rgb(0 0 0 / 0.8);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODERN THEME
+   Dark, high-contrast glass surfaces with indigo/cyan accents, built for the
+   glassmorphism and Islamic-motif utilities below (glass-panel,
+   mihrab-shadow, gold-leaf-glow — the gold-leaf ornament itself stays gold
+   via --gold-leaf, independent of this theme's indigo/cyan accent).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.modern,
+[data-theme="modern"] {
+  --background: #05060a;
+  --foreground: #eef0f8;
+  --card: #0d0f1a;
+  --card-foreground: #eef0f8;
+  --popover: #10121f;
+  --popover-foreground: #eef0f8;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #161827;
+  --secondary-foreground: #eef0f8;
+  --muted: #12131f;
+  --muted-foreground: #9297b3;
+  --accent: #1b1e30;
+  --accent-foreground: #eef0f8;
+  --destructive: oklch(0.65 0.17 27);
+  --border: #1f2233;
+  --input: #262a3f;
+  --ring: #22d3ee;
+  --radius: 1rem;
+
+  --sidebar: #04050a;
+  --sidebar-foreground: #b7bcd4;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #161827;
+  --sidebar-accent-foreground: #eef0f8;
+  --sidebar-border: #1f2233;
+  --sidebar-ring: #22d3ee;
+
+  --surface-sunk: #020306;
+  --foreground-subtle: #9297b3;
+  --foreground-faint: #52566e;
+  --border-strong: #33374d;
+
+  --brand-gold: #6366f1;
+  --brand-gold-strong: #22d3ee;
+  --brand-gold-soft: #171933;
+
+  --reader-ink: #f5f6fb;
+
+  --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
+  --elev-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 28px 60px -20px rgb(0 0 0 / 0.8);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    --tw-ring-offset-color: var(--background);
+  }
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ── Typography helpers ──────────────────────────────────────────────────── */
+
+/* Prose / display headings */
+h1, h2, h3, .font-serif {
+  font-family: var(--font-serif);
+  font-weight: 400; /* size does the work, not bold */
+}
+
+/* Eyebrow labels */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Numerals / verse refs */
+[data-numeric],
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Arabic UI (surah names in lists) */
+.font-arabic-ui {
+  font-family: var(--font-arabic-ui);
+}
+
+/* Quranic text — always Uthmanic Hafs */
+.font-uthmani,
+[data-quran-text] {
+  font-family: var(--font-uthmani);
+  line-height: var(--quran-leading);
+  direction: rtl;
+}
+
+.font-amiri-quran {
+  font-family: var(--font-amiri-quran), var(--font-amiri), serif;
+}
+
+/* Arabic is the foremost layer on every page — one step darker than body
+   text in light mode, one step brighter in dark. Tajweed spans override
+   `color` on their own children, so this is safe as a base. */
+.quran-arabic {
+  font-family: var(--reader-arabic-font, var(--font-uthmani));
+  font-size: var(--arabic-font-size, 2.25rem);
+  line-height: 2;
+  word-spacing: 0.05em;
+  color: var(--reader-ink);
+}
+
+.quran-translation {
+  font-family: var(--font-source-serif), ui-serif, Georgia, serif;
+  font-size: var(--translation-font-size, 1rem);
+  line-height: 1.75;
+}
+
+/* Study panel prose — sanitized tafsir/asbab HTML (M3). Font stack ends with
+   the Arabic families so inline Quranic quotes inside English commentary
+   render with proper glyphs. */
+.study-prose {
+  font-family:
+    var(--font-source-serif), ui-serif, Georgia,
+    var(--reader-arabic-font, var(--font-uthmani)), var(--font-amiri-quran),
+    var(--font-amiri), serif;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  overflow-wrap: break-word;
+  color: var(--foreground);
+}
+
+.study-prose p,
+.study-prose ul,
+.study-prose ol,
+.study-prose blockquote {
+  margin-block: 0.75em;
+}
+
+.study-prose h3,
+.study-prose h4 {
+  font-weight: 600;
+  margin-block: 1.5em 0.5em;
+  color: var(--muted-foreground);
+}
+
+.study-prose h3 {
+  font-size: 1.0625rem;
+}
+
+.study-prose h4 {
+  font-size: 1rem;
+}
+
+.study-prose ul,
+.study-prose ol {
+  padding-inline-start: 1.25em;
+  list-style: revert;
+}
+
+.study-prose blockquote {
+  border-inline-start: 2px solid var(--border);
+  padding-inline-start: 0.875em;
+  color: var(--muted-foreground);
+}
+
+.study-prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Tajweed colour tokens ──────────────────────────────────────────────── */
+:root {
+  --tj-ham_wasl:              oklch(0.55 0.15 200);
+  --tj-laam_shamsiyah:        oklch(0.55 0.15 200);
+  --tj-madda_normal:          oklch(0.52 0.19 260);
+  --tj-madda_permissible:     oklch(0.52 0.19 260);
+  --tj-madda_necessary:       oklch(0.48 0.22 260);
+  --tj-madda_obligatory:      oklch(0.48 0.22 260);
+  --tj-ghunnah:               oklch(0.52 0.18 145);
+  --tj-qalaqah:               oklch(0.52 0.20 30);
+  --tj-ikhafa:                oklch(0.52 0.18 0);
+  --tj-ikhafa_shafawi:        oklch(0.52 0.18 0);
+  --tj-idgham_ghunnah:        oklch(0.50 0.19 290);
+  --tj-idgham_wo_ghunnah:     oklch(0.50 0.14 290);
+  --tj-idgham_mutajanisayn:   oklch(0.50 0.16 290);
+  --tj-idgham_mutaqaribayn:   oklch(0.50 0.14 290);
+  --tj-iqlab:                 oklch(0.52 0.19 330);
+  --tj-slnt:                  oklch(0.55 0.00 0);
+  --tj-custom-alef-maksora:   oklch(0.52 0.18 60);
+}
+/* next-themes is configured with `attribute="class"`, so `.dark` is the live
+   selector. `[data-theme="dark"]` is kept for any consumer that sets the
+   attribute directly (e.g. the OG image renderer). */
+.dark,
+[data-theme="dark"] {
+  --tj-ham_wasl:              oklch(0.72 0.15 200);
+  --tj-laam_shamsiyah:        oklch(0.72 0.15 200);
+  --tj-madda_normal:          oklch(0.70 0.19 260);
+  --tj-madda_permissible:     oklch(0.70 0.19 260);
+  --tj-madda_necessary:       oklch(0.68 0.22 260);
+  --tj-madda_obligatory:      oklch(0.68 0.22 260);
+  --tj-ghunnah:               oklch(0.70 0.18 145);
+  --tj-qalaqah:               oklch(0.70 0.20 30);
+  --tj-ikhafa:                oklch(0.70 0.18 0);
+  --tj-ikhafa_shafawi:        oklch(0.70 0.18 0);
+  --tj-idgham_ghunnah:        oklch(0.68 0.19 290);
+  --tj-idgham_wo_ghunnah:     oklch(0.68 0.14 290);
+  --tj-idgham_mutajanisayn:   oklch(0.68 0.16 290);
+  --tj-idgham_mutaqaribayn:   oklch(0.68 0.14 290);
+  --tj-iqlab:                 oklch(0.70 0.19 330);
+  --tj-slnt:                  oklch(0.65 0.00 0);
+  --tj-custom-alef-maksora:   oklch(0.70 0.18 60);
+}
+
+/* Colour spans must not create their own boxes — otherwise Arabic shaping
+   breaks mid-word, widths drift, and click hits the neighbouring word. */
+.tj-span {
+  display: contents;
+}
+
+.tj-ham_wasl, .tj-laam_shamsiyah       { color: var(--tj-ham_wasl); }
+.tj-madda_normal, .tj-madda_permissible { color: var(--tj-madda_normal); }
+.tj-madda_necessary, .tj-madda_obligatory { color: var(--tj-madda_necessary); }
+.tj-ghunnah                             { color: var(--tj-ghunnah); }
+.tj-qalaqah                             { color: var(--tj-qalaqah); }
+.tj-ikhafa, .tj-ikhafa_shafawi          { color: var(--tj-ikhafa); }
+.tj-idgham_ghunnah                      { color: var(--tj-idgham_ghunnah); }
+.tj-idgham_wo_ghunnah,
+.tj-idgham_mutajanisayn,
+.tj-idgham_mutaqaribayn                 { color: var(--tj-idgham_wo_ghunnah); }
+.tj-iqlab                               { color: var(--tj-iqlab); }
+.tj-slnt                                { color: var(--tj-slnt); }
+.tj-custom-alef-maksora                 { color: var(--tj-custom-alef-maksora); }
+
+@keyframes surah-load {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+
+/* ── Entrance animations ─────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@utility animate-fade-up {
+  animation: fade-up var(--dur-slow) var(--ease-out) both;
+}
+
+@utility animate-fade-in {
+  animation: fade-in var(--dur-base) var(--ease-out) both;
+}
+
+/* Standard site chrome — navbar, footer, audio bar, and page shells share one width. */
+@utility site-shell {
+  @apply mx-auto w-full max-w-6xl;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTION LAYER
+   The shared vocabulary from docs/DESIGN-SYSTEM.md §4. Every one of these
+   animates only transform / opacity / colour — never a layout property.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Press ripple ──
+   Applied by <Ripple> (src/components/ui/ripple.tsx). The span is positioned
+   at the pointer origin and removes itself on animationend. */
+@keyframes ripple-out {
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@utility ripple-host {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ripple-ink {
+  position: absolute;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.18;
+  transform: scale(0);
+  pointer-events: none;
+  animation: ripple-out 600ms var(--ease-out) forwards;
+}
+
+/* ── Spring ──
+   Bookmark / hifz / note toggles. Icon only; the surrounding row must not
+   move, or the reading position shifts under the user. */
+@keyframes spring-pop {
+  0% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.24);
+  }
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+@utility animate-spring {
+  animation: spring-pop var(--dur-slow) var(--ease-overshoot) forwards;
+}
+
+/* ── Link arrow + growing rule ──
+   Footer and nav lists. The rule stops short of the arrow so it tracks the
+   text width, not the flex box. */
+@utility link-reveal {
+  position: relative;
+  width: fit-content;
+
+  & > [data-arrow] {
+    opacity: 0;
+    transform: translateX(-5px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0.125rem;
+    height: 1px;
+    width: 0;
+    background: var(--brand-gold);
+    transition: width var(--dur-slow) var(--ease-out);
+  }
+
+  &:hover > [data-arrow],
+  &:focus-visible > [data-arrow] {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    width: calc(100% - 1.0625rem);
+  }
+}
+
+/* ── Diamond frame ──
+   Surah number ornament. Rotates 45° → 90° and takes on gold on approach. */
+@utility diamond-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0.125rem;
+    border: 1px solid var(--border-strong);
+    border-radius: calc(var(--radius) * 0.6);
+    transform: rotate(45deg);
+    transition:
+      transform var(--dur-slow) var(--ease-out),
+      border-color var(--dur-slow) var(--ease-out);
+  }
+}
+
+.group:hover .diamond-frame::before,
+.group:focus-visible .diamond-frame::before {
+  transform: rotate(90deg);
+  border-color: var(--brand-gold);
+}
+
+/* ── Lift ──
+   The single hover treatment for every clickable card on the site. */
+@utility lift {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--elev-md);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.99);
+  }
+}
+
+/* ── Icon press ──
+   Shared hover/press feedback for toolbar and per-ayah icon buttons — a
+   smaller sibling of `lift` sized for 28–32px controls, not cards. */
+@utility icon-press {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.94);
+  }
+}
+
+/* ── Ayah actions reveal ──
+   Per-ayah controls fade in on hover/focus for pointer devices (system §7).
+   Touch has no hover state, so they stay visible there — a hidden control
+   nobody can discover is worse than a busier row. */
+.ayah-actions {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .ayah-actions {
+    opacity: 0;
+  }
+
+  .group:hover .ayah-actions,
+  .group:focus-within .ayah-actions {
+    opacity: 1;
+  }
+}
+
+/* ── Ayah content-visibility ──
+   Al-Baqarah alone is 286 rows; skipping layout/paint for off-screen ayahs
+   is what keeps the reader at 60fps (system §9). 220px is a rough estimate
+   for an unopened row — the browser measures and remembers the real size
+   after first layout, so this only affects the very first paint. */
+@utility ayah-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
+
+/* ── Underline grow ──
+   Nav links. Draws left-to-right; sits on a pseudo so it never affects layout. */
+@utility underline-grow {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0.5rem;
+    bottom: 0.25rem;
+    height: 1.5px;
+    border-radius: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  &:hover::after,
+  &[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ── Skeleton shimmer ──
+   Ayah-shaped placeholders in the real layout. Never a spinner. */
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    var(--border) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* ── Gold shimmer line ──
+   A slow gold sweep along a thin divider — decorative, not a loading state.
+   Distinct from `.shimmer` above (skeleton placeholders, fast + grey). */
+@keyframes gold-shimmer-sweep {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@utility gold-shimmer-line {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold-leaf) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: gold-shimmer-sweep 3.5s ease-in-out infinite;
+}
+
+/* ── Attribute-driven list filter ──
+   The 114-surah grid stays fully server-rendered; SurahFilter only writes
+   `data-filter` on the container and these two rules do the work. No client
+   re-render, and DOM order stays stable so find-in-page still works. */
+[data-surah-grid][data-filter="makkah"] [data-place="madinah"],
+[data-surah-grid][data-filter="madinah"] [data-place="makkah"] {
+  display: none;
+}
+
+/* ── Gold particle ──
+   Emitted by the bookmark spring. Positioned and driven from JS via the Web
+   Animations API so no per-particle CSS is generated. */
+.spark-dot {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--brand-gold);
+  pointer-events: none;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Tabular figures everywhere a number can change in place — streak counts,
+     ayah counters, timestamps. Prevents digit jitter during count-up. */
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ── Reduced motion ──
+   One global override. Components must not re-implement this. Scroll
+   behaviour is included: smooth scroll is motion too. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODERN LAYOUT UTILITIES & ISLAMIC ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Premium Glassmorphism */
+  .glass-panel {
+    @apply bg-background/70 backdrop-blur-xl border border-white/10 shadow-lg dark:border-white/5;
+  }
+
+  /* Traditional Islamic Touches */
+  .mihrab-shadow {
+    box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px -1px rgba(0, 0, 0, 0.06), inset 0 10px 15px -3px var(--gold-leaf-soft);
+  }
+
+  .gold-leaf-glow {
+    box-shadow: 0 0 20px 2px var(--gold-leaf-soft), inset 0 0 10px 1px var(--gold-leaf);
+  }
+
+  /* Rotating Geometric Arabesque */
+  .animate-slow-spin {
+    animation: slow-spin 60s linear infinite;
+  }
+}
+
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

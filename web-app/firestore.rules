@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// All reads/writes to user data go through Next.js Route Handlers using the
+// Admin SDK (service account), which bypasses these rules entirely. There is
+// no client-side Firestore SDK in this app, so client access is denied
+// outright rather than reimplementing per-user ownership checks twice.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}
