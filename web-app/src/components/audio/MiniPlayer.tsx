@@ -94,10 +94,11 @@ export function MiniPlayer() {
         onClick={() => setExpanded(true)}
         className={cn(
           "fixed inset-x-3 bottom-24 z-40 cursor-pointer rounded-2xl md:inset-x-0 md:bottom-0 md:cursor-default md:rounded-none",
-          "border border-border/60 bg-background/80 shadow-[0_-4px_24px_rgba(43,41,37,0.08)] backdrop-blur-md",
+          "border border-border/60 bg-background/80 shadow-[0_-4px_24px_rgba(0,0,0,0.05)] backdrop-blur-md",
           "md:border-x-0 md:border-b-0 md:pb-[env(safe-area-inset-bottom)]",
-          "animate-in slide-in-from-bottom-8 fade-in duration-[360ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+          "animate-in slide-in-from-bottom-8 fade-in duration-[360ms] ease-out",
         )}
+        transition={{ type: "tween", duration: 0.36, ease: "easeOut" }}
       >
         {player.durationMs !== null &&
           player.status !== "error" &&

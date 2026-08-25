@@ -310,6 +310,7 @@ export function AyahCardDesigner({
           size="lg"
           disabled={busy || loading || !card}
           onClick={() => void exportSecondary()}
+          className="border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
         >
           {canNativeShare ? (
             <Share2 data-icon="inline-start" />

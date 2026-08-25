@@ -16,7 +16,7 @@ export function AudioDockSpacer() {
     <div
       data-slot="audio-dock"
       aria-hidden="true"
-      className={barVisible ? "h-40 md:h-16" : "h-0"}
+      className={barVisible ? "h-40 md:h-20" : "h-0"}
     />
   )
 }
