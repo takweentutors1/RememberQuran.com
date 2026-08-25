@@ -27,7 +27,7 @@ const FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 const navLink =
-  "flex h-9 items-center gap-1.5 rounded-md px-2.5 text-xs text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground"
+  "flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] sm:text-sm font-medium text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground"
 
 export function AuthNav() {
   const router = useRouter()
@@ -46,7 +46,7 @@ export function AuthNav() {
   if (!session?.user) {
     return (
       <Link href="/login?next=/account" className={cn(navLink, FOCUS)}>
-        <UserRound className="size-3.5" strokeWidth={1.75} />
+        <UserRound className="size-4 sm:size-5" strokeWidth={1.75} />
         <span className="hidden sm:inline">Sign in</span>
       </Link>
     )

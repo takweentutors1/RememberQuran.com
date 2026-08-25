@@ -16,8 +16,8 @@ export function ThemeSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "icon", className: "h-9 w-9 cursor-pointer" })}>
-        <Palette className="h-[1.2rem] w-[1.2rem] text-muted-foreground hover:text-foreground transition-colors" />
+      <DropdownMenuTrigger className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <Palette className="size-4 sm:size-5" strokeWidth={1.75} />
         <span className="sr-only">Toggle theme</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

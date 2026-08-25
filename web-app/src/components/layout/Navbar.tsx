@@ -15,13 +15,7 @@ import { cn } from "@/lib/utils"
 const FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
-const NAV: {
-  href: string
-  label: string
-  icon: LucideIcon
-  match: (p: string) => boolean
-  hideLabel?: boolean
-}[] = [
+const TABS = [
   {
     href: "/",
     label: "Quran",
@@ -40,19 +34,12 @@ const NAV: {
     icon: ImagePlus,
     match: (p: string) => p === "/media-maker",
   },
-  {
-    href: "/search",
-    label: "Search",
-    icon: Search,
-    match: (p: string) => p === "/search",
-    hideLabel: true,
-  },
 ]
 
-function NavLinks({ pathname }: { pathname: string }) {
+function NavTabs({ pathname }: { pathname: string }) {
   return (
-    <nav className="flex items-center gap-0.5">
-      {NAV.map(({ href, label, icon: Icon, match, hideLabel }) => {
+    <nav className="flex h-full items-center gap-1 sm:gap-2">
+      {TABS.map(({ href, label, icon: Icon, match }) => {
         const active = match(pathname)
         return (
           <Link
@@ -61,27 +48,40 @@ function NavLinks({ pathname }: { pathname: string }) {
             aria-label={label}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs",
+              "relative flex h-full items-center gap-1.5 px-3 text-[13px] sm:text-sm font-medium",
               "transition-colors duration-(--dur-base) ease-(--ease-out)",
               active
-                ? "text-primary border-b-2 border-primary rounded-none"
+                ? "text-primary border-b-2 border-primary"
                 : "text-muted-foreground hover:text-foreground",
-              !active && "underline-grow",
               FOCUS,
             )}
           >
-            <Icon className="size-5" strokeWidth={1.5} />
-            {hideLabel ? (
-              <span className="sr-only">{label}</span>
-            ) : (
-              <span className="hidden sm:inline">{label}</span>
-            )}
+            <Icon className="size-4 sm:size-5" strokeWidth={1.75} />
+            <span className="hidden sm:inline">{label}</span>
           </Link>
         )
       })}
+    </nav>
+  )
+}
+
+function NavActions() {
+  const { setCommandOpen } = useUI()
+  return (
+    <div className="flex items-center gap-1 sm:gap-2">
+      <button
+        onClick={() => setCommandOpen(true)}
+        aria-label="Search"
+        className={cn(
+          "flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
+          FOCUS
+        )}
+      >
+        <Search className="size-5" strokeWidth={1.75} />
+      </button>
       <ThemeSwitcher />
       <AuthNav />
-    </nav>
+    </div>
   )
 }
 
@@ -101,7 +101,7 @@ function LogoLink({ className }: { className?: string }) {
 
 export function Navbar() {
   const pathname = usePathname()
-  const { sidebarOpen, focusMode } = useUI()
+  const { sidebarOpen, focusMode, setCommandOpen } = useUI()
   const [scrolled, setScrolled] = useState(false)
   const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up")
   const isSurahRoute = /^\/\d+/.test(pathname)
@@ -186,14 +186,18 @@ export function Navbar() {
             >
               <LogoLink />
             </div>
-            <div className="flex min-w-0 flex-1 items-center justify-end px-3 sm:px-4">
-              <NavLinks pathname={pathname} />
+            <div className="flex min-w-0 flex-1 h-full items-center justify-between px-3 sm:px-4">
+              <NavTabs pathname={pathname} />
+              <NavActions />
             </div>
           </div>
         ) : (
-          <div className="site-shell flex h-14 items-center gap-2 px-3 sm:px-4">
-            <LogoLink className="mr-auto" />
-            <NavLinks pathname={pathname} />
+          <div className="site-shell flex h-14 items-center justify-between px-3 sm:px-4">
+            <div className="flex items-center h-full gap-4 sm:gap-8">
+              <LogoLink />
+              <NavTabs pathname={pathname} />
+            </div>
+            <NavActions />
           </div>
         )}
       </div>
