@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/bookmarks_controller.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
+import '../../../shared/widgets/app_dialog.dart';
 import '../../../core/theme/app_colors.dart';
 
 class CollectionDetailsView extends StatefulWidget {
@@ -211,36 +212,14 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
     );
   }
 
-  void _confirmDeleteBookmark(BuildContext context, String verseKey) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete Bookmark'),
-          content: const Text(
-            'Are you sure you want to delete this bookmark? This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _controller.deleteBookmark(verseKey);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+  void _confirmDeleteBookmark(BuildContext context, String verseKey) async {
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Delete bookmark',
+      message: 'This bookmark will be permanently deleted.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
+    if (confirmed == true) _controller.deleteBookmark(verseKey);
   }
 }

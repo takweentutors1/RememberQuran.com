@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../core/models/reciter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive_layout.dart';
+import '../controllers/audio_controller.dart';
+import '../views/widgets/waveform_bars.dart';
 
 /// Shared reciter-picker bottom sheet. Previously private to
 /// `RadioView._showReciterPicker`, which meant reciter selection only
@@ -60,12 +63,19 @@ void showReciterPicker({
                         backgroundColor: isSelected
                             ? brandGold.withOpacity(0.2)
                             : theme.cardColor,
-                        child: Icon(
-                          Icons.person,
-                          color: isSelected
-                              ? brandGold
-                              : theme.iconTheme.color,
-                        ),
+                        // The active reciter gets a tiny live waveform
+                        // (matching the playing/paused state) instead of a
+                        // generic person icon, so the selected row reads as
+                        // "this one is actually sounding right now," not
+                        // just "this one is picked."
+                        child: isSelected
+                            ? Obx(() => WaveformBars(
+                                  isPlaying: Get.find<AudioController>().rxIsPlaying.value,
+                                  color: brandGold,
+                                  height: 16,
+                                  barWidth: 2,
+                                ))
+                            : Icon(Icons.headphones_rounded, color: theme.iconTheme.color),
                       ),
                       title: Text(
                         r.name,

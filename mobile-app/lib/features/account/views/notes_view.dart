@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/note.dart';
 
 import '../../../shared/widgets/loading_skeleton.dart';
+import '../../../shared/widgets/app_dialog.dart';
 import '../../../core/utils/responsive_layout.dart';
 
 class NotesView extends GetView<NotesController> {
@@ -177,30 +178,13 @@ class NotesView extends GetView<NotesController> {
     return Dismissible(
       key: Key(note.verseKey),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (direction) async {
-        return await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text("Delete Note"),
-              content: const Text(
-                "Are you sure you want to delete this note? This cannot be undone.",
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text("Cancel"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: const Text("Delete"),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      confirmDismiss: (direction) => AppDialog.confirm(
+        context,
+        title: 'Delete note',
+        message: 'This note will be permanently deleted.',
+        confirmLabel: 'Delete',
+        isDestructive: true,
+      ),
       onDismissed: (_) {
         controller.deleteNote(note.verseKey);
       },

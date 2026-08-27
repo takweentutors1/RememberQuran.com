@@ -25,4 +25,26 @@ class AudioRemoteDataSource {
     
     return files.first as Map<String, dynamic>;
   }
+
+  /// True if the qdc API confirms this reciter has no audio for this
+  /// chapter (a 200 response with an empty `audio_files` array). Used for
+  /// availability probing, which needs to tell "confirmed absent" apart
+  /// from "request failed" (timeout, DNS hiccup, 5xx) — the latter must
+  /// never be treated as absent, so this returns null on any failure
+  /// instead of throwing, letting the caller fail open exactly like a
+  /// timed-out HEAD probe would.
+  Future<bool?> isChapterAudioMissing(int reciterId, int chapterId) async {
+    final url = Uri.parse('$_baseUrl/audio/reciters/$reciterId/audio_files?chapter=$chapterId');
+    try {
+      final response = await http
+          .get(url, headers: {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 5));
+      if (response.statusCode != 200) return null;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final files = data['audio_files'] as List<dynamic>?;
+      return files == null || files.isEmpty;
+    } catch (_) {
+      return null;
+    }
+  }
 }

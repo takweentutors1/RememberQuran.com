@@ -11,12 +11,18 @@ import '../../widgets/reciter_selector.dart';
 import 'radio_art_card.dart';
 
 class AudioPlayerSheet extends StatefulWidget {
-  const AudioPlayerSheet({Key? key}) : super(key: key);
+  final bool expandSettings;
 
-  static void show(BuildContext context) {
+  const AudioPlayerSheet({Key? key, this.expandSettings = false}) : super(key: key);
+
+  /// [expandSettings] opens straight to Playback Settings pre-expanded — the
+  /// mini player's settings shortcut uses this so a user reaching for
+  /// speed/repeat doesn't have to open the sheet and then also find and tap
+  /// the collapsed "Playback Settings" tile before seeing any controls.
+  static void show(BuildContext context, {bool expandSettings = false}) {
     showResponsiveSheet(
       context: context,
-      builder: (_) => const AudioPlayerSheet(),
+      builder: (_) => AudioPlayerSheet(expandSettings: expandSettings),
     );
   }
 
@@ -372,6 +378,7 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
       // flush inside the sheet instead of looking like a stray line.
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
+        initiallyExpanded: widget.expandSettings,
         tilePadding: EdgeInsets.zero,
         title: const Text(
           'Playback Settings',

@@ -1,57 +1,91 @@
 import 'package:flutter/material.dart';
 
+/// RememberQuran design system palette — jade green (brand/primary action),
+/// gold (decoration and reverence, never a button), warm cream paper, and a
+/// warm (never blue-grey) ink neutral ramp. See the design system's
+/// Colour section for the source tokens this file mirrors.
 class AppColors {
+  // Brand ramp — shared across light/dark, referenced directly by
+  // components that need the raw brand colour rather than a semantic role
+  // (e.g. a medallion border, a gradient stop).
+  static const Color jade400 = Color(0xFF3FC09B); // dark-mode primary (lifted for contrast)
+  static const Color jade500 = Color(0xFF2AA583);
+  static const Color jade700 = Color(0xFF0E6B57); // light-mode primary button
+  static const Color jade800 = Color(0xFF0C5F4D); // hover / deep ink inside the mark
+  static const Color jade900 = Color(0xFF0A4F40); // active/pressed
+
+  static const Color gold300 = Color(0xFFE6C982);
+  static const Color gold600 = Color(0xFFB58A45);
+
+  static const Color cream50 = Color(0xFFFDFBF6); // page
+  static const Color cream200 = Color(0xFFF4EEDE); // tinted hero/band
+
+  // Warm ink ramp — never blue-grey, never pure black.
+  static const Color ink200 = Color(0xFFE4DFD3);
+  static const Color ink500 = Color(0xFF7A7568);
+  static const Color ink800 = Color(0xFF3A352C);
+  static const Color ink900 = Color(0xFF241F17); // mushaf text
+  static const Color ink950 = Color(0xFF17140F); // dark-mode ground
+
+  // Semantic hues — deliberately desaturated so no status competes with jade.
+  static const Color info500 = Color(0xFF3D7EA6);
+  static const Color success500 = Color(0xFF2F8F5B);
+  static const Color warn500 = Color(0xFFB8801F);
+  static const Color danger500 = Color(0xFFB04437);
+
   // Light Mode Colors
-  static const Color lightBackground = Color(0xFFFBFAF7);
-  static const Color lightForeground = Color(0xFF15161A);
+  static const Color lightBackground = cream50;
+  static const Color lightForeground = ink800;
   static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightCardForeground = Color(0xFF15161A);
+  static const Color lightCardForeground = ink800;
   static const Color lightPopover = Color(0xFFFFFFFF);
-  static const Color lightPopoverForeground = Color(0xFF15161A);
-  static const Color lightPrimary = Color(0xFF15161A);
+  static const Color lightPopoverForeground = ink800;
+  static const Color lightPrimary = jade700;
   static const Color lightPrimaryForeground = Color(0xFFFFFFFF);
-  static const Color lightSecondary = Color(0xFFF2F0EA);
-  static const Color lightSecondaryForeground = Color(0xFF15161A);
-  static const Color lightMuted = Color(0xFFF2F0EA);
-  static const Color lightMutedForeground = Color(0xFF53565E);
-  static const Color lightAccent = Color(0xFFEEEDE8);
-  static const Color lightAccentForeground = Color(0xFF15161A);
-  static const Color lightDestructive = Color(0xFFC0392B); // Approx oklch(0.52 0.16 27)
-  static const Color lightBorder = Color(0xFFE8E5DD);
-  static const Color lightInput = Color(0xFFD3CFC4);
-  static const Color lightRing = Color(0xFFB07C22);
-  
+  static const Color lightSecondary = cream200;
+  static const Color lightSecondaryForeground = ink800;
+  static const Color lightMuted = cream200;
+  static const Color lightMutedForeground = ink500;
+  static const Color lightAccent = Color(0xFFE3F3EE); // surface-accent-soft (jade tint)
+  static const Color lightAccentForeground = jade700;
+  static const Color lightDestructive = danger500;
+  static const Color lightBorder = ink200;
+  static const Color lightInput = ink200;
+  static const Color lightRing = jade700; // focus ring is jade, not gold
+
   // Nur extensions (Light)
-  static const Color lightSurfaceSunk = Color(0xFFE9E6DE);
-  static const Color lightForegroundSubtle = Color(0xFF8A8D95);
-  static const Color lightForegroundFaint = Color(0xFFB4B6BC);
-  static const Color lightBorderStrong = Color(0xFFD3CFC4);
-  static const Color lightBrandGold = Color(0xFFB07C22);
-  static const Color lightBrandGoldStrong = Color(0xFF8A5F16);
-  static const Color lightBrandGoldSoft = Color(0xFFFAF0DC);
-  static const Color lightReaderInk = Color(0xFF0D0E11);
+  static const Color lightSurfaceSunk = cream200;
+  static const Color lightForegroundSubtle = ink500;
+  static const Color lightForegroundFaint = Color(0xFFA79F8E);
+  static const Color lightBorderStrong = Color(0xFFC9C2B0);
+  static const Color lightBrandGold = gold600; // readable gold-on-cream
+  static const Color lightBrandGoldStrong = Color(0xFF96702E);
+  static const Color lightBrandGoldSoft = Color(0xFFF7EDD9);
+  static const Color lightReaderInk = ink900;
 
-  // Dark Mode Colors
-  static const Color darkBackground = Color(0xFF0C0C0E);
-  static const Color darkForeground = Color(0xFFF2F1ED);
-  static const Color darkCard = Color(0xFF151618);
-  static const Color darkCardForeground = Color(0xFFF2F1ED);
-  static const Color darkPopover = Color(0xFF151618);
-  static const Color darkPopoverForeground = Color(0xFFF2F1ED);
-  static const Color darkPrimary = Color(0xFFF2F1ED);
-  static const Color darkPrimaryForeground = Color(0xFF0C0C0E);
-  static const Color darkSecondary = Color(0xFF1D1E22);
-  static const Color darkSecondaryForeground = Color(0xFFF2F1ED);
-  static const Color darkMuted = Color(0xFF1D1E22);
-  static const Color darkMutedForeground = Color(0xFFA6A8AE);
-  static const Color darkAccent = Color(0xFF1C1D20);
-  static const Color darkAccentForeground = Color(0xFFF2F1ED);
-  static const Color darkDestructive = Color(0xFFE74C3C); // Approx oklch(0.65 0.17 27)
-  static const Color darkBorder = Color(0xFF232427);
-  static const Color darkInput = Color(0xFF33353A);
-  static const Color darkRing = Color(0xFFE0AE55);
+  // Dark Mode Colors — a reading mode, not an inverted UI.
+  static const Color darkBackground = ink950;
+  static const Color darkForeground = Color(0xFFF7F4EC);
+  static const Color darkCard = Color(0xFF211D17);
+  static const Color darkCardForeground = Color(0xFFF7F4EC);
+  static const Color darkPopover = Color(0xFF211D17);
+  static const Color darkPopoverForeground = Color(0xFFF7F4EC);
+  static const Color darkPrimary = jade400; // jade lifted for contrast on dark ground
+  static const Color darkPrimaryForeground = ink950;
+  static const Color darkSecondary = Color(0xFF2A251D);
+  static const Color darkSecondaryForeground = Color(0xFFF7F4EC);
+  static const Color darkMuted = Color(0xFF2A251D);
+  static const Color darkMutedForeground = Color(0xFFB7AE9C);
+  static const Color darkAccent = Color(0xFF16302A); // dark jade tint
+  static const Color darkAccentForeground = jade400;
+  static const Color darkDestructive = Color(0xFFD0685A); // lightened danger for dark contrast
+  static const Color darkBorder = Color(0xFF332D23);
+  static const Color darkInput = Color(0xFF332D23);
+  static const Color darkRing = jade400;
 
-  // Tajweed Colors - Light
+  // Tajweed Colors - Light (pedagogical colour-coding, unrelated to brand
+  // palette — left as-is; each rule must stay visually distinct regardless
+  // of the surrounding rebrand).
   static const Color lightTajweedGhunnah = Color(0xFFD97706); // Amber/Orange
   static const Color lightTajweedIkhfa = Color(0xFF9333EA); // Purple
   static const Color lightTajweedIdgham = Color(0xFF16A34A); // Green
@@ -61,14 +95,14 @@ class AppColors {
   static const Color lightTajweedSilent = Color(0xFF9CA3AF); // Gray
 
   // Nur extensions (Dark)
-  static const Color darkSurfaceSunk = Color(0xFF08080A);
-  static const Color darkForegroundSubtle = Color(0xFF74767C);
-  static const Color darkForegroundFaint = Color(0xFF54565C);
-  static const Color darkBorderStrong = Color(0xFF33353A);
-  static const Color darkBrandGold = Color(0xFFE0AE55);
-  static const Color darkBrandGoldStrong = Color(0xFFF0C378);
-  static const Color darkBrandGoldSoft = Color(0xFF221A0C);
-  static const Color darkReaderInk = Color(0xFFF7F5F0);
+  static const Color darkSurfaceSunk = Color(0xFF100E0A);
+  static const Color darkForegroundSubtle = Color(0xFF9C9380);
+  static const Color darkForegroundFaint = Color(0xFF6E6656);
+  static const Color darkBorderStrong = Color(0xFF453D30);
+  static const Color darkBrandGold = gold300; // gold kept at --gold-300 in dark mode
+  static const Color darkBrandGoldStrong = Color(0xFFF0DBA8);
+  static const Color darkBrandGoldSoft = Color(0xFF2E2716);
+  static const Color darkReaderInk = Color(0xFFF7F4EC);
 
   // Tajweed Colors - Dark
   static const Color darkTajweedGhunnah = Color(0xFFF59E0B);

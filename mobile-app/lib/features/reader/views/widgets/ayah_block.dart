@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +19,7 @@ import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_controller.dart';
 import '../../../account/controllers/auth_controller.dart';
 import '../../../account/views/collection_picker_sheet.dart';
+import '../../../../shared/widgets/surah_medallion.dart';
 
 class AyahBlock extends StatelessWidget {
   final Verse verse;
@@ -46,6 +46,7 @@ class AyahBlock extends StatelessWidget {
     final nurColors = theme.extension<NurColorsExtension>();
     final settings = Get.find<ReaderSettingsController>();
     final audioController = Get.find<AudioController>();
+    final readerController = Get.find<ReaderController>();
 
     return Obx(() {
       final isVerseActive =
@@ -66,18 +67,26 @@ class AyahBlock extends StatelessWidget {
           ? activeTranslationRows.first.translationText
           : '';
 
+      // The ayah actually being recited gets the jade "now playing" wash —
+      // distinct from merely-active-but-paused (kept on the softer gold
+      // wash), so "this is what's sounding right now" reads at a glance
+      // instead of every visited/selected ayah looking the same.
+      final jade = theme.colorScheme.primary;
+
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
         decoration: BoxDecoration(
-          color: isVerseActive
-              ? (nurColors?.brandGoldSoft ??
-                    theme.colorScheme.primary.withOpacity(0.05))
-              : null,
+          color: isPlayingThisVerse
+              ? jade.withOpacity(0.10)
+              : isVerseActive
+                  ? (nurColors?.brandGoldSoft ??
+                        theme.colorScheme.primary.withOpacity(0.05))
+                  : null,
           border: Border(
             bottom: BorderSide(
-              color:
-                  nurColors?.borderStrong ??
-                  theme.dividerColor.withOpacity(0.1),
+              color: isPlayingThisVerse
+                  ? jade.withOpacity(0.3)
+                  : (nurColors?.borderStrong ?? theme.dividerColor.withOpacity(0.1)),
             ),
           ),
         ),
@@ -87,28 +96,7 @@ class AyahBlock extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        nurColors?.surfaceSunk ??
-                        theme.colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    verse.verseKey,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          nurColors?.brandGoldStrong ??
-                          theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
+                SurahMedallion(number: verse.verseNumber, size: 28),
                 const SizedBox(width: 8),
                 AnimatedActionButton(
                   icon: Icon(
@@ -315,57 +303,69 @@ class AyahBlock extends StatelessWidget {
             ),
             if (activeTranslationRows.isNotEmpty) const SizedBox(height: 24),
             for (final t in activeTranslationRows)
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Container(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      left: BorderSide(
-                        color: nurColors?.brandGoldSoft ?? theme.dividerColor,
-                        width: 3,
-                      ),
-                    ),
-                  ),
-                  child: Directionality(
-                    textDirection:
-                        (getTranslationResource(t.resourceId)?.isRtl ?? false)
-                        ? TextDirection.rtl
-                        : TextDirection.ltr,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          t.translationText,
-                          style: TextStyle(
-                            fontSize: context.responsiveBaseTextSize,
-                            height: 1.6,
-                            color:
-                                nurColors?.foregroundSubtle ??
-                                theme.textTheme.bodyLarge?.color?.withOpacity(
-                                  0.9,
-                                ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '— ${getTranslationName(t.resourceId)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color:
-                                nurColors?.foregroundFaint ??
-                                theme.textTheme.bodySmall?.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              _buildTranslationRow(context, theme, nurColors, readerController, t),
           ],
         ),
       );
     });
+  }
+
+  /// "Surah N:N · Translator" — matches the attribution format used
+  /// elsewhere for quoted verses (e.g. the Ayah of the Day card), rather
+  /// than the bare "— Translator" this used to show on its own.
+  Widget _buildTranslationRow(
+    BuildContext context,
+    ThemeData theme,
+    NurColorsExtension? nurColors,
+    ReaderController readerController,
+    VerseTranslation t,
+  ) {
+    final surahName = readerController.chapter.value?.nameSimple;
+    final reference = (surahName == null || surahName.isEmpty)
+        ? verse.verseKey
+        : '$surahName ${verse.verseKey}';
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: Container(
+        padding: const EdgeInsets.only(left: 16.0),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: nurColors?.brandGoldSoft ?? theme.dividerColor,
+              width: 3,
+            ),
+          ),
+        ),
+        child: Directionality(
+          textDirection: (getTranslationResource(t.resourceId)?.isRtl ?? false)
+              ? TextDirection.rtl
+              : TextDirection.ltr,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                t.translationText,
+                style: TextStyle(
+                  fontSize: context.responsiveBaseTextSize,
+                  height: 1.6,
+                  color: nurColors?.foregroundSubtle ??
+                      theme.textTheme.bodyLarge?.color?.withOpacity(0.9),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '$reference · ${getTranslationName(t.resourceId)}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: nurColors?.foregroundFaint ?? theme.textTheme.bodySmall?.color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

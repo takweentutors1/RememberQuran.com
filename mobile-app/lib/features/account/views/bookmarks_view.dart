@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/bookmarks_controller.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
+import '../../../../shared/widgets/app_dialog.dart';
 import '../../../core/theme/app_colors.dart';
 
 class BookmarksView extends GetView<BookmarksController> {
@@ -294,69 +295,25 @@ class BookmarksView extends GetView<BookmarksController> {
     );
   }
 
-  void _confirmDeleteCollection(BuildContext context, String collectionId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete Collection?'),
-          content: const Text(
-            'Are you sure you want to delete this collection? Any bookmarks inside will be moved to Favourites.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                controller.deleteCollection(collectionId);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+  void _confirmDeleteCollection(BuildContext context, String collectionId) async {
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Delete collection',
+      message: 'Any bookmarks inside will be moved to Favourites.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
+    if (confirmed == true) controller.deleteCollection(collectionId);
   }
 
-  void _confirmDeleteNote(BuildContext context, String verseKey) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete Note'),
-          content: const Text(
-            'Are you sure you want to delete this note? This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                controller.deleteNote(verseKey);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+  void _confirmDeleteNote(BuildContext context, String verseKey) async {
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Delete note',
+      message: 'This note will be permanently deleted.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
+    if (confirmed == true) controller.deleteNote(verseKey);
   }
 }

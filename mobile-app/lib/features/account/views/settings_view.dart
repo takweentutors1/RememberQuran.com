@@ -316,9 +316,9 @@ class _SettingsViewState extends State<SettingsView> {
 
     Get.dialog(
       AlertDialog(
-        title: const Text(
+        title: Text(
           'Delete Account',
-          style: TextStyle(color: Colors.red),
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
         ),
         content: Form(
           key: formKey,

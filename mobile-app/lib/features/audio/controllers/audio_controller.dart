@@ -8,7 +8,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart' show Color, Path, Paint, Rect, Size;
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart' show PlayerException;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -116,6 +115,16 @@ class AudioController extends GetxController {
   final Rxn<String> rxActiveVerseKey = Rxn<String>();
   final Rxn<int> rxActiveWordPosition = Rxn<int>();
 
+  /// Chapter duration reported directly by the qdc audio_files API (already
+  /// fetched for timings/word-sync — this is just its `duration` field).
+  /// The Radio progress bar prefers this over MediaItem.duration, which
+  /// depends on just_audio's own durationStream firing — for a streamed
+  /// LockCachingAudioSource that can lag or never fire promptly, leaving
+  /// the progress bar stuck at 0:00/0:00 even while audio is audibly
+  /// playing. The API already knows the answer up front; no reason to wait
+  /// on the player to figure it out too.
+  final Rxn<Duration> rxKnownDuration = Rxn<Duration>();
+
   List<CleanVerseTiming> _timings = [];
   bool _hasWordTiming = false;
   int _lastVerseIdx = -1;
@@ -194,18 +203,17 @@ class AudioController extends GetxController {
     }
   }
 
-  /// HEAD-probes one surah's mp3. Only an explicit 404/410 counts as
-  /// "missing" — any other outcome (timeout, DNS hiccup, 5xx) is treated as
+  /// Confirms whether a surah is missing for this reciter via the same qdc
+  /// API that actually serves playback (see _loadAndPlayChapter) — probing
+  /// used to HEAD-request Reciter.baseUrl, a separate hardcoded CDN
+  /// (cdn.islamic.network) unrelated to what's actually streamed, so a
+  /// surah could be marked available/unavailable based on a CDN the app no
+  /// longer plays from. Only a confirmed-empty response counts as
+  /// "missing"; any failure (timeout, DNS hiccup, 5xx) is treated as
   /// present, so a flaky connection can never hide a surah that would
   /// actually have played fine.
-  Future<bool> _probeSurahMissing(String baseUrl, int surahId) async {
-    final url = Uri.parse('$baseUrl${surahId.toString().padLeft(3, '0')}.mp3');
-    try {
-      final response = await http.head(url).timeout(const Duration(seconds: 5));
-      return response.statusCode == 404 || response.statusCode == 410;
-    } catch (_) {
-      return false;
-    }
+  Future<bool> _probeSurahMissing(int reciterId, int surahId) async {
+    return await _audioRemoteDs.isChapterAudioMissing(reciterId, surahId) ?? false;
   }
 
   void _onReciterChangedForAvailability(int reciterId) {
@@ -257,30 +265,17 @@ class AudioController extends GetxController {
       return;
     }
 
-    final reciter = getReciter(reciterId);
-    if (reciter.baseUrl.isEmpty) {
-      // Nothing to probe — cache "no known-unavailable surahs" so this
-      // reciter isn't re-checked on every switch, same as a real result.
-      _unavailableByReciter[reciterId] = const <int>{};
-      _availabilityChecksInFlight.remove(reciterId);
-      if (rxCurrentReciterId.value == reciterId) {
-        rxUnavailableSurahIds.clear();
-        rxIsValidatingAvailability.value = false;
-      }
-      return;
-    }
-
     if (rxCurrentReciterId.value == reciterId) rxIsValidatingAvailability.value = true;
     final unavailable = <int>{};
     try {
-      // Bounded concurrency: 114 HEAD requests fire in small batches rather
-      // than all at once, which is kinder to the CDN and to flaky mobile
-      // connections while still finishing in a couple of seconds.
+      // Bounded concurrency: 114 qdc API requests fire in small batches
+      // rather than all at once, which is kinder to the API and to flaky
+      // mobile connections while still finishing in a couple of seconds.
       const chunkSize = 12;
       for (var start = 1; start <= 114; start += chunkSize) {
         final end = (start + chunkSize - 1) > 114 ? 114 : start + chunkSize - 1;
         final results = await Future.wait([
-          for (var id = start; id <= end; id++) _probeSurahMissing(reciter.baseUrl, id),
+          for (var id = start; id <= end; id++) _probeSurahMissing(reciterId, id),
         ]);
         for (var i = 0; i < results.length; i++) {
           if (results[i]) unavailable.add(start + i);
@@ -421,6 +416,26 @@ class AudioController extends GetxController {
     _highlightTimer = null;
   }
 
+  /// Clears the "an ayah is actively playing" UI state — rxActiveVerseKey/
+  /// rxActiveWordPosition, which drive the pause icon and gold highlight on
+  /// ayah_block — and makes sure the underlying player is actually paused.
+  /// Call this everywhere Radio gives up on playback (rxHasAudio flips to
+  /// false due to a failure, as opposed to a normal stop()/pause()) so a
+  /// stale highlight can't outlive the player it was describing. Without
+  /// this, a Radio session that fails on, say, Al-Fatihah ayah 3 left
+  /// rxActiveVerseKey stuck at "1:3" and rxIsPlaying stuck true — so
+  /// opening the Reader for that chapter showed ayah 3 with a pause icon
+  /// and gold highlight even though rxHasAudio was already false and the
+  /// MiniPlayer had disappeared entirely.
+  void _resetActiveHighlight() {
+    _lastVerseIdx = -1;
+    _lastWordPos = null;
+    rxActiveVerseKey.value = null;
+    rxActiveWordPosition.value = null;
+    rxKnownDuration.value = null;
+    unawaited(_audioHandler.pause());
+  }
+
   @override
   void onClose() {
     _stopHighlightTimer();
@@ -515,6 +530,9 @@ class AudioController extends GetxController {
     _lastWordPos = null;
     rxActiveVerseKey.value = null;
     rxActiveWordPosition.value = null;
+
+    final durationMs = audioFile['duration'] as num?;
+    rxKnownDuration.value = durationMs != null ? Duration(milliseconds: durationMs.toInt()) : null;
   }
 
   /// Best-effort timings fetch for locally downloaded chapters — the mp3 is
@@ -534,6 +552,7 @@ class AudioController extends GetxController {
       _lastWordPos = null;
       rxActiveVerseKey.value = null;
       rxActiveWordPosition.value = null;
+      rxKnownDuration.value = null;
       return null;
     }
   }
@@ -577,6 +596,7 @@ class AudioController extends GetxController {
         if (rxRadioFailStreak.value >= 2) {
           rxIsRadioMode.value = false;
           rxHasAudio.value = false;
+          _resetActiveHighlight();
           AppFeedback.showError(
             'Could not play this surah. Check your connection and try again.',
             title: 'Playback error',
@@ -812,6 +832,7 @@ class AudioController extends GetxController {
     _lastWordPos = null;
     rxActiveVerseKey.value = null;
     rxActiveWordPosition.value = null;
+    rxKnownDuration.value = null;
     _lastSurahId = null;
     _hasPrefetchedNextSurah = false;
     _clearSleepTimer();
@@ -1019,13 +1040,32 @@ class AudioController extends GetxController {
       // non-downloaded surah from ever loading. rxIsOffline is now only
       // consulted reactively, in _handleChapterLoadFailure, to pick smarter
       // recovery/wording *after* a load has actually failed for real.
-      final String audioSource = isLocal
-          ? Uri.file(localPath).toString()
-          : '${reciter.baseUrl}${surahId.toString().padLeft(3, '0')}.mp3';
+      final String audioSource;
+      if (isLocal) {
+        audioSource = Uri.file(localPath).toString();
+        // Downloaded chapters don't need to wait on this — it's best-effort
+        // highlight data, not required for the already-local file to play.
+        _timingFetchFuture = _fetchAndApplyTimings(reciterId, surahId);
+      } else {
+        // Primary source of truth for a *streamed* chapter: Quran.com's own
+        // qdc API — the same call already needed for verse timings — also
+        // returns audio_url, the canonical file on download.quranicaudio.com
+        // (Quran.com's own audio CDN). This used to be discarded in favor of
+        // a hardcoded cdn.islamic.network URL built from Reciter.baseUrl: an
+        // unofficial, community-run mirror with its own per-reciter path
+        // quirks, rate limits, and no relation to the CDN timings actually
+        // came from. Falling back to that hardcoded pattern only when the
+        // qdc call itself fails keeps some resilience for a brief API outage
+        // without making the unofficial mirror the everyday playback path.
+        final timingsFuture = _fetchAndApplyTimings(reciterId, surahId);
+        _timingFetchFuture = timingsFuture;
+        final audioFile = await timingsFuture;
+        final officialUrl = audioFile?['audio_url'] as String?;
+        audioSource = (officialUrl != null && officialUrl.isNotEmpty)
+            ? officialUrl
+            : '${reciter.baseUrl}${surahId.toString().padLeft(3, '0')}.mp3';
+      }
 
-      // Kick off timings + chapter DB lookup concurrently — neither depends on
-      // the other and both can run while we build the MediaItem.
-      _timingFetchFuture = _fetchAndApplyTimings(reciterId, surahId);
       final chapter = await _db.getChapter(surahId);
 
       final mediaItem = MediaItem(
@@ -1098,6 +1138,7 @@ class AudioController extends GetxController {
       }
       rxIsRadioMode.value = false;
       rxHasAudio.value = false;
+      _resetActiveHighlight();
       AppFeedback.showError(
         'You\'re offline. Download surahs to keep listening without a connection.',
         title: 'No offline audio',
@@ -1116,6 +1157,7 @@ class AudioController extends GetxController {
       // "on" with nothing loaded and no feedback.
       rxIsRadioMode.value = false;
       rxHasAudio.value = false;
+      _resetActiveHighlight();
       AppFeedback.showError(
         'Could not reach the audio server. Check your connection and try again.',
         title: 'Playback error',

@@ -649,7 +649,18 @@ class _RadioViewState extends State<RadioView> {
       stream: _audioController.mediaItemStream,
       initialData: _audioController.currentMediaItem,
       builder: (context, mediaSnap) {
-        final duration = mediaSnap.data?.duration ?? Duration.zero;
+        // Prefer the duration the qdc API already told us about this
+        // chapter (rxKnownDuration) over MediaItem.duration, which depends
+        // on just_audio's own durationStream firing for a streamed source —
+        // that can lag or never land promptly, which otherwise left this
+        // progress bar stuck at 0:00/0:00 even while audio was audibly
+        // playing. Still prefers the player's own value once it's actually
+        // known, since that reflects the real file rather than the API's
+        // metadata.
+        final mediaDuration = mediaSnap.data?.duration ?? Duration.zero;
+        final duration = mediaDuration > Duration.zero
+            ? mediaDuration
+            : (_audioController.rxKnownDuration.value ?? Duration.zero);
         return StreamBuilder<PlaybackState>(
           stream: _audioController.playbackStateStream,
           initialData: _audioController.currentPlaybackState,
@@ -1144,41 +1155,38 @@ class _RadioViewState extends State<RadioView> {
     });
   }
 
-  // LayoutBuilder + ConstrainedBox(minHeight) + IntrinsicHeight lets the
-  // Expanded center section keep centering content on tall screens while
-  // still allowing the whole column to scroll instead of overflowing on
-  // short ones (small phones, or with the keyboard/large text scale up).
+  // A plain scrollable Column — every section renders at its natural size
+  // and the whole thing scrolls if it doesn't fit, so nothing is ever
+  // squeezed or clipped regardless of viewport height. This replaces an
+  // earlier LayoutBuilder + ConstrainedBox(minHeight) + IntrinsicHeight +
+  // Expanded combo that tried to also vertically center content on tall
+  // screens — IntrinsicHeight's height computation for a Column with an
+  // Expanded child doesn't reliably shrink to the *actually available*
+  // space once RadioView is hosted inside AppScaffold's tab area (which has
+  // materially less height than a full-screen route), so on some devices
+  // the facts panel and the reciter/surah picker pills below it were being
+  // squeezed into a sliver and clipped behind the bottom nav bar — visible
+  // but unreadable and untappable. Trades away perfect vertical centering
+  // on tall screens for guaranteed-visible, guaranteed-tappable content on
+  // every screen height.
   Widget _buildMobileLayout(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: IntrinsicHeight(
-              child: Column(
-                children: [
-                  _buildTopBar(context),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildArtwork(context),
-                        const SizedBox(height: 24),
-                        _buildTrackInfo(context),
-                      ],
-                    ),
-                  ),
-                  _buildPlayControls(context),
-                  const SizedBox(height: 32),
-                  _buildFactsPanel(context),
-                  const SizedBox(height: 8),
-                  _buildBottomSheetButtons(context),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildTopBar(context),
+          const SizedBox(height: 8),
+          _buildArtwork(context),
+          const SizedBox(height: 24),
+          _buildTrackInfo(context),
+          const SizedBox(height: 16),
+          _buildPlayControls(context),
+          const SizedBox(height: 32),
+          _buildFactsPanel(context),
+          const SizedBox(height: 8),
+          _buildBottomSheetButtons(context),
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 

@@ -29,8 +29,9 @@ Future<QuranAudioHandler> initAudioService() async {
 
 class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   final String cacheDirPath;
-  final _player = AudioPlayer();
-  final _prefetchPlayer = AudioPlayer();
+  static const _ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1';
+  final _player = AudioPlayer(userAgent: _ua);
+  final _prefetchPlayer = AudioPlayer(userAgent: _ua);
 
   /// Fires ~4x/sec during playback — the drive signal for word-by-word sync.
   Stream<Duration> get positionStream => _player.positionStream;
@@ -202,9 +203,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         return LockCachingAudioSource(
           uri,
           tag: item,
-          headers: const {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-          },
         );
       } else {
         return AudioSource.uri(uri, tag: item);
@@ -233,9 +231,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         return LockCachingAudioSource(
           uri,
           tag: item,
-          headers: const {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-          },
         );
       } else {
         return AudioSource.uri(uri, tag: item);

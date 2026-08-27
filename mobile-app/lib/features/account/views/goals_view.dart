@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:rememberquran/core/theme/app_theme.dart';
 import 'package:rememberquran/core/theme/app_colors.dart';
 import 'package:rememberquran/data/models/goal.dart';
 import 'package:rememberquran/features/account/controllers/goals_controller.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
+import '../../../../shared/widgets/app_dialog.dart';
 import '../../../core/utils/responsive_layout.dart';
 
 class GoalsView extends GetView<GoalsController> {
@@ -124,46 +124,15 @@ class GoalsView extends GetView<GoalsController> {
           ),
           const SizedBox(height: 12),
           TextButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  final nurColors = Theme.of(
-                    context,
-                  ).extension<NurColorsExtension>();
-                  return AlertDialog(
-                    backgroundColor:
-                        nurColors?.surfaceSunk ??
-                        Theme.of(context).colorScheme.surface,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    title: const Text('Clear Goal'),
-                    content: const Text(
-                      'Are you sure you want to remove your daily goal?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      FilledButton(
-                        onPressed: () {
-                          controller.clearGoal();
-                          Navigator.pop(context);
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onError,
-                        ),
-                        child: const Text('Clear'),
-                      ),
-                    ],
-                  );
-                },
+            onPressed: () async {
+              final confirmed = await AppDialog.confirm(
+                context,
+                title: 'Clear goal',
+                message: 'This removes your daily reading goal.',
+                confirmLabel: 'Clear',
+                isDestructive: true,
               );
+              if (confirmed == true) controller.clearGoal();
             },
             child: Text(
               'Clear Goal',

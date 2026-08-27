@@ -3,6 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/theme/app_motion.dart';
+import '../../core/theme/app_radius.dart';
 import 'app_mascot.dart';
 
 /// Centralised success/error toast styling so every part of the app reports
@@ -144,8 +147,8 @@ class _CenteredToastState extends State<_CenteredToast>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 220),
-      reverseDuration: const Duration(milliseconds: 160),
+      duration: AppMotion.durSlow,
+      reverseDuration: AppMotion.durBase,
     );
     _controller.forward();
     _autoDismissTimer = Timer(widget.displayDuration, _dismiss);
@@ -181,102 +184,100 @@ class _CenteredToastState extends State<_CenteredToast>
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: _dismiss,
-                child: FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _controller,
-                    curve: Curves.easeOut,
+                child: _buildAnimatedCard(context),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Calm, no bounce/overshoot — a fade plus a small translation and scale,
+  /// all on the same easeOut curve. (This used to end on Curves.easeOutBack,
+  /// which overshoots past 1.0 before settling back — motion the rest of
+  /// the app deliberately avoids.)
+  Widget _buildAnimatedCard(BuildContext context) {
+    final curved = CurvedAnimation(parent: _controller, curve: AppMotion.easeOut);
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween(begin: const Offset(0, -0.04), end: Offset.zero).animate(curved),
+        child: ScaleTransition(
+          scale: Tween(begin: 0.96, end: 1.0).animate(curved),
+          child: _buildCard(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 340),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: AppRadius.xl2Radius,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 40,
+                offset: const Offset(0, 16),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: AppRadius.xl2Radius,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                decoration: BoxDecoration(
+                  color: widget.background,
+                  borderRadius: AppRadius.xl2Radius,
+                  border: Border.all(
+                    color: widget.foreground.withOpacity(0.15),
+                    width: 1,
                   ),
-                  child: ScaleTransition(
-                    scale: Tween(begin: 0.9, end: 1.0).animate(
-                      CurvedAnimation(
-                        parent: _controller,
-                        curve: Curves.easeOutBack,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: AppMascot(mood: widget.mood, size: 44),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.title,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.sans(
+                        fontSize: 16,
+                        weight: FontWeight.w700,
+                        color: widget.foreground,
                       ),
                     ),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 340),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 40,
-                                offset: const Offset(0, 16),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(
-                                sigmaX: 16.0,
-                                sigmaY: 16.0,
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 24,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: widget.background,
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: widget.foreground.withOpacity(0.15),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      width: 44,
-                                      height: 44,
-                                      child: AppMascot(
-                                        mood: widget.mood,
-                                        size: 44,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      widget.title,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: widget.foreground,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      widget.message,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: widget.foreground.withOpacity(
-                                          0.9,
-                                        ),
-                                        fontSize: 13,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                    if (widget.onRetry != null) ...[
-                                      const SizedBox(height: 12),
-                                      TextButton(
-                                        onPressed: widget.onRetry,
-                                        child: Text(widget.retryLabel),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.message,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.sans(
+                        fontSize: 13,
+                        weight: FontWeight.w400,
+                        color: widget.foreground.withOpacity(0.9),
+                        height: 1.4,
                       ),
                     ),
-                  ),
+                    if (widget.onRetry != null) ...[
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: widget.onRetry,
+                        child: Text(widget.retryLabel),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),

@@ -10,7 +10,10 @@ class HomeController extends GetxController {
 
   final chapters = <Chapter>[].obs;
   final isLoading = true.obs;
-  
+
+  /// Directory filter — one of 'All', 'Makki', 'Madani'.
+  final RxString directoryFilter = 'All'.obs;
+
   late final DailyAyah ayahOfTheDay;
 
   @override
@@ -19,6 +22,20 @@ class HomeController extends GetxController {
     ayahOfTheDay = getAyahOfTheDay();
     loadChapters();
   }
+
+  /// Chapters matching the current directory filter — reactive so the
+  /// surah list rebuilds whenever [directoryFilter] or [chapters] changes.
+  List<Chapter> get filteredChapters {
+    final filter = directoryFilter.value;
+    if (filter == 'All') return chapters;
+    final wantsMakki = filter == 'Makki';
+    return chapters.where((c) {
+      final isMakki = c.revelationPlace.toLowerCase() == 'makkah';
+      return wantsMakki ? isMakki : !isMakki;
+    }).toList();
+  }
+
+  void setDirectoryFilter(String filter) => directoryFilter.value = filter;
 
   Future<void> loadChapters() async {
     isLoading.value = true;
