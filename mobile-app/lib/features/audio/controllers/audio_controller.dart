@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math' show Random;
 import 'dart:ui' as ui;
 import 'package:audio_service/audio_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart' show Color, Path, Paint, Rect, Size;
 import 'package:get/get.dart';
@@ -85,6 +86,10 @@ class AudioController extends GetxController {
   Timer? _sleepTimer;
   final rxHasAudio = false.obs;
   final rxIsBusy = false.obs;
+  /// True while just_audio is natively buffering (AudioProcessingState.loading
+  /// or .buffering). Unlike rxIsBusy, this does NOT block user interaction —
+  /// it just drives a subtle indicator on the play button.
+  final rxIsBuffering = false.obs;
 
   // Offline download state, keyed by "reciterId_chapterId"
   final RxSet<String> rxDownloadedKeys = <String>{}.obs;
@@ -100,6 +105,12 @@ class AudioController extends GetxController {
   final Map<int, Set<int>> _unavailableByReciter = {};
   final Set<int> _availabilityChecksInFlight = {};
   static const _availabilityCacheTtl = Duration(days: 30);
+
+  // Connectivity — drives Radio mode's offline fallback (only cycle through
+  // already-downloaded surahs, skip pointless network probing/loading) so
+  // airplane mode doesn't just leave playback stuck "loading" forever.
+  final RxBool rxIsOffline = false.obs;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
   // Word-by-word highlight sync — the verse/word currently being recited.
   final Rxn<String> rxActiveVerseKey = Rxn<String>();
@@ -213,11 +224,36 @@ class AudioController extends GetxController {
   Future<void> _checkReciterAvailability(int reciterId) async {
     if (!_availabilityChecksInFlight.add(reciterId)) return; // already running
 
+    // Delay the probe so it doesn't compete with initial audio buffering.
+    // The default reciter (Mishary, id=7) has all 114 surahs; skip the network
+    // probe entirely and treat him as having no unavailable surahs.
+    if (reciterId == defaultReciterId) {
+      _unavailableByReciter[reciterId] = const <int>{};
+      _availabilityChecksInFlight.remove(reciterId);
+      if (rxCurrentReciterId.value == reciterId) {
+        rxUnavailableSurahIds.clear();
+        rxIsValidatingAvailability.value = false;
+      }
+      return;
+    }
+
     final cached = await _readCachedUnavailable(reciterId);
     if (cached != null) {
       _unavailableByReciter[reciterId] = cached;
       _availabilityChecksInFlight.remove(reciterId);
       if (rxCurrentReciterId.value == reciterId) rxUnavailableSurahIds.assignAll(cached);
+      return;
+    }
+
+    // Delay probing by 3s so the initial audio buffering gets priority bandwidth.
+    await Future.delayed(const Duration(seconds: 3));
+    // If the user switched away from this reciter while we were waiting, skip.
+    if (!_availabilityChecksInFlight.contains(reciterId)) return;
+    // Offline — 114 HEAD requests would each hang until their own timeout for
+    // nothing. Bail without caching a result so this re-runs once connectivity
+    // returns (see _initConnectivity).
+    if (rxIsOffline.value) {
+      _availabilityChecksInFlight.remove(reciterId);
       return;
     }
 
@@ -283,6 +319,26 @@ class AudioController extends GetxController {
     unawaited(_prepareLockscreenArt());
     unawaited(_loadWaveformPreference());
     unawaited(_loadShufflePreference());
+    unawaited(_initConnectivity());
+
+    // Route lock-screen/notification/Bluetooth "skip" taps through the same
+    // logic the in-app buttons use, instead of the handler's no-op default
+    // (see the doc comment on QuranAudioHandler.onSkipToNext): the next/
+    // previous surah in Radio mode, or the next/previous ayah otherwise.
+    _audioHandler.onSkipToNext = () async {
+      if (rxIsRadioMode.value) {
+        await radioSkipToNext();
+      } else {
+        await skipToNext();
+      }
+    };
+    _audioHandler.onSkipToPrevious = () async {
+      if (rxIsRadioMode.value) {
+        await radioSkipToPrevious();
+      } else {
+        await skipToPrevious();
+      }
+    };
 
     // Surface load/decode/network failures instead of leaving the user with
     // silent audio and no explanation — this is what used to just print to
@@ -293,7 +349,7 @@ class AudioController extends GetxController {
       // error here too would just be noise on top of that.
       if (rxIsRadioMode.value) return;
       AppFeedback.showError(
-        'Audio failed to load. Check your connection and try again.',
+        'Audio failed to load (${e.code}: ${e.message}). Check your connection and try again.',
         title: 'Playback error',
         onRetry: _lastSurahId == null ? null : () => _loadAndPlayChapter(_lastSurahId!),
       );
@@ -327,6 +383,13 @@ class AudioController extends GetxController {
       } else {
         rxIsPlaying.value = state.playing;
       }
+
+      // Track native buffering so the UI can show a subtle spinner on the
+      // play button even after rxIsBusy is cleared (i.e., while AVPlayer
+      // is actually fetching enough data to start decoding).
+      rxIsBuffering.value =
+          state.processingState == AudioProcessingState.loading ||
+          state.processingState == AudioProcessingState.buffering;
 
       if (state.playing) {
         _startHighlightTimer();
@@ -362,7 +425,31 @@ class AudioController extends GetxController {
   void onClose() {
     _stopHighlightTimer();
     _sleepTimer?.cancel();
+    _connectivitySub?.cancel();
     super.onClose();
+  }
+
+  /// Airplane mode / no-signal detection for Radio's offline fallback.
+  /// [ConnectivityResult] only reports the OS's network *interface* state
+  /// (e.g. "no radio active"), not real internet reachability, but that's
+  /// exactly what airplane mode flips off and is enough to stop Radio from
+  /// wasting retries on a network it already knows doesn't exist.
+  Future<void> _initConnectivity() async {
+    try {
+      final result = await Connectivity().checkConnectivity();
+      rxIsOffline.value = result.every((r) => r == ConnectivityResult.none);
+    } catch (_) {
+      // Best-effort — assume online if the platform check itself fails.
+    }
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
+      final wasOffline = rxIsOffline.value;
+      rxIsOffline.value = results.every((r) => r == ConnectivityResult.none);
+      // Connection just came back — re-validate this reciter's surah
+      // availability now rather than waiting for the next reciter switch.
+      if (wasOffline && !rxIsOffline.value) {
+        _onReciterChangedForAvailability(rxCurrentReciterId.value);
+      }
+    });
   }
 
   /// Drives word-by-word highlight sync — resolves the current verse/word
@@ -567,7 +654,7 @@ class AudioController extends GetxController {
       await _audioHandler.seek(Duration(milliseconds: fromMs));
       rxActiveVerseKey.value = _timings[verseIdx].verseKey;
       rxActiveWordPosition.value = null;
-      await _audioHandler.play();
+      _playGuarded();
     }
 
     final delay = rxRepeatSettings.value.delay;
@@ -644,13 +731,37 @@ class AudioController extends GetxController {
     return pool[_shuffleRandom.nextInt(pool.length)];
   }
 
+  /// Fires [_audioHandler.play()] without blocking the caller, but — unlike
+  /// a bare `unawaited(_audioHandler.play())` — makes sure a failure (dead
+  /// network, source error, offline mid-stream) is actually handled instead
+  /// of vanishing as an unobserved Future error. just_audio flips its
+  /// internal `playing` flag to true the instant play() is called, before
+  /// it knows whether the source will actually produce sound, so an
+  /// unguarded call leaves the UI (rxIsPlaying, and anything keyed off it
+  /// like the per-ayah pause icon) stuck showing "playing" over silence
+  /// forever once the underlying request fails.
+  void _playGuarded() {
+    unawaited(_audioHandler.play().catchError((Object e, StackTrace st) {
+      FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+      if (_audioHandler.playbackState.value.playing) {
+        unawaited(_audioHandler.pause());
+      }
+      AppFeedback.showError(
+        rxIsOffline.value
+            ? 'You\'re offline and this audio isn\'t downloaded.'
+            : 'Playback failed. Check your connection and try again.',
+        title: 'Playback error',
+      );
+    }));
+  }
+
   // Interruption Fix 1: Manual navigation kills active repeat/timer
   Future<void> playAyah(int index) async {
     rxIsRadioMode.value = false;
     _currentRepeat = 0;
     _pauseTimer?.cancel();
     await _audioHandler.skipToQueueItem(index);
-    unawaited(_audioHandler.play());
+    _playGuarded();
   }
 
   // Interruption Fix 2: Manual play/pause or scrubbing kills pending pause timer
@@ -667,7 +778,7 @@ class AudioController extends GetxController {
         await _audioHandler.seek(Duration.zero);
       }
     }
-    unawaited(_audioHandler.play());
+    _playGuarded();
   }
 
   Future<void> pause() async {
@@ -764,16 +875,42 @@ class AudioController extends GetxController {
     await _audioHandler.seek(position);
   }
   
+  /// Jumps to the next/previous ayah's timestamp within the chapter that's
+  /// currently loaded, using the fetched word-timing data. There's no
+  /// per-ayah queue to skip through any more — a chapter's audio is one
+  /// continuous file, not one MediaItem per ayah (see _loadAndPlayChapter)
+  /// — so a literal _audioHandler.skipToNext()/seekToNext() call has
+  /// nothing to jump to and is a silent no-op; these had never actually
+  /// worked despite the "Previous/Next ayah" tooltips on the buttons that
+  /// call them (MiniPlayer, the reader's Now Playing sheet). A no-op here
+  /// too if timings haven't loaded (fetch failed, or this reciter has
+  /// none) or we're already at the first/last ayah.
   Future<void> skipToNext() async {
     _pauseTimer?.cancel();
     _currentRepeat = 0;
-    await _audioHandler.skipToNext();
+    await _seekToAdjacentVerse(forward: true);
   }
-  
+
   Future<void> skipToPrevious() async {
     _pauseTimer?.cancel();
     _currentRepeat = 0;
-    await _audioHandler.skipToPrevious();
+    await _seekToAdjacentVerse(forward: false);
+  }
+
+  Future<void> _seekToAdjacentVerse({required bool forward}) async {
+    if (_timings.isEmpty) return;
+    final position = _audioHandler.playbackState.value.position.inMilliseconds;
+    final currentIdx = _lastVerseIdx >= 0 ? _lastVerseIdx : findVerseIndex(_timings, position);
+    final targetIdx = forward ? currentIdx + 1 : currentIdx - 1;
+    if (targetIdx < 0 || targetIdx >= _timings.length) return;
+
+    final timing = _timings[targetIdx];
+    await _audioHandler.seek(Duration(milliseconds: timing.from));
+    _lastVerseIdx = -1;
+    _lastWordPos = null;
+    rxActiveVerseKey.value = timing.verseKey;
+    rxActiveWordPosition.value = null;
+    _playGuarded();
   }
 
   // Radio Mode Functions
@@ -869,26 +1006,26 @@ class AudioController extends GetxController {
       final reciterId = rxCurrentReciterId.value;
       final reciter = getReciter(reciterId);
       final localPath = await _audioRepository.getLocalPath(reciterId, surahId);
+      final isLocal = localPath != null;
 
-      final String audioSource;
-      if (localPath != null) {
-        audioSource = Uri.file(localPath).toString();
-        // Still need timings even if playing from local file
-        _timingFetchFuture = _fetchAndApplyTimings(reciterId, surahId);
-      } else {
-        // Fetch audio url and timings synchronously before playing
-        final audioData = await _fetchAndApplyTimings(reciterId, surahId);
-        if (audioData != null && audioData['audio_url'] != null) {
-          audioSource = audioData['audio_url'] as String;
-        } else {
-          audioSource = '${reciter.baseUrl}${surahId.toString().padLeft(3, '0')}.mp3';
-        }
-        _timingFetchFuture = Future.value();
-      }
+      // Deliberately NOT gating on rxIsOffline here. ConnectivityResult only
+      // reports which network *interface* is active, not real internet
+      // reachability — it's known to report "none" on iOS Simulators (no
+      // real radio hardware) and in other edge cases even while the device
+      // has a perfectly working connection. An earlier version of this
+      // method pre-emptively refused to even attempt a network load when
+      // rxIsOffline was true, which turned that unreliable signal into a
+      // hard outage: any false "offline" reading permanently blocked every
+      // non-downloaded surah from ever loading. rxIsOffline is now only
+      // consulted reactively, in _handleChapterLoadFailure, to pick smarter
+      // recovery/wording *after* a load has actually failed for real.
+      final String audioSource = isLocal
+          ? Uri.file(localPath).toString()
+          : '${reciter.baseUrl}${surahId.toString().padLeft(3, '0')}.mp3';
 
-      // Fetched directly (not read off rxCurrentSurahName) since that field
-      // updates via a separate reactive listener whose timing isn't
-      // guaranteed to have landed yet when this MediaItem is built.
+      // Kick off timings + chapter DB lookup concurrently — neither depends on
+      // the other and both can run while we build the MediaItem.
+      _timingFetchFuture = _fetchAndApplyTimings(reciterId, surahId);
       final chapter = await _db.getChapter(surahId);
 
       final mediaItem = MediaItem(
@@ -901,46 +1038,89 @@ class AudioController extends GetxController {
 
       await _audioHandler.updateQueue([mediaItem]);
       rxHasAudio.value = true;
-      
+
+      // Release the busy lock NOW — the play button should flip to its
+      // native play/pause state immediately. just_audio surfaces its own
+      // AudioProcessingState.buffering while the network stream loads,
+      // which the UI already listens to for the progress bar; there is no
+      // need to keep rxIsBusy true just to show a spinner.
+      rxIsBusy.value = false;
+
       // Do not await play() itself — it only completes when playback ends —
-      // but any *immediate* failure (bad URL, unsupported format) still
-      // needs to be logged, not silently dropped.
+      // but a failure (dead network mid-flight, unsupported format) still
+      // needs to reach the same recovery path a synchronous failure above
+      // gets: log it, and in Radio mode retry/advance/tell the user, instead
+      // of leaving the UI stuck showing "loaded" with silence. The
+      // _lastSurahId guard drops a stale rejection from a chapter the user
+      // has already navigated away from.
       unawaited(_audioHandler.play().catchError((Object e, StackTrace st) {
         FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+        if (_lastSurahId == surahId) unawaited(_handleChapterLoadFailure(surahId, e, audioSource));
       }));
-      // Block here until the player has actually buffered the new source.
-      // Without this, a caller that seeks right after (playVerse, "play
-      // from this ayah") races a still-loading network source — the seek
-      // is silently ignored on iOS and playback starts from 0:00 instead
-      // of the requested ayah.
-      await _audioHandler.waitUntilReady();
+
       rxRadioFailStreak.value = 0;
     } catch (e) {
-      rxRadioFailStreak.value += 1;
-      // Skip at most one broken chapter — never loop through failures indefinitely
-      if (rxIsRadioMode.value && rxRadioFailStreak.value < 2) {
-        final nextSurah = nextAvailableSurahId(surahId);
-        rxCurrentSurahId.value = nextSurah;
-        await _loadAndPlayChapter(nextSurah);
-      } else if (rxIsRadioMode.value) {
-        // Retry budget exhausted — stop instead of leaving Radio mode stuck
-        // "on" with nothing loaded and no feedback.
-        rxIsRadioMode.value = false;
-        rxHasAudio.value = false;
-        AppFeedback.showError(
-          'Could not reach the audio server. Check your connection and try again.',
-          title: 'Playback error',
-          onRetry: () => startRadio(surahId),
-        );
-      } else {
-        AppFeedback.showError(
-          'Could not play this surah. Check your connection and try again.',
-          title: 'Playback error',
-          onRetry: () => _loadAndPlayChapter(surahId),
-        );
-      }
+      await _handleChapterLoadFailure(surahId, e, 'unknown_url_sync_catch');
     } finally {
       rxIsBusy.value = false;
+    }
+  }
+
+  /// Shared recovery for a chapter that failed to load or play — reached
+  /// both from a synchronous failure in [_loadAndPlayChapter] and from
+  /// play()'s async catchError, so a dead-network/offline failure gets the
+  /// same retry/advance/error-message treatment regardless of which stage
+  /// it actually surfaces at.
+  Future<void> _handleChapterLoadFailure(int surahId, [Object? error, String? audioUrl]) async {
+    rxRadioFailStreak.value += 1;
+    if (!rxIsRadioMode.value) {
+      final urlText = audioUrl != null ? '\nURL: $audioUrl' : '';
+      AppFeedback.showError(
+        rxIsOffline.value
+            ? 'You\'re offline and this surah isn\'t downloaded.'
+            : 'Could not play this surah ($error).$urlText\nCheck your connection and try again.',
+        title: 'Playback error',
+        onRetry: () => _loadAndPlayChapter(surahId),
+      );
+      return;
+    }
+
+    // Offline in Radio mode: a plain "next surah" pick would just be
+    // another dead network URL. Cycle through downloaded surahs instead so
+    // the user can keep listening in airplane mode; only give up if nothing
+    // is downloaded at all.
+    if (rxIsOffline.value) {
+      final nextSurah = _pickNextRadioSurah(forward: true);
+      if (nextSurah != null && rxRadioFailStreak.value < 2) {
+        rxCurrentSurahId.value = nextSurah;
+        await _loadAndPlayChapter(nextSurah);
+        return;
+      }
+      rxIsRadioMode.value = false;
+      rxHasAudio.value = false;
+      AppFeedback.showError(
+        'You\'re offline. Download surahs to keep listening without a connection.',
+        title: 'No offline audio',
+        onRetry: () => startRadio(surahId),
+      );
+      return;
+    }
+
+    // Skip at most one broken chapter — never loop through failures indefinitely
+    if (rxRadioFailStreak.value < 2) {
+      final nextSurah = nextAvailableSurahId(surahId);
+      rxCurrentSurahId.value = nextSurah;
+      await _loadAndPlayChapter(nextSurah);
+    } else {
+      // Retry budget exhausted — stop instead of leaving Radio mode stuck
+      // "on" with nothing loaded and no feedback.
+      rxIsRadioMode.value = false;
+      rxHasAudio.value = false;
+      AppFeedback.showError(
+        'Could not reach the audio server. Check your connection and try again.',
+        title: 'Playback error',
+        onRetry: () => startRadio(surahId),
+      );
     }
   }
 
@@ -948,6 +1128,14 @@ class AudioController extends GetxController {
   /// [radioSkipToNext] tap, kept as a separate name since callers differ.
   Future<void> advanceRadio() async => radioSkipToNext();
 
+  /// Manual skip always tries the normal next/previous surah first — same
+  /// as if the user picked it from the surah list — rather than pre-judging
+  /// connectivity. If that particular surah genuinely fails to load,
+  /// _loadAndPlayChapter's own failure handling (_handleChapterLoadFailure)
+  /// reactively falls back to a downloaded surah when it turns out we
+  /// really are offline. Deciding this upfront off rxIsOffline used to mean
+  /// a single bad/false "offline" reading from the OS made every skip tap
+  /// refuse to even try the network.
   Future<void> radioSkipToNext() async {
     if (!rxIsRadioMode.value) return;
     final nextSurah = rxShuffleEnabled.value
@@ -964,32 +1152,65 @@ class AudioController extends GetxController {
     await _loadAndPlayChapter(prevSurah);
   }
 
-  Future<void> _prefetchNextSurah() async {
-    final nextSurahId = nextAvailableSurahId(rxCurrentSurahId.value);
-    final reciterId = rxCurrentReciterId.value;
-    
-    // Skip if already fully downloaded offline
-    if (isDownloaded(reciterId, nextSurahId)) return;
-    
-    final reciter = getReciter(reciterId);
-    String audioSource = '${reciter.baseUrl}${nextSurahId.toString().padLeft(3, '0')}.mp3';
-    
-    try {
-      final audioData = await _audioRemoteDs.getChapterAudio(reciterId, nextSurahId);
-      if (audioData['audio_url'] != null) {
-        audioSource = audioData['audio_url'] as String;
-      }
-    } catch (_) {}
-    
-    final nextMediaItem = MediaItem(
-      id: audioSource,
-      album: 'Surah $nextSurahId',
-      title: 'Surah $nextSurahId',
-    );
-    
-    // Delegate to the audio handler's detached prefetch player
-    unawaited(_audioHandler.prefetchItem(nextMediaItem));
+  /// Picks a downloaded-only fallback surah once a load has *actually*
+  /// failed and we're reacting to a confirmed offline state (see
+  /// _handleChapterLoadFailure) — never called pre-emptively, so a stale or
+  /// false rxIsOffline reading can no longer block a skip from even trying
+  /// the network. Returns null only when nothing is downloaded for this
+  /// reciter at all.
+  int? _pickNextRadioSurah({required bool forward}) {
+    return rxShuffleEnabled.value
+        ? _randomDownloadedSurahId(exclude: rxCurrentSurahId.value)
+        : _nextDownloadedSurahId(rxCurrentSurahId.value, forward: forward);
   }
+
+  /// Surah ids downloaded for the current reciter, sorted ascending — the
+  /// pool Radio draws from when offline.
+  List<int> _downloadedSurahIdsForCurrentReciter() {
+    final prefix = '${rxCurrentReciterId.value}_';
+    final ids = <int>[];
+    for (final key in rxDownloadedKeys) {
+      if (!key.startsWith(prefix)) continue;
+      final id = int.tryParse(key.substring(prefix.length));
+      if (id != null) ids.add(id);
+    }
+    ids.sort();
+    return ids;
+  }
+
+  /// Next downloaded surah id after/before [currentId], wrapping around —
+  /// null if nothing is downloaded for this reciter at all.
+  int? _nextDownloadedSurahId(int currentId, {bool forward = true}) {
+    final ids = _downloadedSurahIdsForCurrentReciter();
+    if (ids.isEmpty) return null;
+    if (ids.length == 1) return ids.first;
+    final idx = ids.indexOf(currentId);
+    if (idx == -1) return forward ? ids.first : ids.last;
+    final nextIdx = forward ? (idx + 1) % ids.length : (idx - 1 + ids.length) % ids.length;
+    return ids[nextIdx];
+  }
+
+  /// Random downloaded surah id, excluding [exclude] when more than one is
+  /// available — null if nothing is downloaded for this reciter.
+  int? _randomDownloadedSurahId({int? exclude}) {
+    final ids = _downloadedSurahIdsForCurrentReciter();
+    if (ids.isEmpty) return null;
+    final pool = ids.where((id) => id != exclude).toList();
+    if (pool.isEmpty) return ids.first;
+    return pool[_shuffleRandom.nextInt(pool.length)];
+  }
+
+  /// Disabled — QuranAudioHandler.prefetchItem() is a deliberate no-op (see
+  /// its doc comment: LockCachingAudioSource caused excessive buffering
+  /// delays on iOS; offline caching is handled exclusively by the explicit
+  /// download feature instead). This used to still fire a real
+  /// getChapterAudio() network call every time Radio crossed 90% of a
+  /// surah just to build a MediaItem that was then handed to a function
+  /// that does nothing with it — a wasted API call, every surah, forever,
+  /// for zero benefit. Left as a stub rather than removing the
+  /// _hasPrefetchedNextSurah bookkeeping/call site, so re-enabling real
+  /// prefetching later only means filling this back in.
+  Future<void> _prefetchNextSurah() async {}
 
   /// Plays a chapter starting from a specific verse — the reader's
   /// "play from here" trigger. Leaves Radio mode; loads the chapter's audio
@@ -1008,6 +1229,11 @@ class AudioController extends GetxController {
       if (_timingFetchFuture != null) {
         await _timingFetchFuture;
       }
+      
+      // Block here until the player has actually buffered the new source.
+      // Without this, seeking right after loading races a still-loading network source
+      // and is silently ignored on iOS.
+      await _audioHandler.waitUntilReady();
     }
 
     final timing = _findTiming(verseNumber);
@@ -1020,7 +1246,7 @@ class AudioController extends GetxController {
     }
     
     // Ensure we start playing if paused or completed
-    unawaited(_audioHandler.play());
+    _playGuarded();
   }
 
   /// Switches reciters. Radio mode already had a picker (RadioView); the
@@ -1054,6 +1280,7 @@ class AudioController extends GetxController {
     if (resumeVerseNumber != null) {
       final timing = _findTiming(resumeVerseNumber);
       if (timing != null) {
+        await _audioHandler.waitUntilReady();
         await _audioHandler.seek(Duration(milliseconds: timing.from));
         _lastVerseIdx = -1;
         _lastWordPos = null;

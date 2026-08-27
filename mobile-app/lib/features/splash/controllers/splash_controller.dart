@@ -58,9 +58,12 @@ class SplashController extends GetxController {
       Get.put<QuranDatabase>(quranDb, permanent: true);
       final quranRepository = QuranRepository(localDb: quranDb, remoteDs: quranRemoteDs);
       Get.put<QuranRepository>(quranRepository, permanent: true);
-      unawaited(quranRepository.seedIfEmpty().catchError((Object e, StackTrace st) {
+      // Await chapters seed so all 114 surah names are in the DB before we
+      // navigate home. seedIfEmpty() now only blocks on the fast chapter-only
+      // fetch (~200ms); verses are seeded in the background after.
+      await quranRepository.seedIfEmpty().catchError((Object e, StackTrace st) {
         FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
-      }));
+      });
 
       // Step 3: Audio Services
       loadingText.value = 'Tuning the beautiful recitations...';

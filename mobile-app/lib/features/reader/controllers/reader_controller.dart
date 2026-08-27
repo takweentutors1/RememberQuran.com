@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../data/repositories/quran_repository.dart';
@@ -99,18 +100,33 @@ class ReaderController extends GetxController {
     }
   }
 
+  /// Always deferred to a post-frame callback: this can be reached
+  /// directly from a GetX route binding (_bindReaderController in
+  /// app_pages.dart calls jumpToRouteAyah() when a SURAH -> SURAH_AYAH
+  /// navigation reuses an existing ReaderController) while GetPageRoute is
+  /// still building the widget tree for the new route. Calling jumpTo()
+  /// synchronously there trips "setState() called during build" on
+  /// ScrollablePositionedList, since the controller is already attached to
+  /// the still-mounting frame. A post-frame callback guarantees the jump
+  /// runs only once the current build has actually finished, whether this
+  /// was called mid-build or from a plain async callback (e.g. the verses
+  /// listener in onInit).
   void _scrollToIndex(int index) {
-    if (itemScrollController.isAttached) {
-      _hasScrolledToAyah = true;
-      itemScrollController.jumpTo(index: index);
-    } else {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (itemScrollController.isAttached) {
-          _hasScrolledToAyah = true;
-          itemScrollController.jumpTo(index: index);
-        }
-      });
+    void jump() {
+      if (itemScrollController.isAttached) {
+        _hasScrolledToAyah = true;
+        itemScrollController.jumpTo(index: index);
+      } else {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (itemScrollController.isAttached) {
+            _hasScrolledToAyah = true;
+            itemScrollController.jumpTo(index: index);
+          }
+        });
+      }
     }
+
+    SchedulerBinding.instance.addPostFrameCallback((_) => jump());
   }
 
   void _onScrollPositionsChanged() {

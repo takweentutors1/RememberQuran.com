@@ -13,10 +13,17 @@ class QuranRepository {
   QuranRepository({required this.localDb, required this.remoteDs});
 
   /// Seeds the full offline Quran text database on first launch, if it hasn't been already.
+  /// Phase 1 (chapters only) is awaited so the home screen shows all 114 surahs immediately.
+  /// Phase 2 (verses) runs in the background.
   Future<void> seedIfEmpty() async {
-    final hasData = await (localDb.select(localDb.chapters)..limit(1)).getSingleOrNull();
-    if (hasData == null) {
-      await localDb.seedFromFirstSync(remoteDs);
+    final hasChapters = await (localDb.select(localDb.chapters)..limit(1)).getSingleOrNull();
+    if (hasChapters == null) {
+      // Await chapters so the home screen can render all 114 surahs immediately.
+      await localDb.seedChaptersOnly(remoteDs);
+      // Seed verses in the background — they're only needed when a user opens a surah to read.
+      unawaited(localDb.seedVerses(remoteDs).catchError((Object e, StackTrace st) {
+        FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+      }));
     }
   }
 

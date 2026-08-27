@@ -826,6 +826,7 @@ class _RadioViewState extends State<RadioView> {
           final isRadio = _audioController.rxIsRadioMode.value;
           final isPlaying = _audioController.rxIsPlaying.value;
           final isBusy = _audioController.rxIsBusy.value;
+          final isBuffering = _audioController.rxIsBuffering.value;
 
           return GestureDetector(
             onTapDown: isBusy
@@ -860,6 +861,7 @@ class _RadioViewState extends State<RadioView> {
                 ),
                 child: Center(
                   child: isBusy
+                      // Full blocking spinner: source is being set up
                       ? SizedBox(
                           width: 32,
                           height: 32,
@@ -868,18 +870,34 @@ class _RadioViewState extends State<RadioView> {
                             strokeWidth: 3,
                           ),
                         )
-                      : AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          transitionBuilder: (child, anim) =>
-                              ScaleTransition(scale: anim, child: child),
-                          child: Icon(
-                            (!isRadio || !isPlaying)
-                                ? Icons.play_arrow_rounded
-                                : Icons.pause_rounded,
-                            key: ValueKey(!isRadio || !isPlaying),
-                            color: theme.colorScheme.onPrimary,
-                            size: 44,
-                          ),
+                      : Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              transitionBuilder: (child, anim) =>
+                                  ScaleTransition(scale: anim, child: child),
+                              child: Icon(
+                                (!isRadio || !isPlaying)
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.pause_rounded,
+                                key: ValueKey(!isRadio || !isPlaying),
+                                color: theme.colorScheme.onPrimary,
+                                size: 44,
+                              ),
+                            ),
+                            // Subtle buffering ring: network is buffering but
+                            // the user can still tap to pause/resume
+                            if (isBuffering)
+                              SizedBox(
+                                width: 68,
+                                height: 68,
+                                child: CircularProgressIndicator(
+                                  color: theme.colorScheme.onPrimary.withOpacity(0.4),
+                                  strokeWidth: 2.5,
+                                ),
+                              ),
+                          ],
                         ),
                 ),
               ),

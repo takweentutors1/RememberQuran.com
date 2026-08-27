@@ -31,7 +31,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   final String cacheDirPath;
   final _player = AudioPlayer();
   final _prefetchPlayer = AudioPlayer();
-  final _playlist = ConcatenatingAudioSource(children: []);
 
   /// Fires ~4x/sec during playback — the drive signal for word-by-word sync.
   Stream<Duration> get positionStream => _player.positionStream;
@@ -99,8 +98,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         mediaItem.add(mediaItem.value!.copyWith(duration: duration));
       }
     });
-
-    await _player.setAudioSource(_playlist);
   }
 
   /// Resolves once the current source has buffered enough to seek reliably
@@ -165,47 +162,90 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     await super.stop();
   }
 
-  @override
-  Future<void> skipToNext() => _player.seekToNext();
+  /// Overridable hooks — system media controls (lock screen, notification,
+  /// Bluetooth/car head units) dispatch "skip" taps straight to this
+  /// handler via audio_service, bypassing AudioController entirely. The
+  /// underlying playlist always holds exactly one item (one MediaItem per
+  /// *chapter*, not per ayah — see AudioController's _loadAndPlayChapter),
+  /// so _player.seekToNext()/seekToPrevious() have nothing to jump to and
+  /// are a silent no-op. AudioController sets these once at startup so a
+  /// hardware skip during Radio mode actually advances/rewinds the surah
+  /// like the in-app buttons do; falls back to the old seek behavior if
+  /// nothing has claimed the hook yet.
+  Future<void> Function()? onSkipToNext;
+  Future<void> Function()? onSkipToPrevious;
 
   @override
-  Future<void> skipToPrevious() => _player.seekToPrevious();
+  Future<void> skipToNext() async {
+    final hook = onSkipToNext;
+    if (hook != null) return hook();
+    await _player.seekToNext();
+  }
+
+  @override
+  Future<void> skipToPrevious() async {
+    final hook = onSkipToPrevious;
+    if (hook != null) return hook();
+    await _player.seekToPrevious();
+  }
 
   @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
     _enforceCacheLimit();
-    final audioSources = mediaItems.map((item) {
+    
+    final newQueue = queue.value.toList()..addAll(mediaItems);
+    
+    final audioSources = newQueue.map((item) {
       final uri = Uri.parse(item.id);
-      if (uri.scheme == 'http' || uri.scheme == 'https') {
-        final safeName = item.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-        final cacheFile = File('$cacheDirPath/$safeName.mp3');
-        return LockCachingAudioSource(uri, tag: item, cacheFile: cacheFile);
+      final isNetwork = uri.scheme == 'http' || uri.scheme == 'https';
+      if (isNetwork) {
+        return LockCachingAudioSource(
+          uri,
+          tag: item,
+          headers: const {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+          },
+        );
+      } else {
+        return AudioSource.uri(uri, tag: item);
       }
-      return AudioSource.uri(uri, tag: item);
     }).toList();
 
-    await _playlist.addAll(audioSources);
+    // Recreate the source entirely
+    final newPlaylist = ConcatenatingAudioSource(children: audioSources);
+    await _player.setAudioSource(
+      newPlaylist,
+      initialIndex: _player.currentIndex ?? 0,
+      initialPosition: _player.position,
+    );
 
-    final newQueue = queue.value..addAll(mediaItems);
     queue.add(newQueue);
   }
 
   @override
   Future<void> updateQueue(List<MediaItem> newQueue) async {
     _enforceCacheLimit();
-    await _playlist.clear();
 
     final audioSources = newQueue.map((item) {
       final uri = Uri.parse(item.id);
-      if (uri.scheme == 'http' || uri.scheme == 'https') {
-        final safeName = item.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-        final cacheFile = File('$cacheDirPath/$safeName.mp3');
-        return LockCachingAudioSource(uri, tag: item, cacheFile: cacheFile);
+      final isNetwork = uri.scheme == 'http' || uri.scheme == 'https';
+      if (isNetwork) {
+        return LockCachingAudioSource(
+          uri,
+          tag: item,
+          headers: const {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+          },
+        );
+      } else {
+        return AudioSource.uri(uri, tag: item);
       }
-      return AudioSource.uri(uri, tag: item);
     }).toList();
 
-    await _playlist.addAll(audioSources);
+    // Recreate the source entirely to avoid AVPlayer mutation bugs on iOS
+    final newPlaylist = ConcatenatingAudioSource(children: audioSources);
+    await _player.setAudioSource(newPlaylist);
+
     queue.add(newQueue);
 
     if (newQueue.isNotEmpty) {
@@ -276,18 +316,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   /// Silently downloads/caches the given item without interrupting active playback.
   Future<void> prefetchItem(MediaItem item) async {
-    final uri = Uri.parse(item.id);
-    if (uri.scheme == 'http' || uri.scheme == 'https') {
-      final safeName = item.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-      final cacheFile = File('$cacheDirPath/$safeName.mp3');
-      if (await cacheFile.exists()) return; // Already cached
-      
-      final source = LockCachingAudioSource(uri, tag: item, cacheFile: cacheFile);
-      try {
-        await _prefetchPlayer.setAudioSource(source);
-      } catch (_) {
-        // Ignore prefetch failures
-      }
-    }
+    // Disabled: LockCachingAudioSource causes excessive buffering delays on iOS.
+    // Offline caching is now handled exclusively by the explicit download feature.
   }
 }

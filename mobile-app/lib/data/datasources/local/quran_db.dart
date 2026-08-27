@@ -100,36 +100,47 @@ class QuranDatabase extends _$QuranDatabase {
     return (select(verses)..where((tbl) => tbl.chapterId.equals(chapterId))).get();
   }
 
-  /// Fetches all 114 chapters and verses from the remote data source and inserts them.
-  /// This should only be called once on first launch if the DB is empty.
-  Future<void> seedFromFirstSync(QuranRemoteDataSource remoteDs) async {
+  /// Phase 1: Seeds all 114 chapter *names* from a single fast API call.
+  /// Called synchronously during splash so the home screen can show all
+  /// 114 surahs immediately — no need to wait for verses.
+  Future<void> seedChaptersOnly(QuranRemoteDataSource remoteDs) async {
     final chaptersList = await remoteDs.getChapters();
-    
+    await transaction(() async {
+      for (final chapter in chaptersList) {
+        final c = Map<String, dynamic>.from(chapter);
+        await into(chapters).insert(ChaptersCompanion.insert(
+          id: Value(c['id'] as int),
+          revelationPlace: c['revelation_place'] as String,
+          revelationOrder: c['revelation_order'] as int,
+          bismillahPre: (c['bismillah_pre'] ?? false) as bool,
+          nameSimple: c['name_simple'] as String,
+          nameComplex: c['name_complex'] as String,
+          nameArabic: c['name_arabic'] as String,
+          versesCount: c['verses_count'] as int,
+          pages: jsonEncode(c['pages']),
+          translatedName: jsonEncode(c['translated_name']),
+        ), mode: InsertMode.insertOrReplace);
+      }
+    });
+  }
+
+  /// Phase 2: Seeds all verses in the background after chapters are visible.
+  /// Each chapter's verses are fetched and stored page-by-page.
+  Future<void> seedVerses(QuranRemoteDataSource remoteDs) async {
+    final chaptersList = await remoteDs.getChapters();
+
     for (final chapter in chaptersList) {
       final c = Map<String, dynamic>.from(chapter);
-      await into(chapters).insert(ChaptersCompanion.insert(
-        id: Value(c['id'] as int),
-        revelationPlace: c['revelation_place'] as String,
-        revelationOrder: c['revelation_order'] as int,
-        bismillahPre: (c['bismillah_pre'] ?? false) as bool,
-        nameSimple: c['name_simple'] as String,
-        nameComplex: c['name_complex'] as String,
-        nameArabic: c['name_arabic'] as String,
-        versesCount: c['verses_count'] as int,
-        pages: jsonEncode(c['pages']),
-        translatedName: jsonEncode(c['translated_name']),
-      ), mode: InsertMode.insertOrReplace);
-
       int page = 1;
       int totalPages = 1;
-      
+
       do {
         // IMPORTANT: Fetch from network OUTSIDE the transaction so we don't lock the DB for seconds/minutes
         final versesPage = await remoteDs.getVersesPage(c['id'], page: page, translations: bundleTranslationIds);
         totalPages = versesPage['pagination']['total_pages'];
-        
+
         final versesList = versesPage['verses'] as List<dynamic>;
-        
+
         // Only wrap the inserts in a transaction for atomicity and speed
         await transaction(() async {
           for (final verse in versesList) {
@@ -181,6 +192,14 @@ class QuranDatabase extends _$QuranDatabase {
         page++;
       } while (page <= totalPages);
     }
+  }
+
+  /// @deprecated Use [seedChaptersOnly] + [seedVerses] instead.
+  /// Kept for reference. Fetches all 114 chapters and verses from the remote data source and inserts them.
+  /// This should only be called once on first launch if the DB is empty.
+  Future<void> seedFromFirstSync(QuranRemoteDataSource remoteDs) async {
+    await seedChaptersOnly(remoteDs);
+    await seedVerses(remoteDs);
   }
 }
 

@@ -30,13 +30,18 @@ class AudioRepository {
         .getSingleOrNull();
     if (row == null) return null;
 
-    if (!await File(row.localPath).exists()) {
+    // Resolve absolute path dynamically because iOS sandbox UUID changes on rebuilds.
+    final baseDir = await _audioDir(reciterId);
+    final fileName = p.basename(row.localPath);
+    final absolutePath = p.join(baseDir.path, fileName);
+
+    if (!await File(absolutePath).exists()) {
       await (localDb.delete(localDb.downloadedAudio)
             ..where((t) => t.reciterId.equals(reciterId) & t.chapterId.equals(chapterId)))
           .go();
       return null;
     }
-    return row.localPath;
+    return absolutePath;
   }
 
   /// Set of "reciterId_chapterId" keys for chapters currently downloaded on disk.
