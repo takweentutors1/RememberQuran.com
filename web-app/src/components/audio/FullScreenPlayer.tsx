@@ -90,7 +90,7 @@ export function FullScreenPlayer({ onClose }: { onClose: () => void }) {
       onDragEnd={(_, info) => {
         if (info.offset.y > DISMISS_THRESHOLD_PX) onClose()
       }}
-      className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-background text-foreground"
+      className="fixed inset-0 z-[45] flex flex-col overflow-hidden bg-background text-foreground"
     >
       <MeshGradientBackdrop prefersReducedMotion={!!prefersReducedMotion} />
 

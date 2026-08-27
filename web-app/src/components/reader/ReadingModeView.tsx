@@ -6,6 +6,7 @@ import { useHighlightedWord } from "@/lib/playbackStore"
 import { ArabicWord } from "./ArabicWord"
 import { AyahEndMarker } from "./AyahEndMarker"
 import { HideableArabic } from "./HideableArabic"
+import { toArabicDigits } from "./AyahText"
 import { cn } from "@/lib/utils"
 
 interface ReadingModeViewProps {
@@ -54,20 +55,36 @@ function ReadingVerse({ verse, isTarget }: { verse: Verse; isTarget: boolean }) 
   )
 }
 
-/** Juz boundary divider — mirrors comparable Quran sites, which mark the
- * juz a reader is currently in rather than leaving continuous mode as one
- * undifferentiated block of text. */
-function JuzMarker({ juz }: { juz: number }) {
+/** Juz/hizb cartouche — a boxed marker breaking the flow, mirroring the
+ * small ornamental margin boxes a printed mushaf uses to mark these
+ * boundaries. Always spans both reading columns so it reads as a section
+ * break rather than getting stranded mid-column. */
+function SectionMarker({
+  arabicLabel,
+  englishLabel,
+  number,
+  emphasized,
+}: {
+  arabicLabel: string
+  englishLabel: string
+  number: number
+  emphasized: boolean
+}) {
   return (
     <div
-      dir="ltr"
+      dir="rtl"
       role="separator"
-      aria-label={`Juz ${juz}`}
-      className="my-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+      aria-label={`${englishLabel} ${number}`}
+      style={{ columnSpan: "all", breakInside: "avoid" }}
+      className={cn("mushaf-marker mx-auto my-6 flex w-fit items-center gap-2.5 px-4 py-1.5", !emphasized && "opacity-80")}
     >
-      <span aria-hidden className="h-px flex-1 bg-border/50" />
-      <span className="shrink-0 tabular-nums">Juz {juz}</span>
-      <span aria-hidden className="h-px flex-1 bg-border/50" />
+      <span className={cn("quran-arabic text-base leading-none text-gold", emphasized ? "font-medium" : "")}>
+        {arabicLabel} {toArabicDigits(number)}
+      </span>
+      <span aria-hidden className="h-3 w-px bg-gold/30" />
+      <span dir="ltr" className="shrink-0 font-mono text-[10px] tabular-nums tracking-wide text-muted-foreground">
+        {englishLabel} {number}
+      </span>
     </div>
   )
 }
@@ -77,19 +94,29 @@ function JuzMarker({ juz }: { juz: number }) {
  * only, deliberately, regardless of the reader's translation setting.
  * "Verse by verse" is the annotated/study mode where translations belong;
  * Reading mode's whole promise (see its description in DisplayModeToggle)
- * is an unbroken mushaf-style page. Words stream RTL; end-of-ayah glyphs
- * mark verse boundaries; juz dividers break up the flow at each boundary
- * crossed within the surah.
+ * is an unbroken mushaf-style page: two gold-ruled columns on wide screens
+ * (one on mobile), juz/hizb cartouches breaking the flow at each boundary,
+ * gold end-of-ayah medallions.
  */
 export function ReadingModeView({ verses, targetAyahId }: ReadingModeViewProps) {
   return (
-    <div dir="rtl" lang="ar" className="quran-arabic mx-auto max-w-[44rem] text-justify font-uthmani leading-[var(--quran-leading)]">
+    <div
+      dir="rtl"
+      lang="ar"
+      className="mushaf-columns quran-arabic font-uthmani text-justify leading-[var(--quran-leading)]"
+    >
       {verses.map((verse, index) => {
-        const prevJuz = index > 0 ? verses[index - 1].juz_number : null
-        const showJuzMarker = verse.juz_number !== prevJuz
+        const prev = index > 0 ? verses[index - 1] : null
+        const showJuzMarker = verse.juz_number !== prev?.juz_number
+        const showHizbMarker = !showJuzMarker && verse.hizb_number !== prev?.hizb_number
         return (
           <Fragment key={verse.id}>
-            {showJuzMarker && <JuzMarker juz={verse.juz_number} />}
+            {showJuzMarker && (
+              <SectionMarker arabicLabel="الجزء" englishLabel="Juz" number={verse.juz_number} emphasized />
+            )}
+            {showHizbMarker && (
+              <SectionMarker arabicLabel="الحزب" englishLabel="Hizb" number={verse.hizb_number} emphasized={false} />
+            )}
             <ReadingVerse
               verse={verse}
               isTarget={targetAyahId === verse.verse_number}

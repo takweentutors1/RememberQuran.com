@@ -242,6 +242,32 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
     })
   }, [activePlaybackKey, chapter.id, shouldReduceMotion])
 
+  const isReading = displayMode === "reading"
+
+  const playButton = (
+    <button
+      type="button"
+      onClick={handlePlayFullSurah}
+      className={cn(
+        "flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
+        isPlayingThis
+          ? "bg-primary/10 text-primary hover:bg-primary/20"
+          : "bg-primary text-primary-foreground hover:bg-primary/90",
+      )}
+    >
+      {isLoadingThis ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : isPlayingThis ? (
+        <Pause className="size-4" fill="currentColor" />
+      ) : (
+        <Play className="size-4" fill="currentColor" />
+      )}
+      <span>
+        {isLoadingThis ? "Loading..." : isPlayingThis ? "Pause Surah" : "Play Surah"}
+      </span>
+    </button>
+  )
+
   return (
     <>
       <ProgressTracker surahId={chapter.id} />
@@ -249,7 +275,12 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
       ref={articleRef}
       aria-label={`Surah ${chapter.name_simple}`}
       aria-busy={false}
-      className="mx-auto px-6 py-8 sm:px-10 sm:py-10 max-w-[820px]"
+      className={cn(
+        "mx-auto",
+        isReading
+          ? "reading-page max-w-[1080px] rounded-2xl px-6 py-10 sm:px-14 sm:py-14"
+          : "max-w-[820px] px-6 py-8 sm:px-10 sm:py-10",
+      )}
       style={
         {
           "--arabic-font-size": arabicFontSize,
@@ -258,56 +289,55 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
         } as React.CSSProperties
       }
     >
-      <header className="mb-8 border-b border-border/40 pb-8 text-center">
-        <p
-          className="font-uthmani text-[2.75rem] leading-[1.7] text-foreground sm:text-[3.25rem]"
-          dir="rtl"
-          lang="ar"
-        >
-          {chapter.name_arabic}
-        </p>
-        <h1 className="mt-3 text-xl font-medium tracking-tight text-foreground">
-          {chapter.name_simple}
-        </h1>
-        <p className="mt-1 font-serif text-sm text-muted-foreground">
-          {chapter.translated_name.name}
-        </p>
-        <p className="mt-2 text-xs tabular-nums text-muted-foreground/70">
-          {chapter.verses_count} ayahs ·{" "}
-          {chapter.revelation_place === "makkah" ? "Makki" : "Madani"}
-        </p>
-        <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={handlePlayFullSurah}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
-              isPlayingThis
-                ? "bg-primary/10 text-primary hover:bg-primary/20"
-                : "bg-primary text-primary-foreground hover:bg-primary/90",
-            )}
+      {isReading ? (
+        <header className="mb-8 text-center">
+          <div className="mushaf-banner mx-auto max-w-sm">
+            <p
+              className="font-uthmani text-[2rem] leading-[1.6] text-gold sm:text-[2.35rem]"
+              dir="rtl"
+              lang="ar"
+            >
+              سورة {chapter.name_arabic}
+            </p>
+          </div>
+          <h1 className="mt-5 text-lg font-medium tracking-tight text-foreground">
+            {chapter.name_simple}
+          </h1>
+          <p className="mt-1 font-serif text-sm text-muted-foreground">
+            {chapter.translated_name.name}
+          </p>
+          <p className="mt-2 text-xs tabular-nums text-muted-foreground/70">
+            {chapter.verses_count} ayahs ·{" "}
+            {chapter.revelation_place === "makkah" ? "Makki" : "Madani"}
+          </p>
+          <div className="mt-6 flex justify-center">{playButton}</div>
+        </header>
+      ) : (
+        <header className="mb-8 border-b border-border/40 pb-8 text-center">
+          <p
+            className="font-uthmani text-[2.75rem] leading-[1.7] text-foreground sm:text-[3.25rem]"
+            dir="rtl"
+            lang="ar"
           >
-            {isLoadingThis ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : isPlayingThis ? (
-              <Pause className="size-4" fill="currentColor" />
-            ) : (
-              <Play className="size-4" fill="currentColor" />
-            )}
-            <span>
-              {isLoadingThis
-                ? "Loading..."
-                : isPlayingThis
-                  ? "Pause Surah"
-                  : "Play Surah"}
-            </span>
-          </button>
-        </div>
-      </header>
+            {chapter.name_arabic}
+          </p>
+          <h1 className="mt-3 text-xl font-medium tracking-tight text-foreground">
+            {chapter.name_simple}
+          </h1>
+          <p className="mt-1 font-serif text-sm text-muted-foreground">
+            {chapter.translated_name.name}
+          </p>
+          <p className="mt-2 text-xs tabular-nums text-muted-foreground/70">
+            {chapter.verses_count} ayahs ·{" "}
+            {chapter.revelation_place === "makkah" ? "Makki" : "Madani"}
+          </p>
+          <div className="mt-6 flex justify-center">{playButton}</div>
+        </header>
+      )}
 
       {chapter.bismillah_pre && <BismillahHeader />}
 
-      {displayMode === "reading" ? (
+      {isReading ? (
         <ReadingModeView
           verses={verses}
           targetAyahId={highlightActive ? targetAyahId : undefined}

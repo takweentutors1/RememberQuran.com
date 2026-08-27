@@ -25,6 +25,7 @@ export function SurahCard({ chapter }: SurahCardProps) {
   return (
     <Link
       href={`/${chapter.id}`}
+      dir="ltr"
       className={cn(
         "group relative flex items-center gap-3.5 rounded-[var(--radius-card)] border border-border/50 bg-card p-4 transition-all duration-(--dur-base) ease-(--ease-out) hover:-translate-y-[1px] hover:border-gold-strong/30 hover:shadow-[0_4px_12px_rgba(182,152,91,0.08)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
