@@ -32,24 +32,28 @@ function ReadingVerse({ verse, isTarget }: { verse: Verse; isTarget: boolean }) 
       )}
     >
       <span id={`ayah-${verse.verse_number}`} data-verse-key={verse.verse_key}>
-        {words.map((word, i) =>
-          word.char_type_name === "end" ? (
-            <AyahEndMarker
-              key={word.id}
-              digits={word.qpc_uthmani_hafs || word.text_uthmani}
-              ariaLabel={`Ayah ${verse.verse_number}`}
-            />
-          ) : (
-            <span key={word.id}>
+        {words.map((word, i) => {
+          if (word.char_type_name === "end") return null
+          const isLast = i === words.length - 1
+          const endWord = !isLast && words[i + 1]?.char_type_name === "end" ? words[i + 1] : null
+
+          return (
+            <span key={word.id} className={endWord ? "whitespace-nowrap" : undefined}>
               <ArabicWord
                 word={word}
                 isHighlighted={highlightedPosition === word.position}
                 verseKey={verse.verse_key}
               />
-              {i < words.length - 1 ? " " : null}
+              {endWord && (
+                <AyahEndMarker
+                  digits={endWord.qpc_uthmani_hafs || endWord.text_uthmani}
+                  ariaLabel={`Ayah ${verse.verse_number}`}
+                />
+              )}
+              {!isLast && !endWord ? " " : null}
             </span>
-          ),
-        )}{" "}
+          )
+        })}{" "}
       </span>
     </HideableArabic>
   )
@@ -103,7 +107,7 @@ export function ReadingModeView({ verses, targetAyahId }: ReadingModeViewProps) 
     <div
       dir="rtl"
       lang="ar"
-      className="mushaf-columns quran-arabic font-uthmani text-justify leading-[var(--quran-leading)]"
+      className="mushaf-columns quran-arabic font-uthmani text-justify leading-[1.85]"
     >
       {verses.map((verse, index) => {
         const prev = index > 0 ? verses[index - 1] : null
