@@ -128,7 +128,14 @@ export function Navbar() {
   // itself — gating on isSurahRoute too means a stale `focusMode=true` left
   // over from a previous reader visit can never hide the navbar anywhere
   // else.
-  if (focusMode && isSurahRoute) return null
+  //
+  // Slides out via `top` instead of unmounting: ReaderControls (the toolbar
+  // right below) animates its own `top` between `top-14` and `top-0` over
+  // the same 200ms/ease-out, so this bar's bottom edge and that bar's top
+  // edge move in lockstep with zero gap or overlap. Unmounting instead (the
+  // old behavior) made this bar vanish instantly while ReaderControls kept
+  // animating for 200ms, so their icons briefly collided mid-scroll.
+  const hideForFocus = focusMode && isSurahRoute
 
   // The reader route's bar stays flush and full-width — its logo column
   // lines up with the reader sidebar below it (see the comment further
@@ -140,9 +147,10 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full translate-y-0",
+        "sticky z-40 w-full",
+        hideForFocus ? "-top-14 pointer-events-none" : "top-0",
         floating && "px-3 pt-3 sm:px-4",
-        "transition-transform duration-300 ease-in-out",
+        "transition-[top] duration-200 ease-out",
       )}
     >
       <div
