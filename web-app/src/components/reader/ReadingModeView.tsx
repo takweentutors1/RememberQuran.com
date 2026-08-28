@@ -179,7 +179,25 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
             {page.hasSurahStart && chapter && (
               <div className="mb-4">
                 <SurahHeaderCartouche chapter={chapter} />
+                {/* For Surahs with bismillah_pre (Surahs 2-114 except 9) */}
                 {chapter.bismillah_pre && <BismillahHeader />}
+                {/* For Surah 1 (Al-Fatihah), Ayah 1 IS the Basmalah */}
+                {chapter.id === 1 && (
+                  <div className="my-3 sm:my-5 flex flex-col items-center justify-center text-center select-none">
+                    <div className="inline-flex items-center gap-2">
+                      <p
+                        className="quran-arabic text-[1.85rem] sm:text-[2.1rem] md:text-[2.3rem] leading-none text-[#A37F46] dark:text-[#D4AF37] drop-shadow-2xs font-normal"
+                        dir="rtl"
+                        lang="ar"
+                      >
+                        بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
+                      </p>
+                      {page.verses.find((v) => v.verse_number === 1) && (
+                        <AyahEndMarker digits="١" ariaLabel="Ayah 1" />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -187,29 +205,31 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
             <div
               dir="rtl"
               lang="ar"
-              className="mushaf-flow quran-arabic font-uthmani text-[1.65rem] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.25rem] leading-[2.5] sm:leading-[2.7] text-[#22201D] dark:text-[#E8E2D5]"
+              className="mushaf-flow quran-arabic font-uthmani text-[1.65rem] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.25rem] leading-[2.4] sm:leading-[2.6] text-[#22201D] dark:text-[#E8E2D5]"
             >
-              {page.verses.map((verse, index) => {
-                const prev = index > 0 ? page.verses[index - 1] : null
-                const showInlineJuz = prev && verse.juz_number !== prev.juz_number
-                const showInlineHizb = !showInlineJuz && prev && verse.hizb_number !== prev.hizb_number
+              {page.verses
+                .filter((verse) => !(chapter?.id === 1 && verse.verse_number === 1))
+                .map((verse, index) => {
+                  const prev = index > 0 ? page.verses[index - 1] : null
+                  const showInlineJuz = prev && verse.juz_number !== prev.juz_number
+                  const showInlineHizb = !showInlineJuz && prev && verse.hizb_number !== prev.hizb_number
 
-                return (
-                  <Fragment key={verse.id}>
-                    {showInlineJuz && (
-                      <SectionMarker arabicLabel="الجزء" englishLabel="Juz" number={verse.juz_number} emphasized />
-                    )}
-                    {showInlineHizb && (
-                      <SectionMarker arabicLabel="الحزب" englishLabel="Hizb" number={verse.hizb_number} emphasized={false} />
-                    )}
-                    <ReadingVerse
-                      verse={verse}
-                      isTarget={targetAyahId === verse.verse_number}
-                      onWordClick={handleWordClick}
-                    />
-                  </Fragment>
-                )
-              })}
+                  return (
+                    <Fragment key={verse.id}>
+                      {showInlineJuz && (
+                        <SectionMarker arabicLabel="الجزء" englishLabel="Juz" number={verse.juz_number} emphasized />
+                      )}
+                      {showInlineHizb && (
+                        <SectionMarker arabicLabel="الحزب" englishLabel="Hizb" number={verse.hizb_number} emphasized={false} />
+                      )}
+                      <ReadingVerse
+                        verse={verse}
+                        isTarget={targetAyahId === verse.verse_number}
+                        onWordClick={handleWordClick}
+                      />
+                    </Fragment>
+                  )
+                })}
             </div>
           </MushafPageFrame>
         )
