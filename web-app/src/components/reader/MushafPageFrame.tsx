@@ -73,6 +73,7 @@ export function MushafPageFrame({
 }: MushafPageFrameProps) {
   const juzOrdinal = juzNumber ? JUZ_NAMES_ARABIC[juzNumber] || toArabicDigits(juzNumber) : ""
   const formattedSurahName = surahNameArabic ? `سورة ${surahNameArabic.replace(/^سورة\s+/i, "")}` : ""
+  const isOpeningIlluminatedPage = pageNumber === 1 || pageNumber === 2
 
   return (
     <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[840px]", className)}>
@@ -101,20 +102,22 @@ export function MushafPageFrame({
         </div>
       )}
 
-      {/* Main Mushaf Page Container */}
+      {/* Main Mushaf Page Container with Traditional Manuscript Framing */}
       <div
         className={cn(
-          "relative overflow-hidden rounded-md border border-[#D5CEBF] dark:border-[#42392D]",
-          "bg-[#FAF8F2] dark:bg-[#1E1914] p-3.5 sm:p-7 md:p-9 lg:p-10",
-          "shadow-sm transition-colors duration-300",
+          "relative overflow-hidden border transition-colors duration-300",
+          "bg-[#FAF8F2] dark:bg-[#1E1914] text-[#22201D] dark:text-[#E8E2D5]",
+          isOpeningIlluminatedPage
+            ? "border-2 border-[#8E6C42] p-4 sm:p-7 md:p-8 rounded-sm shadow-md"
+            : "border border-[#D5CEBF] dark:border-[#42392D] p-3.5 sm:p-7 md:p-9 lg:p-10 rounded-md shadow-xs",
         )}
       >
-        {/* Top Header Split Bar: Left = Surah Name, Right = Juz Ordinal */}
+        {/* Top Header Split Bar: Right = Juz Ordinal, Left = Surah Name */}
         <header
           dir="rtl"
           lang="ar"
           aria-label={`صفحة ${pageNumber}`}
-          className="relative z-10 mx-auto mb-6 sm:mb-8 flex max-w-lg items-center justify-between border border-[#D2C7B2] dark:border-[#524638] bg-[#F4EFE6]/60 dark:bg-[#25201A]/60 px-4 py-1.5 text-xs sm:text-sm font-medium text-[#5D5447] dark:text-[#C5BBAA] select-none"
+          className="relative z-10 mx-auto mb-5 sm:mb-7 flex max-w-lg items-center justify-between border border-[#D2C7B2] dark:border-[#524638] bg-[#F4EFE6]/60 dark:bg-[#25201A]/60 px-4 py-1.5 text-xs sm:text-sm font-medium text-[#5D5447] dark:text-[#C5BBAA] select-none"
         >
           {/* Right Cell: Juz Name */}
           <div className="flex-1 text-center font-serif quran-arabic">
@@ -130,15 +133,24 @@ export function MushafPageFrame({
           </div>
         </header>
 
-        {/* Core Page Verses Content */}
-        <main className="relative z-10 min-h-[350px]">
-          {children}
-        </main>
+        {/* Core Illuminated Manuscript Inner Area */}
+        <div
+          className={cn(
+            "relative",
+            isOpeningIlluminatedPage &&
+              "rounded-sm border border-[#8E6C42]/50 bg-gradient-to-b from-[#8E6C42]/5 via-transparent to-[#8E6C42]/5 p-3 sm:p-6",
+          )}
+        >
+          {/* Core Page Verses Content */}
+          <main className="relative z-10 min-h-[350px]">
+            {children}
+          </main>
+        </div>
 
         {/* Bottom Page Footer: Centered Page Number */}
         <footer
           aria-label={`Page ${pageNumber}`}
-          className="relative z-10 mt-8 sm:mt-10 flex items-center justify-center pt-2 select-none"
+          className="relative z-10 mt-6 sm:mt-8 flex items-center justify-center pt-2 select-none"
         >
           <span className="quran-arabic text-sm sm:text-base font-semibold text-[#5D5447] dark:text-[#B5AA96] tracking-widest font-mono">
             {toArabicDigits(pageNumber)}
