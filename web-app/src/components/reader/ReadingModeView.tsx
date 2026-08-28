@@ -187,7 +187,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
             <div
               dir="rtl"
               lang="ar"
-              className="mushaf-flow quran-arabic font-uthmani text-2xl sm:text-3xl lg:text-[2.1rem] leading-[2.35] sm:leading-[2.5]"
+              className="mushaf-flow quran-arabic font-uthmani text-[1.65rem] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.25rem] leading-[2.5] sm:leading-[2.7] text-[#22201D] dark:text-[#E8E2D5]"
             >
               {page.verses.map((verse, index) => {
                 const prev = index > 0 ? page.verses[index - 1] : null
