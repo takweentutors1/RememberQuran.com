@@ -300,8 +300,7 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
               <span>·</span>
               <span className="tabular-nums">{chapter.verses_count} ayahs</span>
               <span>·</span>
-              <span>{chapter.revelation_place === "makkah" ? "Makki" : "Madani"}</span>
-            </div>
+              <span>{chapter.revelation_place === "makkah" ? "Makki" : "Madani"}</span>            </div>
             <div>{playButton}</div>
           </div>
         ) : (
