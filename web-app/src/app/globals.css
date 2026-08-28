@@ -216,6 +216,13 @@
      always reads as the foremost layer on the page. */
   --reader-ink: #0d0e11;
 
+  /* Mushaf paper — reading mode's parchment surface. Light theme only;
+     .dark/.modern neutralize these to their normal card/border below so
+     reading mode keeps a dark surface at night instead of glowing cream. */
+  --reader-paper: #faf3e1;
+  --reader-paper-edge: #e8d9ac;
+  --reader-paper-shadow: 0 1px 2px rgba(93, 71, 20, 0.07), 0 24px 48px -26px rgba(93, 71, 20, 0.4);
+
   --elev-sm: var(--shadow-paper-sm);
   --elev-md: var(--shadow-paper-md);
   --elev-lg: var(--shadow-paper-lg);
@@ -264,6 +271,11 @@
   --brand-gold-soft: #221a0c;
 
   --reader-ink: #f7f5f0;
+
+  /* Reading mode stays dark at night — no cream paper. */
+  --reader-paper: var(--card);
+  --reader-paper-edge: var(--border);
+  --reader-paper-shadow: var(--elev-md);
 
   --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
@@ -319,6 +331,11 @@
   --brand-gold-soft: #171933;
 
   --reader-ink: #f5f6fb;
+
+  /* Reading mode stays dark at night — no cream paper. */
+  --reader-paper: var(--card);
+  --reader-paper-edge: var(--border);
+  --reader-paper-shadow: var(--elev-md);
 
   --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
@@ -896,5 +913,64 @@ h1, h2, h3, .font-serif {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MUSHAF READING MODE
+   Traditional printed-Quran page: warm paper, a gold double-rule banner for
+   the surah name, and gold cartouche markers for juz/hizb boundaries. Paper
+   is light-theme only (see --reader-paper); dark/modern stay on their
+   normal card surface so night reading doesn't glow.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  .reading-page {
+    background: var(--reader-paper);
+    border: 1px solid var(--reader-paper-edge);
+    box-shadow: var(--reader-paper-shadow);
+  }
+
+  /* Ornamental plate for the surah's Arabic name */
+  .mushaf-banner {
+    position: relative;
+    border-block: 4px double var(--brand-gold);
+    padding-block: 0.85rem;
+  }
+
+  .mushaf-banner::before,
+  .mushaf-banner::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--brand-gold);
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .mushaf-banner::before {
+    left: -0.25rem;
+  }
+
+  .mushaf-banner::after {
+    right: -0.25rem;
+  }
+
+  /* Juz/hizb cartouche — small boxed marker breaking the text flow */
+  .mushaf-marker {
+    border: 1px solid var(--reader-paper-edge);
+    background: var(--brand-gold-soft);
+    border-radius: calc(var(--radius) * 0.5);
+    box-shadow: var(--reader-paper-shadow);
+  }
+
+  /* Authentic Mushaf single-flow layout — natural line breaking without artificial column breaks */
+  .mushaf-flow {
+    display: block;
+    width: 100%;
+    text-align: justify;
+    text-align-last: center;
+    line-height: 2.35;
+    word-spacing: 0.15em;
   }
 }

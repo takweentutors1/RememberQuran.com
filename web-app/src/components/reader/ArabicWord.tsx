@@ -13,13 +13,20 @@ import { cn } from "@/lib/utils"
 
 interface ArabicWordProps {
   word: Word
-  onWordClick?: (word: Word) => void
+  onWordClick?: (word: Word, verseKey?: string) => void
   isHighlighted?: boolean
   isPlaying?: boolean
   verseKey?: string
+  disableTooltip?: boolean
 }
 
-export function ArabicWord({ word, isHighlighted = false, verseKey }: ArabicWordProps) {
+export function ArabicWord({
+  word,
+  onWordClick,
+  isHighlighted = false,
+  verseKey,
+  disableTooltip = false,
+}: ArabicWordProps) {
   const isTouch = useIsTouch()
   // Stable actions context — never re-renders words on playback state changes
   const actions = useAudioPlayerActions()
@@ -48,15 +55,36 @@ export function ArabicWord({ word, isHighlighted = false, verseKey }: ArabicWord
 
   const triggerClass = cn(
     "inline-block cursor-pointer rounded-sm px-0.5 py-1",
-    "touch-manipulation",
+    "touch-manipulation select-text",
     "transition-colors duration-(--dur-fast) ease-(--ease-out)",
-    "hover:bg-accent",
+    "hover:bg-gold/20 hover:text-gold",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-    isHighlighted && "bg-primary/15",
+    isHighlighted && "bg-primary/20 text-primary font-bold",
   )
 
-  function speakWord() {
-    if (actions && getWordAudioUrl(word)) actions.playWord(word)
+  function handleClick() {
+    if (onWordClick) {
+      onWordClick(word, verseKey)
+    }
+  }
+
+  if (disableTooltip) {
+    return (
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            handleClick()
+          }
+        }}
+        className={triggerClass}
+      >
+        {wordContent()}
+      </span>
+    )
   }
 
   /* Touch: tap keeps opening the meaning popover exactly as before —
@@ -89,13 +117,13 @@ export function ArabicWord({ word, isHighlighted = false, verseKey }: ArabicWord
             tabIndex={0}
             onClick={(e) => {
               props.onClick?.(e)
-              speakWord()
+              if (actions && getWordAudioUrl(word)) actions.playWord(word)
             }}
             onKeyDown={(e) => {
               props.onKeyDown?.(e)
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault()
-                speakWord()
+                if (actions && getWordAudioUrl(word)) actions.playWord(word)
               }
             }}
           >

@@ -19,7 +19,7 @@ export function AyahEndMarker({ digits, ariaLabel }: AyahEndMarkerProps) {
   const text = quranFont === "amiri" ? `۝${digits}` : digits
 
   return (
-    <span className="mx-1.5 inline-block text-foreground/90" aria-label={ariaLabel}>
+    <span className="mx-1.5 inline-block text-gold" aria-label={ariaLabel}>
       {text}
     </span>
   )
