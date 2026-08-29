@@ -49,7 +49,7 @@ const KHATTAB_CDN_URL =
   "https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba"
 
 const WORD_FIELDS =
-  "text_uthmani,qpc_uthmani_hafs,translation,audio_url,transliteration,text_uthmani_tajweed"
+  "text_uthmani,qpc_uthmani_hafs,translation,audio_url,transliteration,text_uthmani_tajweed,line_number,code_v1,code_v2,page_number"
 const VERSE_FIELDS =
   "text_uthmani,qpc_uthmani_hafs,verse_key,verse_number,page_number,juz_number,hizb_number"
 
@@ -157,6 +157,9 @@ function slimWord(word: Word): Word {
     position: word.position,
     audio_url: word.audio_url,
     char_type_name: word.char_type_name,
+    line_number: word.line_number,
+    code_v1: word.code_v1,
+    code_v2: word.code_v2,
     text_uthmani: hasQpc ? "" : word.text_uthmani,
     ...(word.qpc_uthmani_hafs
       ? { qpc_uthmani_hafs: word.qpc_uthmani_hafs }

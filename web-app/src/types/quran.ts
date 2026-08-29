@@ -31,6 +31,11 @@ export interface Word {
   text_uthmani: string
   /** QPC Hafs encoding — matches the KFGQPC UthmanicHafs font */
   qpc_uthmani_hafs?: string
+  /** 15-line printed Mushaf line number (1-15 per page) */
+  line_number?: number
+  /** QCF v1 / v2 vector glyph codes */
+  code_v1?: string
+  code_v2?: string
   /** Per-word tajweed markup — `<rule class=ham_wasl>ٱ</rule>…` with unquoted attrs */
   text_uthmani_tajweed?: string
   translation: WordTranslation
