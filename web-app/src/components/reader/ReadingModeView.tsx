@@ -184,135 +184,38 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
               </div>
             )}
 
-            {/* Authentic Line-by-Line Mushaf Page Rendering (King Fahd Complex 15-line layout) */}
-            {(() => {
-              // Extract all words across the page in reading order with their verse context
-              const pageWordsWithContext: Array<{ word: Word; verse: Verse; isLastInAyah: boolean; endWord: Word | null }> = []
-
-              for (const verse of page.verses) {
-                const words = (verse.words ?? []).filter(
-                  (w) => w.char_type_name === "word" || w.char_type_name === "end",
-                )
-                for (let i = 0; i < words.length; i++) {
-                  const w = words[i]
-                  if (w.char_type_name === "end") continue
-                  const isLast = i === words.length - 1
-                  const endWord = !isLast && words[i + 1]?.char_type_name === "end" ? words[i + 1] : null
-                  pageWordsWithContext.push({
-                    word: w,
-                    verse,
-                    isLastInAyah: isLast,
-                    endWord,
-                  })
-                }
-              }
-
-              // Group by line_number if available from QDC
-              const lineMap = new Map<number, typeof pageWordsWithContext>()
-              let hasLineNumbers = false
-
-              for (const item of pageWordsWithContext) {
-                if (item.word.line_number) {
-                  hasLineNumbers = true
-                  const l = item.word.line_number
-                  const list = lineMap.get(l) ?? []
-                  list.push(item)
-                  lineMap.set(l, list)
-                }
-              }
-
-              // If line numbers exist (Standard Madinah Mushaf Pages), render line-by-line
-              if (hasLineNumbers && lineMap.size > 0) {
-                const sortedLines = Array.from(lineMap.entries()).sort(([a], [b]) => a - b)
+            {/* Continuous Arabic text flow within the Mushaf page */}
+            <div
+              dir="rtl"
+              lang="ar"
+              className={cn(
+                "mushaf-flow quran-arabic font-uthmani text-[1.75rem] sm:text-[2.05rem] md:text-[2.25rem] lg:text-[2.35rem]",
+                "leading-[2.4] sm:leading-[2.6] text-[#1E1B18] dark:text-[#E8E2D5] select-text",
+                page.pageNumber === 1 ? "text-center" : "text-justify",
+              )}
+            >
+              {page.verses.map((verse, index) => {
+                const prev = index > 0 ? page.verses[index - 1] : null
+                const showInlineJuz = prev && verse.juz_number !== prev.juz_number
+                const showInlineHizb = !showInlineJuz && prev && verse.hizb_number !== prev.hizb_number
 
                 return (
-                  <div
-                    dir="rtl"
-                    lang="ar"
-                    className="mushaf-lines-container flex flex-col justify-between w-full min-h-[420px] py-1 select-none gap-2 sm:gap-2.5"
-                  >
-                    {sortedLines.map(([lineNum, lineItems], idx) => {
-                      const isFirstLine = idx === 0
-                      const isLastLine = idx === sortedLines.length - 1
-                      const isPage1 = page.pageNumber === 1
-
-                      return (
-                        <div
-                          key={`page-${page.pageNumber}-line-${lineNum}`}
-                          data-line-number={lineNum}
-                          className={cn(
-                            "mushaf-line flex items-center w-full leading-[2.2] sm:leading-[2.4]",
-                            "quran-arabic font-uthmani text-[1.65rem] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.25rem] text-[#22201D] dark:text-[#E8E2D5]",
-                            // Symmetrical centering for opening page or end lines; justified stretch for standard lines
-                            isPage1 || isLastLine || isFirstLine
-                              ? "justify-center text-center gap-1.5 sm:gap-2 flex-wrap"
-                              : "justify-between text-justify",
-                          )}
-                        >
-                          {lineItems.map(({ word, verse, isLastInAyah, endWord }) => {
-                            const isTarget = targetAyahId === verse.verse_number
-                            return (
-                              <HideableArabic
-                                key={word.id}
-                                verseKey={verse.verse_key}
-                                compact
-                                className={cn("inline-flex items-center", isTarget && "bg-primary/10 rounded-xs")}
-                              >
-                                <span className={cn("inline-flex items-center", endWord ? "whitespace-nowrap" : undefined)}>
-                                  <ArabicWord
-                                    word={word}
-                                    verseKey={verse.verse_key}
-                                    disableTooltip={true}
-                                    onWordClick={handleWordClick}
-                                  />
-                                  {endWord && (
-                                    <AyahEndMarker
-                                      digits={endWord.qpc_uthmani_hafs || endWord.text_uthmani}
-                                      ariaLabel={`Ayah ${verse.verse_number}`}
-                                    />
-                                  )}
-                                </span>
-                              </HideableArabic>
-                            )
-                          })}
-                        </div>
-                      )
-                    })}
-                  </div>
+                  <Fragment key={verse.id}>
+                    {showInlineJuz && (
+                      <SectionMarker arabicLabel="الجزء" englishLabel="Juz" number={verse.juz_number} emphasized />
+                    )}
+                    {showInlineHizb && (
+                      <SectionMarker arabicLabel="الحزب" englishLabel="Hizb" number={verse.hizb_number} emphasized={false} />
+                    )}
+                    <ReadingVerse
+                      verse={verse}
+                      isTarget={targetAyahId === verse.verse_number}
+                      onWordClick={handleWordClick}
+                    />
+                  </Fragment>
                 )
-              }
-
-              // Graceful fallback if lines are not present: continuous book flow
-              return (
-                <div
-                  dir="rtl"
-                  lang="ar"
-                  className="mushaf-flow quran-arabic font-uthmani text-[1.65rem] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.25rem] leading-[2.4] sm:leading-[2.6] text-[#22201D] dark:text-[#E8E2D5]"
-                >
-                  {page.verses.map((verse, index) => {
-                    const prev = index > 0 ? page.verses[index - 1] : null
-                    const showInlineJuz = prev && verse.juz_number !== prev.juz_number
-                    const showInlineHizb = !showInlineJuz && prev && verse.hizb_number !== prev.hizb_number
-
-                    return (
-                      <Fragment key={verse.id}>
-                        {showInlineJuz && (
-                          <SectionMarker arabicLabel="الجزء" englishLabel="Juz" number={verse.juz_number} emphasized />
-                        )}
-                        {showInlineHizb && (
-                          <SectionMarker arabicLabel="الحزب" englishLabel="Hizb" number={verse.hizb_number} emphasized={false} />
-                        )}
-                        <ReadingVerse
-                          verse={verse}
-                          isTarget={targetAyahId === verse.verse_number}
-                          onWordClick={handleWordClick}
-                        />
-                      </Fragment>
-                    )
-                  })}
-                </div>
-              )
-            })()}
+              })}
+            </div>
           </MushafPageFrame>
         )
       })}
