@@ -973,7 +973,7 @@ h1, h2, h3, .font-serif {
     text-justify: inter-word;
     line-height: 2.15;
     letter-spacing: 0;
-    word-spacing: 0.08em;
+    word-spacing: 0.01em;
     font-feature-settings: "liga" 1, "calt" 1, "kash" 1, "ss01" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
