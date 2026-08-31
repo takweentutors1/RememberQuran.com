@@ -191,9 +191,9 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
               dir="rtl"
               lang="ar"
               className={cn(
-                "mushaf-flow quran-arabic font-uthmani text-[1.75rem] sm:text-[2.05rem] md:text-[2.25rem] lg:text-[2.35rem]",
-                "leading-[2.4] sm:leading-[2.6] text-[#1E1B18] dark:text-[#E8E2D5] select-text",
-                page.pageNumber === 1 ? "text-center" : "text-justify",
+                "mushaf-flow quran-arabic font-uthmani text-[1.65rem] sm:text-[1.85rem] md:text-[2.05rem]",
+                "leading-[2.35] sm:leading-[2.5] text-[#1E1B18] dark:text-[#E8E2D5] select-text",
+                page.pageNumber <= 2 ? "text-center" : "text-justify",
               )}
             >
               {page.verses.map((verse, index) => {
