@@ -72,7 +72,7 @@ export function MushafPageFrame({
   const cleanSurahName = surahNameArabic ? surahNameArabic.replace(/^سورة\s+/i, "") : ""
 
   return (
-    <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[680px] px-2 sm:px-4", className)}>
+    <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[760px] px-2 sm:px-4", className)}>
       {/* Outer Margin Badges (Desktop) */}
       {marginBadges.length > 0 && (
         <div className="absolute -right-3 top-12 hidden flex-col gap-3 lg:flex translate-x-full pr-3">
@@ -104,7 +104,7 @@ export function MushafPageFrame({
           "relative overflow-hidden transition-colors duration-300",
           "bg-[#FBF9F4] dark:bg-[#151412] text-[#1E1B18] dark:text-[#ECE6DA]",
           "border border-[#D8D1C3] dark:border-[#383227] rounded-sm shadow-md",
-          "p-3.5 sm:p-6 md:p-8",
+          "p-3 sm:p-5 md:p-6",
         )}
       >
         {/* Subtle Outer Frame Rule */}

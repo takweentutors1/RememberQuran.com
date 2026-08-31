@@ -275,8 +275,8 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
               lang="ar"
               className={cn(
                 "flex flex-col w-full quran-arabic font-uthmani select-text",
-                isCenteredOpeningPage ? "gap-2.5 sm:gap-3.5 my-2" : "gap-1 sm:gap-2",
-                "text-[1.75rem] sm:text-[2rem] md:text-[2.2rem]",
+                isCenteredOpeningPage ? "gap-3 sm:gap-4 my-2" : "gap-1.5 sm:gap-2.5 my-1",
+                "text-[1.4rem] sm:text-[1.65rem] md:text-[1.85rem]",
                 "text-[#1E1B18] dark:text-[#E8E2D5]",
               )}
             >
@@ -285,10 +285,10 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                   key={lineNum}
                   data-line-number={lineNum}
                   className={cn(
-                    "flex items-center w-full leading-none",
+                    "flex items-center w-full min-h-[2.4em] leading-[2.5] sm:leading-[2.7] py-0.5",
                     isCenteredOpeningPage
-                      ? "justify-center gap-1.5 sm:gap-2"
-                      : "justify-between",
+                      ? "justify-center gap-2 sm:gap-3"
+                      : "justify-between gap-1",
                   )}
                 >
                   {lineWords.map((item) => (
