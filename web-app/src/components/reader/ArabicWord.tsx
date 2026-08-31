@@ -54,12 +54,12 @@ export function ArabicWord({
   }
 
   const triggerClass = cn(
-    "inline-block cursor-pointer rounded-sm px-0.5 py-1",
+    "inline cursor-pointer rounded-xs px-0 py-0.5",
     "touch-manipulation select-text",
     "transition-colors duration-(--dur-fast) ease-(--ease-out)",
     "hover:bg-gold/20 hover:text-gold",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-    isHighlighted && "bg-primary/20 text-primary font-bold",
+    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+    isHighlighted && "bg-primary/20 text-primary font-bold rounded-xs",
   )
 
   function handleClick() {

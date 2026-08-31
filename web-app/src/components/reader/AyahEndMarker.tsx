@@ -9,7 +9,7 @@ interface AyahEndMarkerProps {
 export function AyahEndMarker({ digits, ariaLabel }: AyahEndMarkerProps) {
   return (
     <span
-      className="inline-flex items-center justify-center align-middle select-none mx-1.5 translate-y-[-1px]"
+      className="inline-flex items-center justify-center align-middle select-none mx-1 translate-y-[-1px]"
       aria-label={ariaLabel}
     >
       <span className="relative inline-flex items-center justify-center size-[1.55em] text-[0.62em]">

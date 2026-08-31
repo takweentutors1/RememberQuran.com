@@ -970,10 +970,10 @@ h1, h2, h3, .font-serif {
     width: 100%;
     text-align: justify;
     text-align-last: center;
-    text-justify: inter-word;
+    text-justify: auto;
     line-height: 2.3;
-    letter-spacing: 0;
-    word-spacing: 0.04em;
+    letter-spacing: normal;
+    word-spacing: normal;
     font-feature-settings: "liga" 1, "calt" 1, "kash" 1, "ss01" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
