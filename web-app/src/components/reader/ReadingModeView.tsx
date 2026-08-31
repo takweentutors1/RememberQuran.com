@@ -65,7 +65,7 @@ function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
                 
                 </>
               ) : (
-                " "
+                ""
               )}
             </Fragment>
           )
