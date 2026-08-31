@@ -201,19 +201,35 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                 "leading-[2.05] sm:leading-[2.15] md:leading-[2.2]",
                 "text-[#1E1B18] dark:text-[#E8E2D5]",
                 isCenteredOpeningPage
-                  ? "text-center space-y-2"
+                  ? "text-center space-y-2.5"
                   : "mushaf-flow",
               )}
             >
-              {page.verses.map((verse) => (
-                <Fragment key={verse.id}>
-                  <ReadingVerse
-                    verse={verse}
-                    isTarget={targetAyahId === verse.verse_number}
-                    onWordClick={handleWordClick}
-                  />
-                </Fragment>
-              ))}
+              {page.verses.map((verse) => {
+                const isFatihahAyah1 = chapter?.id === 1 && verse.verse_number === 1
+
+                if (isFatihahAyah1) {
+                  return (
+                    <div key={verse.id} className="block w-full text-center my-2 sm:my-3">
+                      <ReadingVerse
+                        verse={verse}
+                        isTarget={targetAyahId === verse.verse_number}
+                        onWordClick={handleWordClick}
+                      />
+                    </div>
+                  )
+                }
+
+                return (
+                  <Fragment key={verse.id}>
+                    <ReadingVerse
+                      verse={verse}
+                      isTarget={targetAyahId === verse.verse_number}
+                      onWordClick={handleWordClick}
+                    />
+                  </Fragment>
+                )
+              })}
             </div>
           </MushafPageFrame>
         )
