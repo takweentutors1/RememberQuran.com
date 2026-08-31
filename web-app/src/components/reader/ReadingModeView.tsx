@@ -56,16 +56,11 @@ function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
                 disableTooltip={true}
                 onWordClick={onWordClick}
               />
-              {endWord ? (
-                <>
-                  <AyahEndMarker
-                    digits={endWord.qpc_uthmani_hafs || endWord.text_uthmani}
-                    ariaLabel={`Ayah ${verse.verse_number}`}
-                  />
-                  {" "}
-                </>
-              ) : (
-                " "
+              {endWord && (
+                <AyahEndMarker
+                  digits={endWord.qpc_uthmani_hafs || endWord.text_uthmani}
+                  ariaLabel={`Ayah ${verse.verse_number}`}
+                />
               )}
             </Fragment>
           )
