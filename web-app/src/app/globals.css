@@ -970,7 +970,7 @@ h1, h2, h3, .font-serif {
     width: 100%;
     text-align: center;
     text-align-last: center;
-    text-justify: auto;
+    text-justify: center;
     line-height: 2.15;
     letter-spacing: 0;
     word-spacing: -5.0em;
