@@ -48,7 +48,7 @@ function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
           const endWord = !isLast && words[i + 1]?.char_type_name === "end" ? words[i + 1] : null
 
           return (
-            <span key={word.id} className="inline">
+            <Fragment key={word.id}>
               <ArabicWord
                 word={word}
                 isHighlighted={highlightedPosition === word.position}
@@ -61,13 +61,11 @@ function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
                   digits={endWord.qpc_uthmani_hafs || endWord.text_uthmani}
                   ariaLabel={`Ayah ${verse.verse_number}`}
                 />
-              ) : !isLast ? (
-                " "
               ) : null}
-            </span>
+              {" "}
+            </Fragment>
           )
         })}
-        {" "}
       </span>
     </HideableArabic>
   )
