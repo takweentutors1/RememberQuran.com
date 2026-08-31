@@ -968,14 +968,12 @@ h1, h2, h3, .font-serif {
   .mushaf-flow {
     display: block;
     width: 100%;
-    max-width: 650px;
-    margin-inline: auto;
     text-align: justify;
     text-align-last: center;
     text-justify: inter-word;
-    line-height: 2.3;
+    line-height: 2.75;
     letter-spacing: normal;
-    word-spacing: -0.02em;
+    word-spacing: 0.04em;
     font-feature-settings: "liga" 1, "calt" 1, "kash" 1, "ss01" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

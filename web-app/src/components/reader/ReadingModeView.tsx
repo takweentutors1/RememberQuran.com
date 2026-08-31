@@ -38,7 +38,7 @@ function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
       compact
       className={cn(
         "scroll-mt-28 inline",
-        isTarget && "rounded-sm bg-primary/10",
+        isTarget && "rounded-xs bg-primary/10",
       )}
     >
       <span id={`ayah-${verse.verse_number}`} data-verse-key={verse.verse_key} className="inline">
@@ -48,7 +48,7 @@ function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
           const endWord = !isLast && words[i + 1]?.char_type_name === "end" ? words[i + 1] : null
 
           return (
-            <span key={word.id} className={endWord ? "whitespace-nowrap inline" : "inline"}>
+            <span key={word.id} className="inline">
               <ArabicWord
                 word={word}
                 isHighlighted={highlightedPosition === word.position}
@@ -106,66 +106,18 @@ function SectionMarker({
   )
 }
 
-interface PageLineWord {
-  word: Word
-  verseKey: string
-  verseNumber: number
-  isEnd: boolean
-}
-
-function ReadingLineWord({
-  item,
-  isTarget,
-  onWordClick,
-}: {
-  item: PageLineWord
-  isTarget: boolean
-  onWordClick: (word: Word, verseKey?: string) => void
-}) {
-  const highlightedWord = useHighlightedWord(item.verseKey)
-
-  if (item.isEnd) {
-    return (
-      <AyahEndMarker
-        digits={item.word.qpc_uthmani_hafs || item.word.text_uthmani}
-        ariaLabel={`Ayah ${item.verseNumber}`}
-      />
-    )
-  }
-
-  return (
-    <span
-      id={`ayah-${item.verseNumber}`}
-      data-verse-key={item.verseKey}
-      className={cn(
-        "inline-flex items-center",
-        isTarget && "rounded-xs bg-primary/10",
-      )}
-    >
-      <ArabicWord
-        word={item.word}
-        isHighlighted={highlightedWord === item.word.position}
-        verseKey={item.verseKey}
-        disableTooltip={true}
-        onWordClick={onWordClick}
-      />
-    </span>
-  )
-}
-
 /**
  * Authentic Printed Quran (Mushaf) Reading Mode
  * Features:
- * - True 15-line Madani Mushaf grid engine (grouping by word.line_number)
+ * - Natural continuous Mushaf flow per page with authentic justification
  * - Centered calligraphic layout on opening pages (Al-Fatihah / Al-Baqarah 1-5)
- * - Edge-to-edge justification on standard 15-line pages with natural word proximity
  * - Surah title cartouches (Unwan) and calligraphic Basmalah
  * - Docked Word Study Ribbon on word interaction
  */
 export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeViewProps) {
   const [selectedWord, setSelectedWord] = useState<{ word: Word; verseKey?: string } | null>(null)
 
-  // Group verses into authentic printed Mushaf pages and their exact 15 lines
+  // Group verses into authentic printed Mushaf pages
   const pages = useMemo(() => {
     const pageMap = new Map<number, Verse[]>()
     for (const verse of verses) {
@@ -181,43 +133,12 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
       const juzNumber = firstVerse?.juz_number
       const hizbNumber = firstVerse?.hizb_number
 
-      // Group words into physical Mushaf lines (1 to 15)
-      const lineMap = new Map<number, PageLineWord[]>()
-      for (const verse of pageVerses) {
-        const words = (verse.words ?? []).filter(
-          (w) => w.char_type_name === "word" || w.char_type_name === "end",
-        )
-
-        for (let i = 0; i < words.length; i++) {
-          const w = words[i]
-          const isEnd = w.char_type_name === "end"
-          const lineNum = w.line_number || 1
-
-          const list = lineMap.get(lineNum) ?? []
-          list.push({
-            word: w,
-            verseKey: verse.verse_key,
-            verseNumber: verse.verse_number,
-            isEnd,
-          })
-          lineMap.set(lineNum, list)
-        }
-      }
-
-      const lines = Array.from(lineMap.entries())
-        .sort(([a], [b]) => a - b)
-        .map(([lineNum, lineWords]) => ({
-          lineNum,
-          words: lineWords,
-        }))
-
       return {
         pageNumber,
         verses: pageVerses,
         hasSurahStart,
         juzNumber,
         hizbNumber,
-        lines,
       }
     })
   }, [verses])
@@ -269,37 +190,29 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
               </div>
             )}
 
-            {/* 15-Line Madani Mushaf Line-by-Line Layout */}
+            {/* Authentic Mushaf Page Text Block */}
             <div
               dir="rtl"
               lang="ar"
               className={cn(
-                "flex flex-col w-full quran-arabic font-uthmani select-text",
-                isCenteredOpeningPage ? "gap-3 sm:gap-4 my-2" : "gap-1.5 sm:gap-2.5 my-1",
-                "text-[1.4rem] sm:text-[1.65rem] md:text-[1.85rem]",
+                "quran-arabic font-uthmani select-text",
+                "px-2 sm:px-4 py-1",
+                "text-[1.5rem] sm:text-[1.75rem] md:text-[1.95rem]",
+                "leading-[2.5] sm:leading-[2.75] md:leading-[2.9]",
                 "text-[#1E1B18] dark:text-[#E8E2D5]",
+                isCenteredOpeningPage
+                  ? "text-center space-y-3"
+                  : "mushaf-flow",
               )}
             >
-              {page.lines.map(({ lineNum, words: lineWords }) => (
-                <div
-                  key={lineNum}
-                  data-line-number={lineNum}
-                  className={cn(
-                    "flex items-center w-full min-h-[2.4em] leading-[2.5] sm:leading-[2.7] py-0.5",
-                    isCenteredOpeningPage
-                      ? "justify-center gap-2 sm:gap-3"
-                      : "justify-between gap-1",
-                  )}
-                >
-                  {lineWords.map((item) => (
-                    <ReadingLineWord
-                      key={item.word.id}
-                      item={item}
-                      isTarget={targetAyahId === item.verseNumber}
-                      onWordClick={handleWordClick}
-                    />
-                  ))}
-                </div>
+              {page.verses.map((verse) => (
+                <Fragment key={verse.id}>
+                  <ReadingVerse
+                    verse={verse}
+                    isTarget={targetAyahId === verse.verse_number}
+                    onWordClick={handleWordClick}
+                  />
+                </Fragment>
               ))}
             </div>
           </MushafPageFrame>
