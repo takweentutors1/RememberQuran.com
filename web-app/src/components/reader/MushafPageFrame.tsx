@@ -109,37 +109,6 @@ export function MushafPageFrame({
       >
         {/* Subtle Outer Frame Rule */}
         <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#7A6440]/60 p-2 sm:p-3 md:p-4">
-          {/* Authentic Top Header Bar inside the frame */}
-          <header
-            dir="rtl"
-            lang="ar"
-            aria-label={`صفحة ${pageNumber}`}
-            className="mb-2.5 sm:mb-4 flex items-center justify-between border-b border-[#C2A676]/60 dark:border-[#7A6440]/60 pb-1.5 px-1 select-none"
-          >
-            {/* Surah Name (Outer/Inner traditional header cell) */}
-            <div className="flex items-center gap-1.5 font-serif quran-arabic text-sm sm:text-base font-semibold text-[#3C3224] dark:text-[#DCD2C0]">
-              <span className="text-xs text-[#8C6D38] dark:text-[#C5A375]">سورة</span>
-              <span>{cleanSurahName}</span>
-            </div>
-
-            {/* Subtle Center Rosette / Star Accent */}
-            <div className="flex items-center gap-1.5 opacity-60">
-              <span className="h-px w-6 sm:w-12 bg-[#C2A676] dark:bg-[#7A6440]" />
-              <span className="text-[10px] text-[#8C6D38] dark:text-[#D4AF37]">۞</span>
-              <span className="h-px w-6 sm:w-12 bg-[#C2A676] dark:bg-[#7A6440]" />
-            </div>
-
-            {/* Juz Header Cell */}
-            <div className="flex items-center gap-1.5 font-serif quran-arabic text-sm sm:text-base font-semibold text-[#3C3224] dark:text-[#DCD2C0]">
-              {juzNumber ? (
-                <>
-                  <span className="text-xs text-[#8C6D38] dark:text-[#C5A375]">الجزء</span>
-                  <span>{juzOrdinal}</span>
-                </>
-              ) : null}
-            </div>
-          </header>
-
           {/* Main Quranic Text Body (15-line flow) */}
           <main className="relative z-10 min-h-[360px] py-1">
             {children}
