@@ -968,9 +968,9 @@ h1, h2, h3, .font-serif {
   .mushaf-flow {
     display: block;
     width: 100%;
-    text-align: center;
+    text-align: right;
     text-align-last: center;
-    text-justify: center;
+    text-justify: right;
     line-height: 2.15;
     letter-spacing: 0;
     word-spacing: -10.0em;
