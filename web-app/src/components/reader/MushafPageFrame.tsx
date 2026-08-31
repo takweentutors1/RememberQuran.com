@@ -104,17 +104,17 @@ export function MushafPageFrame({
           "relative overflow-hidden transition-colors duration-300",
           "bg-[#FBF9F4] dark:bg-[#151412] text-[#1E1B18] dark:text-[#ECE6DA]",
           "border border-[#D8D1C3] dark:border-[#383227] rounded-sm shadow-md",
-          "p-3 sm:p-5 md:p-6",
+          "p-2 sm:p-3 md:p-4",
         )}
       >
         {/* Subtle Outer Frame Rule */}
-        <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#7A6440]/60 p-3 sm:p-5 md:p-6">
+        <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#7A6440]/60 p-2 sm:p-3 md:p-4">
           {/* Authentic Top Header Bar inside the frame */}
           <header
             dir="rtl"
             lang="ar"
             aria-label={`صفحة ${pageNumber}`}
-            className="mb-4 sm:mb-6 flex items-center justify-between border-b border-[#C2A676]/60 dark:border-[#7A6440]/60 pb-2.5 px-2 select-none"
+            className="mb-2.5 sm:mb-4 flex items-center justify-between border-b border-[#C2A676]/60 dark:border-[#7A6440]/60 pb-1.5 px-1 select-none"
           >
             {/* Surah Name (Outer/Inner traditional header cell) */}
             <div className="flex items-center gap-1.5 font-serif quran-arabic text-sm sm:text-base font-semibold text-[#3C3224] dark:text-[#DCD2C0]">

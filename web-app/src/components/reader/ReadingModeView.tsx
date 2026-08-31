@@ -183,7 +183,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
           >
             {/* Surah Title Cartouche (Unwan) when Surah begins on this page */}
             {page.hasSurahStart && chapter && (
-              <div className="w-full mb-3">
+              <div className="w-full mb-2">
                 <SurahHeaderCartouche chapter={chapter} />
                 {/* For Surahs with bismillah_pre (Surahs 2-114 except 9) */}
                 {chapter.bismillah_pre && <BismillahHeader />}
@@ -196,12 +196,12 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
               lang="ar"
               className={cn(
                 "quran-arabic font-uthmani select-text",
-                "px-2 sm:px-4 py-1",
-                "text-[1.5rem] sm:text-[1.75rem] md:text-[1.95rem]",
-                "leading-[2.5] sm:leading-[2.75] md:leading-[2.9]",
+                "px-1 sm:px-2 py-0.5",
+                "text-[1.5rem] sm:text-[1.75rem] md:text-[1.92rem]",
+                "leading-[2.05] sm:leading-[2.15] md:leading-[2.2]",
                 "text-[#1E1B18] dark:text-[#E8E2D5]",
                 isCenteredOpeningPage
-                  ? "text-center space-y-3"
+                  ? "text-center space-y-2"
                   : "mushaf-flow",
               )}
             >
