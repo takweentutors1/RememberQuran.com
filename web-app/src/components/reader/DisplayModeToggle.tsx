@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutList, AlignLeft, LayoutGrid } from "lucide-react"
+import { LayoutList, AlignLeft } from "lucide-react"
 import { useReaderSettings, type DisplayMode } from "@/context/ReaderSettingsContext"
 import { cn } from "@/lib/utils"
 
@@ -21,12 +21,6 @@ const OPTIONS: {
     label: "Reading",
     description: "Continuous Arabic flow, like a printed mushaf",
     icon: AlignLeft,
-  },
-  {
-    value: "card",
-    label: "Cards",
-    description: "Verses as individual cards in a grid, with translation",
-    icon: LayoutGrid,
   },
 ]
 

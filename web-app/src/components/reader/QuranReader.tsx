@@ -16,7 +16,6 @@ import { useAudioPlayer } from "@/context/AudioPlayerContext"
 import { BismillahHeader } from "./BismillahHeader"
 import { AyahBlock } from "./AyahBlock"
 import { ReadingModeView } from "./ReadingModeView"
-import { CardModeView } from "./CardModeView"
 import { ProgressTracker } from "./ProgressTracker"
 
 
@@ -248,7 +247,6 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
   }, [activePlaybackKey, chapter.id, shouldReduceMotion])
 
   const isReading = displayMode === "reading"
-  const isCard = displayMode === "card"
 
   const playButton = (
     <button
@@ -285,9 +283,7 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
           "mx-auto",
           isReading
             ? "max-w-5xl px-3 py-6 sm:px-8 sm:py-8"
-            : isCard
-              ? "max-w-6xl px-4 py-8 sm:px-8 sm:py-10"
-              : "max-w-[820px] px-6 py-8 sm:px-10 sm:py-10",
+            : "max-w-[820px] px-6 py-8 sm:px-10 sm:py-10",
         )}
         style={
           {
@@ -337,14 +333,6 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
             verses={verses}
             targetAyahId={highlightActive ? targetAyahId : undefined}
             chapter={chapter}
-          />
-        ) : isCard ? (
-          <CardModeView
-            verses={verses}
-            chapter={chapter}
-            targetAyahId={highlightActive ? targetAyahId : undefined}
-            activeTranslationIds={activeTranslations}
-            showTranslation={showTranslation}
           />
         ) : (
           <div role="list" aria-label="Ayahs" className="divide-y divide-border/40">

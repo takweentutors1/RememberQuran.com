@@ -35,7 +35,7 @@ import {
 } from "@/lib/quran/verse-key"
 
 /** verse = translation/verse-by-verse view; reading = continuous Arabic (mushaf-like); card = verse-card grid */
-export type DisplayMode = "verse" | "reading" | "card"
+export type DisplayMode = "verse" | "reading"
 
 
 /** @deprecated Use FontScale — kept for migration from older localStorage */
@@ -153,7 +153,7 @@ function migrateSettings(raw: unknown): ReaderSettings {
       : DEFAULT_SETTINGS.quranFont
 
   const displayMode =
-    s.displayMode === "reading" || s.displayMode === "verse" || s.displayMode === "card"
+    s.displayMode === "reading" || s.displayMode === "verse"
       ? s.displayMode
       : DEFAULT_SETTINGS.displayMode
 

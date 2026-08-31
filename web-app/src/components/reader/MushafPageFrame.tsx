@@ -69,23 +69,23 @@ export function MushafPageFrame({
   className,
 }: MushafPageFrameProps) {
   const juzOrdinal = juzNumber ? JUZ_NAMES_ARABIC[juzNumber] || toArabicDigits(juzNumber) : ""
-  const formattedSurahName = surahNameArabic ? `سورة ${surahNameArabic.replace(/^سورة\s+/i, "")}` : ""
+  const cleanSurahName = surahNameArabic ? surahNameArabic.replace(/^سورة\s+/i, "") : ""
 
   return (
-    <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[800px]", className)}>
+    <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[840px] px-2 sm:px-4", className)}>
       {/* Outer Margin Badges (Desktop) */}
       {marginBadges.length > 0 && (
-        <div className="absolute -right-3 top-16 hidden flex-col gap-3 lg:flex translate-x-full pr-3">
+        <div className="absolute -right-3 top-12 hidden flex-col gap-3 lg:flex translate-x-full pr-3">
           {marginBadges.map((badge) => (
             <div
               key={badge.id}
               dir="rtl"
               className={cn(
-                "flex flex-col items-center justify-center rounded-md border border-[#8E6C42]/50 bg-[#F4EFE6]/90 dark:bg-[#2A241C]/90 px-3 py-2 text-center shadow-xs",
+                "flex flex-col items-center justify-center rounded-sm border border-[#C2A676]/60 bg-[#FAF7EE] dark:bg-[#201C17] px-3.5 py-2 text-center shadow-xs",
                 "transition-transform hover:scale-105",
               )}
             >
-              <span className="quran-arabic text-sm font-semibold text-[#8E6C42] dark:text-[#C5A375] leading-tight">
+              <span className="quran-arabic text-sm font-semibold text-[#8C6D38] dark:text-[#D4AF37] leading-tight">
                 {badge.label}
               </span>
               {badge.sublabel && (
@@ -98,61 +98,64 @@ export function MushafPageFrame({
         </div>
       )}
 
-      {/* Top Header Split Bar: Right = Juz Ordinal, Left = Surah Name */}
-      <header
-        dir="rtl"
-        lang="ar"
-        aria-label={`صفحة ${pageNumber}`}
-        className="relative z-10 mx-auto mb-3 sm:mb-4 flex max-w-sm items-center justify-between rounded-xs border border-[#D5CEBF] dark:border-[#4A3F33] bg-[#F7F3E9] dark:bg-[#1E1914] px-4 py-1 text-xs sm:text-sm font-medium text-[#5D5447] dark:text-[#C5BBAA] shadow-2xs select-none"
-      >
-        {/* Right Cell: Juz Name */}
-        <div className="flex-1 text-center font-serif quran-arabic">
-          {juzNumber ? `الجزء ${juzOrdinal}` : ""}
-        </div>
-
-        {/* Center Dividing Line */}
-        <div className="h-3.5 w-px bg-[#D5CEBF] dark:bg-[#4A3F33]" />
-
-        {/* Left Cell: Surah Name */}
-        <div className="flex-1 text-center font-serif quran-arabic">
-          {formattedSurahName}
-        </div>
-      </header>
-
-      {/* Main Mushaf Page Container with Plain Clean Background */}
+      {/* Main Mushaf Page Container - Exact King Fahd Complex Manuscript Geometry */}
       <div
         className={cn(
           "relative overflow-hidden transition-colors duration-300",
-          "bg-[#FDFBF7] dark:bg-[#141311] text-[#1E1B18] dark:text-[#E8E2D5]",
-          "border border-[#D8D0C2] dark:border-[#383026] rounded-xs shadow-md p-4 sm:p-7 md:p-9",
+          "bg-[#FBF9F4] dark:bg-[#151412] text-[#1E1B18] dark:text-[#ECE6DA]",
+          "border border-[#D8D1C3] dark:border-[#383227] rounded-sm shadow-md",
+          "p-3.5 sm:p-6 md:p-8",
         )}
       >
-        {/* Elegant Minimalist Double Gold Inner Frame */}
-        <div className="relative rounded-xs border border-[#8E6C42]/50 p-3.5 sm:p-6 md:p-7">
-          {/* Subtle Corner Finials */}
-          <div className="pointer-events-none absolute top-1 right-1 size-2 border-t border-r border-[#8E6C42]" />
-          <div className="pointer-events-none absolute top-1 left-1 size-2 border-t border-l border-[#8E6C42]" />
-          <div className="pointer-events-none absolute bottom-1 right-1 size-2 border-b border-r border-[#8E6C42]" />
-          <div className="pointer-events-none absolute bottom-1 left-1 size-2 border-b border-l border-[#8E6C42]" />
+        {/* Subtle Outer Frame Rule */}
+        <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#7A6440]/60 p-3 sm:p-5 md:p-6">
+          {/* Authentic Top Header Bar inside the frame */}
+          <header
+            dir="rtl"
+            lang="ar"
+            aria-label={`صفحة ${pageNumber}`}
+            className="mb-4 sm:mb-6 flex items-center justify-between border-b border-[#C2A676]/60 dark:border-[#7A6440]/60 pb-2.5 px-2 select-none"
+          >
+            {/* Surah Name (Outer/Inner traditional header cell) */}
+            <div className="flex items-center gap-1.5 font-serif quran-arabic text-sm sm:text-base font-semibold text-[#3C3224] dark:text-[#DCD2C0]">
+              <span className="text-xs text-[#8C6D38] dark:text-[#C5A375]">سورة</span>
+              <span>{cleanSurahName}</span>
+            </div>
 
-          {/* Main Quranic Text Area */}
-          <main className="relative z-10 min-h-[350px]">
+            {/* Subtle Center Rosette / Star Accent */}
+            <div className="flex items-center gap-1.5 opacity-60">
+              <span className="h-px w-6 sm:w-12 bg-[#C2A676] dark:bg-[#7A6440]" />
+              <span className="text-[10px] text-[#8C6D38] dark:text-[#D4AF37]">۞</span>
+              <span className="h-px w-6 sm:w-12 bg-[#C2A676] dark:bg-[#7A6440]" />
+            </div>
+
+            {/* Juz Header Cell */}
+            <div className="flex items-center gap-1.5 font-serif quran-arabic text-sm sm:text-base font-semibold text-[#3C3224] dark:text-[#DCD2C0]">
+              {juzNumber ? (
+                <>
+                  <span className="text-xs text-[#8C6D38] dark:text-[#C5A375]">الجزء</span>
+                  <span>{juzOrdinal}</span>
+                </>
+              ) : null}
+            </div>
+          </header>
+
+          {/* Main Quranic Text Body (15-line flow) */}
+          <main className="relative z-10 min-h-[360px] py-1">
             {children}
           </main>
+
+          {/* Bottom Page Footer: Centered Oriental Page Numeral */}
+          <footer
+            aria-label={`Page ${pageNumber}`}
+            className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-2 flex items-center justify-center select-none"
+          >
+            <span className="quran-arabic font-uthmani text-sm sm:text-base font-bold text-[#4B3E2C] dark:text-[#D0C6B4] leading-none">
+              {toArabicDigits(pageNumber)}
+            </span>
+          </footer>
         </div>
       </div>
-
-      {/* Bottom Page Footer: Classical Framed Oriental Page Counter Cartouche */}
-      <footer
-        aria-label={`Page ${pageNumber}`}
-        className="relative z-10 mt-3 sm:mt-4 flex items-center justify-center select-none"
-      >
-        <div className="inline-flex items-center justify-center rounded-xs border border-[#D5CEBF] dark:border-[#4A3F33] bg-[#F7F3E9] dark:bg-[#1E1914] px-4 py-0.5 shadow-2xs">
-          <span className="quran-arabic font-uthmani text-sm sm:text-base font-semibold text-[#5D5447] dark:text-[#C5BBAA] leading-none">
-            {toArabicDigits(pageNumber)}
-          </span>
-        </div>
-      </footer>
     </div>
   )
 }
