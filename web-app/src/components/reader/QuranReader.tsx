@@ -293,17 +293,7 @@ export function QuranReader({ chapter, verses, targetAyahId }: QuranReaderProps)
           } as React.CSSProperties
         }
       >
-        {isReading ? (
-          <div className="mb-6 flex items-center justify-between gap-4 px-2 sm:px-4">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{chapter.name_simple}</span>
-              <span>·</span>
-              <span className="tabular-nums">{chapter.verses_count} ayahs</span>
-              <span>·</span>
-              <span>{chapter.revelation_place === "makkah" ? "Makki" : "Madani"}</span>            </div>
-            <div>{playButton}</div>
-          </div>
-        ) : (
+        {!isReading && (
           <header className="mb-8 border-b border-border/40 pb-8 text-center">
             <p
               className="font-uthmani text-[2.75rem] leading-[1.7] text-foreground sm:text-[3.25rem]"
