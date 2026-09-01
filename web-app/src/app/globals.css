@@ -972,8 +972,8 @@ h1, h2, h3, .font-serif {
     text-align-last: right;
     text-justify: right;
     line-height: 2.15;
-    letter-spacing: -50.0em;
-    word-spacing: -100.0em;
+    letter-spacing: 0;
+    word-spacing: 0;
     font-feature-settings: "liga" 1, "calt" 1, "kash" 1, "ss01" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
