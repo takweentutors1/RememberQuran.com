@@ -232,80 +232,80 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
       stream: _audioController.mediaItemStream,
       initialData: _audioController.currentMediaItem,
       builder: (context, mediaSnap) {
-        final duration = mediaSnap.data?.duration ?? Duration.zero;
-        return StreamBuilder<PlaybackState>(
-          // The stream itself only fires on real playback events (~4x/sec);
-          // the smooth ticker in initState re-triggers this builder far more
-          // often while playing, and each rebuild re-reads the interpolated
-          // getter below rather than the (possibly stale) stream snapshot.
-          stream: _audioController.playbackStateStream,
-          initialData: _audioController.currentPlaybackState,
-          builder: (context, stateSnap) {
-            final livePosition = _audioController.currentPlaybackState.position;
-            final position = _dragPosition ?? livePosition;
-            final totalMs = duration.inMilliseconds.toDouble();
-            final hasDuration = totalMs > 0;
-            final clampedMs = hasDuration
-                ? position.inMilliseconds
-                      .toDouble()
-                      .clamp(0, totalMs)
-                      .toDouble()
-                : 0.0;
+        final mediaDuration = mediaSnap.data?.duration ?? Duration.zero;
+        return Obx(() {
+          final knownDuration = _audioController.rxKnownDuration.value ?? Duration.zero;
+          final duration = mediaDuration > Duration.zero ? mediaDuration : knownDuration;
+          return StreamBuilder<PlaybackState>(
+            stream: _audioController.playbackStateStream,
+            initialData: _audioController.currentPlaybackState,
+            builder: (context, stateSnap) {
+              final livePosition = _audioController.currentPlaybackState.position;
+              final position = _dragPosition ?? livePosition;
+              final totalMs = duration.inMilliseconds.toDouble();
+              final hasDuration = totalMs > 0;
+              final clampedMs = hasDuration
+                  ? position.inMilliseconds
+                        .toDouble()
+                        .clamp(0, totalMs)
+                        .toDouble()
+                  : 0.0;
 
-            return Column(
-              children: [
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 3,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 6,
+              return Column(
+                children: [
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 3,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 6,
+                      ),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 14,
+                      ),
                     ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 14,
+                    child: Slider(
+                      value: clampedMs,
+                      max: hasDuration ? totalMs : 1,
+                      onChanged: hasDuration
+                          ? (v) => setState(
+                              () => _dragPosition = Duration(
+                                milliseconds: v.toInt(),
+                              ),
+                            )
+                          : null,
+                      onChangeEnd: hasDuration
+                          ? (v) {
+                              _audioController.seek(
+                                Duration(milliseconds: v.toInt()),
+                              );
+                              setState(() => _dragPosition = null);
+                            }
+                          : null,
                     ),
                   ),
-                  child: Slider(
-                    value: clampedMs,
-                    max: hasDuration ? totalMs : 1,
-                    onChanged: hasDuration
-                        ? (v) => setState(
-                            () => _dragPosition = Duration(
-                              milliseconds: v.toInt(),
-                            ),
-                          )
-                        : null,
-                    onChangeEnd: hasDuration
-                        ? (v) {
-                            _audioController.seek(
-                              Duration(milliseconds: v.toInt()),
-                            );
-                            setState(() => _dragPosition = null);
-                          }
-                        : null,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatDuration(
-                          Duration(milliseconds: clampedMs.toInt()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatDuration(
+                            Duration(milliseconds: clampedMs.toInt()),
+                          ),
+                          style: theme.textTheme.bodySmall,
                         ),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      Text(
-                        _formatDuration(duration),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
+                        Text(
+                          _formatDuration(duration),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
-        );
+                ],
+              );
+            },
+          );
+        });
       },
     );
   }
@@ -313,58 +313,67 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
   Widget _buildTransportControls(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        IconButton(
-          icon: const Icon(Icons.skip_previous_rounded),
-          tooltip: 'Previous ayah',
-          iconSize: 36,
-          onPressed: _audioController.skipToPrevious,
+        // Balanced left action / spacer matching the stop button width
+        const SizedBox(width: 48),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.skip_previous_rounded),
+              tooltip: 'Previous ayah',
+              iconSize: 36,
+              onPressed: _audioController.skipToPrevious,
+            ),
+            const SizedBox(width: 12),
+            Obx(() {
+              final isPlaying = _audioController.rxIsPlaying.value;
+              final isBusy = _audioController.rxIsBusy.value;
+              return SizedBox(
+                width: 72,
+                height: 72,
+                child: isBusy
+                    ? const Padding(
+                        padding: EdgeInsets.all(22),
+                        child: CircularProgressIndicator(strokeWidth: 3),
+                      )
+                    : IconButton.filled(
+                        iconSize: 36,
+                        icon: Icon(
+                          isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                        ),
+                        onPressed: () {
+                          if (isPlaying) {
+                            _audioController.pause();
+                          } else {
+                            _audioController.play();
+                          }
+                        },
+                      ),
+              );
+            }),
+            const SizedBox(width: 12),
+            IconButton(
+              icon: const Icon(Icons.skip_next_rounded),
+              tooltip: 'Next ayah',
+              iconSize: 36,
+              onPressed: _audioController.skipToNext,
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Obx(() {
-          final isPlaying = _audioController.rxIsPlaying.value;
-          final isBusy = _audioController.rxIsBusy.value;
-          return SizedBox(
-            width: 72,
-            height: 72,
-            child: isBusy
-                ? const Padding(
-                    padding: EdgeInsets.all(22),
-                    child: CircularProgressIndicator(strokeWidth: 3),
-                  )
-                : IconButton.filled(
-                    iconSize: 36,
-                    icon: Icon(
-                      isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                    ),
-                    onPressed: () {
-                      if (isPlaying) {
-                        _audioController.pause();
-                      } else {
-                        _audioController.play();
-                      }
-                    },
-                  ),
-          );
-        }),
-        const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(Icons.skip_next_rounded),
-          tooltip: 'Next ayah',
-          iconSize: 36,
-          onPressed: _audioController.skipToNext,
-        ),
-        const SizedBox(width: 20),
-        IconButton(
-          icon: const Icon(Icons.stop_rounded),
-          tooltip: 'Stop',
-          iconSize: 26,
-          color: theme.colorScheme.outline,
-          onPressed: _audioController.stopPlayback,
+        SizedBox(
+          width: 48,
+          child: IconButton(
+            icon: const Icon(Icons.stop_rounded),
+            tooltip: 'Stop',
+            iconSize: 26,
+            color: theme.colorScheme.outline,
+            onPressed: _audioController.stopPlayback,
+          ),
         ),
       ],
     );
@@ -448,62 +457,66 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
             ),
           ],
 
-          if (_mode == RepeatMode.range && _readerController != null) ...[
+          if (_mode == RepeatMode.range) ...[
             const SizedBox(height: 24),
             _buildSectionTitle('Ayah Range'),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    decoration: const InputDecoration(
-                      labelText: 'Start Ayah',
-                      border: OutlineInputBorder(),
+            Obx(() {
+              final totalVerses = _readerController != null && _readerController!.verses.isNotEmpty
+                  ? _readerController!.verses.length
+                  : _audioController.rxCurrentSurahVersesCount.value;
+              final count = totalVerses > 0 ? totalVerses : 7;
+              return Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      decoration: const InputDecoration(
+                        labelText: 'Start Ayah',
+                        border: OutlineInputBorder(),
+                      ),
+                      value: (_rangeStartIdx != null && _rangeStartIdx! < count) ? _rangeStartIdx : 0,
+                      items: List.generate(count, (i) {
+                        return DropdownMenuItem(
+                          value: i,
+                          child: Text('Ayah ${i + 1}'),
+                        );
+                      }),
+                      onChanged: (val) {
+                        setState(() => _rangeStartIdx = val);
+                        if ((_rangeEndIdx ?? -1) < val!) {
+                          _rangeEndIdx = val;
+                        }
+                        _applySettings();
+                      },
                     ),
-                    value: _rangeStartIdx ?? 0,
-                    items: List.generate(_readerController!.verses.length, (i) {
-                      return DropdownMenuItem(
-                        value: i,
-                        child: Text('Ayah ${i + 1}'),
-                      );
-                    }),
-                    onChanged: (val) {
-                      setState(() => _rangeStartIdx = val);
-                      if ((_rangeEndIdx ?? -1) < val!) {
-                        _rangeEndIdx = val;
-                      }
-                      _applySettings();
-                    },
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    decoration: const InputDecoration(
-                      labelText: 'End Ayah',
-                      border: OutlineInputBorder(),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      decoration: const InputDecoration(
+                        labelText: 'End Ayah',
+                        border: OutlineInputBorder(),
+                      ),
+                      value: (_rangeEndIdx != null && _rangeEndIdx! < count)
+                          ? _rangeEndIdx
+                          : (count > 0 ? count - 1 : 0),
+                      items: List.generate(count, (i) {
+                        return DropdownMenuItem(
+                          value: i,
+                          child: Text('Ayah ${i + 1}'),
+                        );
+                      }),
+                      onChanged: (val) {
+                        setState(() => _rangeEndIdx = val);
+                        if ((_rangeStartIdx ?? 9999) > val!) {
+                          _rangeStartIdx = val;
+                        }
+                        _applySettings();
+                      },
                     ),
-                    value:
-                        _rangeEndIdx ??
-                        (_readerController!.verses.length > 0
-                            ? _readerController!.verses.length - 1
-                            : 0),
-                    items: List.generate(_readerController!.verses.length, (i) {
-                      return DropdownMenuItem(
-                        value: i,
-                        child: Text('Ayah ${i + 1}'),
-                      );
-                    }),
-                    onChanged: (val) {
-                      setState(() => _rangeEndIdx = val);
-                      if ((_rangeStartIdx ?? 9999) > val!) {
-                        _rangeStartIdx = val;
-                      }
-                      _applySettings();
-                    },
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            }),
           ],
         ],
       ),

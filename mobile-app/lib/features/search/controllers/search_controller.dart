@@ -28,6 +28,32 @@ class SearchController extends GetxController {
   void onSearchChanged(String query) {
     currentQuery.value = query;
     final trimmed = query.trim();
+
+    // Check for direct surah:ayah navigation format (e.g., 2:255)
+    final directMatch = RegExp(r'^(\d+):(\d+)$').firstMatch(trimmed);
+    if (directMatch != null) {
+      final surahId = int.tryParse(directMatch.group(1) ?? '');
+      final ayahId = int.tryParse(directMatch.group(2) ?? '');
+      if (surahId != null && surahId >= 1 && surahId <= 114 && ayahId != null && ayahId >= 1) {
+        // Clear previous list and insert immediate direct jump result
+        results.value = [
+          SearchResult(
+            verseKey: '$surahId:$ayahId',
+            verseNumber: ayahId,
+            chapterId: surahId,
+            text: 'Direct navigation to Surah $surahId, Ayah $ayahId',
+            highlightedText: 'Jump to $surahId:$ayahId',
+            words: [],
+            translations: [],
+          ),
+        ];
+        hasMore.value = false;
+        error.value = '';
+        isLoading.value = false;
+        return;
+      }
+    }
+
     if (trimmed.length > 2) {
       _performSearch(trimmed, isLoadMore: false);
     } else {

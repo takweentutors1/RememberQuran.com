@@ -229,31 +229,47 @@ class SearchView extends GetView<my_search.SearchController> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Combine words to show the matching Arabic text
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text.rich(
-                TextSpan(
-                  children: result.words.map((w) {
-                    return TextSpan(
-                      text: '${w.text} ',
-                      style: TextStyle(
-                        fontFamily: 'UthmanicHafs',
-                        fontSize: 24,
-                        color: w.highlight
-                            ? (nurColors?.brandGold ??
-                                  theme.colorScheme.primary)
-                            : theme.textTheme.bodyLarge?.color,
-                        fontWeight: w.highlight
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    );
-                  }).toList(),
+            if (result.words.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              // Combine words to show the matching Arabic text
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text.rich(
+                  TextSpan(
+                    children: result.words.map((w) {
+                      return TextSpan(
+                        text: '${w.text} ',
+                        style: TextStyle(
+                          fontFamily: 'UthmanicHafs',
+                          fontSize: 24,
+                          color: w.highlight
+                              ? (nurColors?.brandGold ??
+                                    theme.colorScheme.primary)
+                              : theme.textTheme.bodyLarge?.color,
+                          fontWeight: w.highlight
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.bolt_rounded, size: 20, color: nurColors?.brandGold ?? theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Jump directly to Surah ${result.chapterId}, Ayah ${result.verseNumber}',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
             // Show matching translations
             if (result.translations.isNotEmpty) ...[
