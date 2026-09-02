@@ -120,12 +120,7 @@ export function MushafPageFrame({
             className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-3 flex items-center justify-center select-none"
           >
             <div className="relative inline-flex items-center justify-center w-[29px] h-[29px]">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
-              >
+             
                 <circle
                   cx="12"
                   cy="12"
@@ -148,7 +143,7 @@ export function MushafPageFrame({
                 >
                   {toArabicDigits(pageNumber)}
                 </text>
-              </svg>
+              
             </div>
           </footer>
         </div>
