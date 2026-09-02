@@ -30,9 +30,9 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
         
         {/* Authentic Bismillah Calligraphic Text */}
         <p
-          className="aqf-bsml text-[2.5rem] sm:text-[3.2rem] md:text-[3.75rem] leading-none text-[#8C6D38] dark:text-[#E2C792] drop-shadow-2xs tracking-normal font-normal"
+          className="quran-arabic font-uthmani text-[1.85rem] sm:text-[2.15rem] md:text-[2.45rem] leading-none text-[#8C6D38] dark:text-[#E2C792] drop-shadow-2xs tracking-normal font-normal"
         >
-          {AQF_BISMILLAH_CHAR}
+          بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
         </p>
 
         <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-l from-transparent to-[#9E783E]/60 dark:to-[#D4AF37]/60 mr-3" />

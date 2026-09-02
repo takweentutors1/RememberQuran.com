@@ -197,7 +197,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
               dir="rtl"
               lang="ar"
               className={cn(
-                "quran-arabic font-uthmani aqf-bsml select-text",
+                "quran-arabic font-uthmani select-text",
                 "px-1 sm:px-2 py-0.5",
                 "text-[1.5rem] sm:text-[1.75rem] md:text-[1.92rem]",
                 "leading-[2.05] sm:leading-[2.15] md:leading-[2.2]",
