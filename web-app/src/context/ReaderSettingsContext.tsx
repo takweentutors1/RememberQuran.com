@@ -148,7 +148,7 @@ function migrateSettings(raw: unknown): ReaderSettings {
   }
 
   const quranFont =
-    s.quranFont === "amiri" || s.quranFont === "uthmani"
+    s.quranFont === "KFGQPC Hafs V2" || s.quranFont === "amiri " || s.quranFont === "uthmani"
       ? s.quranFont
       : DEFAULT_SETTINGS.quranFont
 

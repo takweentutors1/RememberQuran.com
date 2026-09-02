@@ -1,6 +1,6 @@
 /** Reader typography — aligned with quran.com scale steps (simplified 1–6). */
 
-export type QuranFont = "uthmani" | "amiri"
+export type QuranFont = "uthmani" | "KFGQPC Hafs V2" | "amiri"
 export type FontScale = 1 | 2 | 3 | 4 | 5 | 6
 
 export const QURAN_FONT_OPTIONS: {
@@ -14,7 +14,7 @@ export const QURAN_FONT_OPTIONS: {
     description: "King Fahd Complex — Madani mushaf",
   },
   {
-    value: "amiri",
+    value: "KFGQPC Hafs V2",
     label: "King Fahd Complex V2",
     description: "KFGQPC Hafs V2 — Digital Nastaleeq & Naskh",
   },
@@ -50,7 +50,8 @@ export const TRANSLATION_FONT_SIZES: Record<FontScale, string> = {
 
 export const QURAN_FONT_FAMILY: Record<QuranFont, string> = {
   uthmani: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
-  amiri: 'var(--font-amiri-quran), var(--font-amiri), serif',
+  "KFGQPC Hafs V2": '"KFGQPC_HAFS_V2", "UthmanicHafs", serif',
+  amiri: '"KFGQPC_HAFS_V2", "UthmanicHafs", serif',
 }
 
 export const MIN_FONT_SCALE = 1 as FontScale

@@ -38,7 +38,7 @@ export function FontTypeSelector() {
               <span
                 className={cn(
                   "text-base leading-none",
-                  opt.value === "uthmani" ? "font-uthmani" : "font-amiri-quran",
+                  opt.value === "uthmani" ? "font-uthmani" : "font-kfgqpc-v2",
                 )}
                 dir="rtl"
                 lang="ar"

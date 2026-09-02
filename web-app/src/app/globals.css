@@ -22,6 +22,15 @@
   unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }
 
+/* King Fahd Complex Hafs V2 */
+@font-face {
+  font-family: "KFGQPC_HAFS_V2";
+  src:
+    url("/fonts/KFGQPC_HAFS_V2.woff2") format("woff2");
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+}
+
 /* Authentic Bismillah & Surah Calligraphic Font */
 @font-face {
   font-family: 'aqf_bsml';
@@ -42,6 +51,7 @@
   --font-arabic-ui: var(--font-noto-naskh), serif;
   --font-arabic: "UthmanicHafs", "KFGQPC Uthmanic Hafs", serif;
   --font-uthmani: "UthmanicHafs", "KFGQPC Uthmanic Hafs", serif;
+  --font-kfgqpc-v2: "KFGQPC_HAFS_V2", "UthmanicHafs", serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
