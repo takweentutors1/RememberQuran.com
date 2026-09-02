@@ -114,56 +114,42 @@ export function MushafPageFrame({
             {children}
           </main>
 
-          {/* Bottom Page Footer: Centered Oriental Page Numeral in Emblem */}
+          {/* Bottom Page Footer: Centered Oriental Page Numeral in Pure Circular Medallion */}
           <footer
             aria-label={`Page ${pageNumber}`}
             className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-3 flex items-center justify-center select-none"
           >
-            <div className="relative inline-flex items-center justify-center w-[22px] h-[24px]">
+            <div className="relative inline-flex items-center justify-center w-[24px] h-[24px]">
               <svg
-                viewBox="0 0 22 24"
+                viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
               >
                 <circle
-                  cx="11"
-                  cy="10.5"
-                  r="8"
+                  cx="12"
+                  cy="12"
+                  r="10"
                   fill="#FFFDF9"
                   className="dark:fill-[#181512]"
                 />
-                <path
-                  d="
-                    M 11,23.2
-                    C 12.8,21.2 16,20.2 17.5,17.8
-                    C 15.5,16.5 13.5,16.8 11,16.8
-                    C 8.5,16.8 6.5,16.5 4.5,17.8
-                    C 6,20.2 9.2,21.2 11,23.2 Z
-                  "
-                  fill="currentColor"
-                />
-                <circle cx="11" cy="23.2" r="0.75" fill="currentColor" />
-                <circle cx="11" cy="19.5" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="7.8" cy="18.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="14.2" cy="18.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
                 <circle
-                  cx="11"
-                  cy="10.5"
-                  r="8"
+                  cx="12"
+                  cy="12"
+                  r="10"
                   stroke="currentColor"
-                  strokeWidth="1.4"
+                  strokeWidth="1.5"
                 />
                 <text
-                  x="11"
-                  y="10.5"
+                  x="12"
+                  y="12"
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="currentColor"
                   style={{
                     fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
                     fontWeight: "bold",
-                    fontSize: "12px",
+                    fontSize: "13px",
                     letterSpacing: "0",
                   }}
                 >

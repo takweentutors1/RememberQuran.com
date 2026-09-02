@@ -10,16 +10,14 @@ interface AyahEndMarkerProps {
 }
 
 /**
- * Authentic Madani Mushaf Emblem without Top Crown
- * - Smooth arched top
- * - Solid black base crown on bottom with 3 white puncture pearls + bottom point
- * - Clean circular/oval center canvas with bold centered Uthmanic Hafs numeral
+ * Authentic Madani Mushaf Pure Circular Medallion (علامة نهاية الآية الدائرية النقية)
+ * Pure, clean single circle medallion with bold centered Uthmanic Hafs calligraphy numeral.
  */
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
   // Dynamic SVG font size for 1, 2, or 3 digits
-  const svgFontSize = digitCount >= 3 ? "10px" : digitCount === 2 ? "12px" : "14.5px"
+  const svgFontSize = digitCount >= 3 ? "10.5px" : digitCount === 2 ? "12.5px" : "15px"
 
   return (
     <span
@@ -30,52 +28,35 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
       )}
       aria-label={ariaLabel}
     >
-      <span className="relative inline-flex items-center justify-center w-[1.15em] h-[1.3em] shrink-0">
+      <span className="relative inline-flex items-center justify-center w-[1.15em] h-[1.15em] shrink-0">
         <svg
-          viewBox="0 0 22 24"
+          viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
         >
           {/* Inner Light Room */}
           <circle
-            cx="11"
-            cy="10.5"
-            r="8"
+            cx="12"
+            cy="12"
+            r="10"
             fill="#FFFDF9"
             className="dark:fill-[#181512]"
           />
 
-          {/* ─── BOTTOM BLACK BASE CROWN WITH 3 PEARLS ─── */}
-          <path
-            d="
-              M 11,23.2
-              C 12.8,21.2 16,20.2 17.5,17.8
-              C 15.5,16.5 13.5,16.8 11,16.8
-              C 8.5,16.8 6.5,16.5 4.5,17.8
-              C 6,20.2 9.2,21.2 11,23.2 Z
-            "
-            fill="currentColor"
-          />
-          <circle cx="11" cy="23.2" r="0.75" fill="currentColor" />
-          {/* 3 Bottom White Puncture Pearls */}
-          <circle cx="11" cy="19.5" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-          <circle cx="7.8" cy="18.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-          <circle cx="14.2" cy="18.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-
-          {/* ─── CAPSULE OUTLINE RING ─── */}
+          {/* Clean Single Medallion Ring */}
           <circle
-            cx="11"
-            cy="10.5"
-            r="8"
+            cx="12"
+            cy="12"
+            r="10"
             stroke="currentColor"
-            strokeWidth="1.4"
+            strokeWidth="1.5"
           />
 
-          {/* ─── MATHEMATICALLY CENTERED CALLIGRAPHIC NUMERAL ─── */}
+          {/* Centered Uthmanic Numeral */}
           <text
-            x="11"
-            y="10.5"
+            x="12"
+            y="12"
             textAnchor="middle"
             dominantBaseline="central"
             fill="currentColor"
