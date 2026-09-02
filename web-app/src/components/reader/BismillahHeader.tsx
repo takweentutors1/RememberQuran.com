@@ -19,7 +19,7 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
       role="banner"
       aria-label="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
       className={cn(
-        "my-3 sm:my-4 flex items-center justify-center text-center select-none",
+        "my-2 sm:my-2.5 flex items-center justify-center text-center select-none",
         className,
       )}
     >

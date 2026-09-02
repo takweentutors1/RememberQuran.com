@@ -230,10 +230,10 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                 "quran-arabic font-uthmani select-text w-full",
                 "text-[#1E1B18] dark:text-[#E8E2D5]",
                 isCenteredOpeningPage
-                  ? "flex flex-col items-center justify-center space-y-2.5 py-1.5 text-center text-[1.65rem] sm:text-[1.85rem] md:text-[2.05rem] leading-[2.05]"
+                  ? "flex flex-col items-center justify-center space-y-2 py-1 text-center text-[1.65rem] sm:text-[1.85rem] md:text-[2.05rem] leading-[2.0]"
                   : page.hasSurahStart
-                    ? "flex flex-col gap-2 sm:gap-3 md:gap-3.5 py-0.5"
-                    : "flex flex-col justify-between min-h-[520px] sm:min-h-[600px] md:min-h-[680px] py-0.5",
+                    ? "flex flex-col gap-1.5 sm:gap-2.5 md:gap-3 py-0.5"
+                    : "flex flex-col justify-between min-h-[500px] sm:min-h-[580px] md:min-h-[660px] py-0.5",
               )}
             >
               {isCenteredOpeningPage ? (

@@ -30,12 +30,12 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
       role="region"
       aria-label={`سورة ${chapter.name_arabic}`}
       className={cn(
-        "relative mx-auto my-3 sm:my-4 w-full select-none max-w-[680px]",
+        "relative mx-auto my-2 sm:my-2.5 w-full select-none max-w-[680px]",
         className,
       )}
     >
       {/* Outer Arabesque Illuminated Border Box */}
-      <div className="relative w-full h-[64px] sm:h-[76px] md:h-[84px] rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs overflow-hidden flex items-stretch">
+      <div className="relative w-full h-[60px] sm:h-[72px] md:h-[80px] rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs overflow-hidden flex items-stretch">
         
         {/* Right Arabesque Wing (RTL start) */}
         <div className="w-[28%] sm:w-[30%] border-l-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
