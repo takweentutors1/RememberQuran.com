@@ -19,13 +19,8 @@ interface AyahEndMarkerProps {
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
-  // Dynamic font sizing for 1, 2, or 3+ digits to keep perfectly centered inside the oval
-  const digitSizeClass =
-    digitCount >= 3
-      ? "text-[0.40em] tracking-[-0.04em]"
-      : digitCount === 2
-        ? "text-[0.52em] tracking-[-0.02em]"
-        : "text-[0.64em] tracking-normal"
+  // Dynamic SVG font size for 1, 2, or 3+ digits
+  const svgFontSize = digitCount >= 3 ? "9px" : digitCount === 2 ? "11.5px" : "13.5px"
 
   return (
     <span
@@ -42,7 +37,7 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
           viewBox="0 0 32 38"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="absolute inset-0 size-full text-[#9C7944] dark:text-[#C5A365] drop-shadow-2xs overflow-visible"
+          className="size-full text-[#9C7944] dark:text-[#C5A365] drop-shadow-2xs overflow-visible"
         >
           {/* Inner Cream/Parchment Tint Fill */}
           <ellipse
@@ -100,22 +95,25 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
           {/* Side Floral Accent Beads */}
           <circle cx="2.2" cy="19" r="0.85" fill="currentColor" />
           <circle cx="29.8" cy="19" r="0.85" fill="currentColor" />
-        </svg>
 
-        {/* Eastern Arabic numeral inside the cartouche */}
-        <span
-          className={cn(
-            "relative z-10 font-bold font-mono tabular-nums leading-none text-[#231A0F] dark:text-[#F4ECE0]",
-            "flex items-center justify-center text-center",
-            digitSizeClass,
-          )}
-          style={{
-            wordSpacing: "normal",
-            letterSpacing: "0",
-          }}
-        >
-          {digits}
-        </span>
+          {/* Mathematically Centered Eastern Arabic Numeral */}
+          <text
+            x="16"
+            y="19"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="#231A0F"
+            className="dark:fill-[#F4ECE0]"
+            style={{
+              fontFamily: "var(--font-mono), monospace",
+              fontWeight: "700",
+              fontSize: svgFontSize,
+              letterSpacing: "0",
+            }}
+          >
+            {digits}
+          </text>
+        </svg>
       </span>
     </span>
   )

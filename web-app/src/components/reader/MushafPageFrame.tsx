@@ -171,10 +171,23 @@ export function MushafPageFrame({
                 />
                 <circle cx="2.2" cy="19" r="0.85" fill="currentColor" />
                 <circle cx="29.8" cy="19" r="0.85" fill="currentColor" />
+                <text
+                  x="16"
+                  y="19"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="#231A0F"
+                  className="dark:fill-[#F4ECE0]"
+                  style={{
+                    fontFamily: "var(--font-mono), monospace",
+                    fontWeight: "700",
+                    fontSize: "12.5px",
+                    letterSpacing: "0",
+                  }}
+                >
+                  {toArabicDigits(pageNumber)}
+                </text>
               </svg>
-              <span className="relative z-10 font-bold font-mono tabular-nums text-sm text-[#231A0F] dark:text-[#F4ECE0] leading-none text-center">
-                {toArabicDigits(pageNumber)}
-              </span>
             </div>
           </footer>
         </div>
