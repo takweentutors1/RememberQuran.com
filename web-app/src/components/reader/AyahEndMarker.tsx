@@ -10,17 +10,18 @@ interface AyahEndMarkerProps {
 }
 
 /**
- * Authentic Madani Mushaf Compact Ayah End Marker (علامة نهاية الآية المفردة)
- * Clean, minimal, authentic black calligraphic emblem without the large outer gold ring:
- * - 8-point scalloped star / octagonal crested ring
- * - Crisp contrast in light & dark mode
- * - Mathematically centered Eastern Arabic numerals
+ * Authentic Madani Mushaf Vertical Oval Cartouche Emblem (علامة نهاية الآية والصفحة المتقنة)
+ * Exactly matched to the Madani Mushaf page/ayah emblem:
+ * - Vertical oval form factor with wide inner horizontal breathing space
+ * - Intricate solid black top and bottom palmette crowns (shurufat / zakhrafah)
+ * - Beaded / dotted inner concentric framing ring
+ * - Mathematically centered Uthmanic Hafs calligraphy numerals (1, 2, or 3 digits)
  */
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
-  // Dynamic SVG font size for 1, 2, or 3+ digits
-  const svgFontSize = digitCount >= 3 ? "11px" : digitCount === 2 ? "13px" : "15.5px"
+  // Dynamic SVG font size for 1, 2, or 3 digits
+  const svgFontSize = digitCount >= 3 ? "10px" : digitCount === 2 ? "12px" : "14.5px"
 
   return (
     <span
@@ -31,59 +32,84 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
       )}
       aria-label={ariaLabel}
     >
-      <span className="relative inline-flex items-center justify-center size-[1.25em] shrink-0">
-        {/* Compact Centered Black Aya Marker Emblem */}
+      <span className="relative inline-flex items-center justify-center w-[1.35em] h-[1.52em] shrink-0">
+        {/* Authentic Madani Vertical Oval Cartouche SVG */}
         <svg
-          viewBox="0 0 32 32"
+          viewBox="0 0 32 38"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="size-full text-[#1A1612] dark:text-[#EAE3D6] drop-shadow-2xs overflow-visible"
+          className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
         >
-          {/* Inner Light Fill for Number Legibility */}
-          <circle
+          {/* Inner Light Fill for High Legibility */}
+          <ellipse
             cx="16"
-            cy="16"
-            r="12.5"
+            cy="19"
+            rx="12.5"
+            ry="14.5"
             fill="#FFFDF9"
-            className="dark:fill-[#1A1612]"
+            className="dark:fill-[#181512]"
           />
 
-          {/* 8-pointed / scalloped crenellations around the circle */}
+          {/* ─── TOP FLORAL CROWN / PALMETTE FINIAL (Solid Black) ─── */}
           <path
             d="
-              M 16,1.8 L 18.2,3.8 L 21.2,2.8 L 22.8,5.5 L 26,5.8 L 26.5,9 L 29.2,10.5 L 28.5,13.5 L 30.5,16 L 28.5,18.5 L 29.2,21.5 L 26.5,23 L 26,26.2 L 22.8,26.5 L 21.2,29.2 L 18.2,28.2 L 16,30.2 L 13.8,28.2 L 10.8,29.2 L 9.2,26.5 L 6,26.2 L 5.5,23 L 2.8,21.5 L 3.5,18.5 L 1.5,16 L 3.5,13.5 L 2.8,10.5 L 5.5,9 L 6,5.8 L 9.2,5.5 L 10.8,2.8 L 13.8,3.8 Z
+              M 16,1.2 
+              C 17.8,3.5 21.2,4.2 22.8,6.8 
+              C 20.8,7.5 18.8,6.8 16,9.2 
+              C 13.2,6.8 11.2,7.5 9.2,6.8 
+              C 10.8,4.2 14.2,3.5 16,1.2 Z
             "
             fill="currentColor"
-            fillOpacity="0.18"
-            stroke="currentColor"
-            strokeWidth="0.8"
-            strokeLinejoin="round"
           />
+          <circle cx="16" cy="1" r="0.9" fill="currentColor" />
+          <circle cx="11.2" cy="5.5" r="0.75" fill="currentColor" />
+          <circle cx="20.8" cy="5.5" r="0.75" fill="currentColor" />
 
-          {/* Solid Heavy Inner Border */}
-          <circle
+          {/* ─── BOTTOM FLORAL CROWN / PALMETTE FINIAL (Solid Black Flipped) ─── */}
+          <path
+            d="
+              M 16,36.8 
+              C 17.8,34.5 21.2,33.8 22.8,31.2 
+              C 20.8,30.5 18.8,31.2 16,28.8 
+              C 13.2,31.2 11.2,30.5 9.2,31.2 
+              C 10.8,33.8 14.2,34.5 16,36.8 Z
+            "
+            fill="currentColor"
+          />
+          <circle cx="16" cy="37" r="0.9" fill="currentColor" />
+          <circle cx="11.2" cy="32.5" r="0.75" fill="currentColor" />
+          <circle cx="20.8" cy="32.5" r="0.75" fill="currentColor" />
+
+          {/* ─── OUTER HEAVY OVAL FRAME ─── */}
+          <ellipse
             cx="16"
-            cy="16"
-            r="12.5"
+            cy="19"
+            rx="13.2"
+            ry="14.8"
             stroke="currentColor"
-            strokeWidth="1.6"
+            strokeWidth="1.4"
           />
 
-          {/* Delicate Inner Beaded Line */}
-          <circle
+          {/* ─── INNER DELICATE BEADED / DOTTED CONCENTRIC RING ─── */}
+          <ellipse
             cx="16"
-            cy="16"
-            r="10.8"
+            cy="19"
+            rx="11.2"
+            ry="12.8"
             stroke="currentColor"
-            strokeWidth="0.6"
-            strokeDasharray="1.2 1"
-            opacity="0.8"
+            strokeWidth="0.7"
+            strokeDasharray="1.5 1.2"
+            opacity="0.9"
           />
 
-          {/* Mathematically Centered Arabic Numeral */}
+          {/* Side Floral Accent Beads */}
+          <circle cx="2" cy="19" r="0.9" fill="currentColor" />
+          <circle cx="30" cy="19" r="0.9" fill="currentColor" />
+
+          {/* ─── MATHEMATICALLY CENTERED UTHMANIC DIGITS ─── */}
           <text
             x="16"
-            y="16"
+            y="19"
             textAnchor="middle"
             dominantBaseline="central"
             fill="currentColor"
