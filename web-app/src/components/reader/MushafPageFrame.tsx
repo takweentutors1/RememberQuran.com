@@ -114,63 +114,49 @@ export function MushafPageFrame({
             {children}
           </main>
 
-          {/* Bottom Page Footer: Centered Oriental Page Numeral in Isolated Inner Core Emblem */}
+          {/* Bottom Page Footer: Centered Oriental Page Numeral in Emblem */}
           <footer
             aria-label={`Page ${pageNumber}`}
             className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-3 flex items-center justify-center select-none"
           >
-            <div className="relative inline-flex items-center justify-center w-[22px] h-[26px]">
+            <div className="relative inline-flex items-center justify-center w-[22px] h-[24px]">
               <svg
-                viewBox="0 0 22 26"
+                viewBox="0 0 22 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
               >
                 <circle
                   cx="11"
-                  cy="13"
+                  cy="10.5"
                   r="8"
                   fill="#FFFDF9"
                   className="dark:fill-[#181512]"
                 />
                 <path
                   d="
-                    M 11,0.8
-                    C 12.8,2.8 16,3.8 17.5,6.2
-                    C 15.5,7.5 13.5,7.2 11,7.2
-                    C 8.5,7.2 6.5,7.5 4.5,6.2
-                    C 6,3.8 9.2,2.8 11,0.8 Z
+                    M 11,23.2
+                    C 12.8,21.2 16,20.2 17.5,17.8
+                    C 15.5,16.5 13.5,16.8 11,16.8
+                    C 8.5,16.8 6.5,16.5 4.5,17.8
+                    C 6,20.2 9.2,21.2 11,23.2 Z
                   "
                   fill="currentColor"
                 />
-                <circle cx="11" cy="0.8" r="0.75" fill="currentColor" />
-                <circle cx="11" cy="4.5" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="7.8" cy="5.2" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="14.2" cy="5.2" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <path
-                  d="
-                    M 11,25.2
-                    C 12.8,23.2 16,22.2 17.5,19.8
-                    C 15.5,18.5 13.5,18.8 11,18.8
-                    C 8.5,18.8 6.5,18.5 4.5,19.8
-                    C 6,22.2 9.2,23.2 11,25.2 Z
-                  "
-                  fill="currentColor"
-                />
-                <circle cx="11" cy="25.2" r="0.75" fill="currentColor" />
-                <circle cx="11" cy="21.5" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="7.8" cy="20.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="14.2" cy="20.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="11" cy="23.2" r="0.75" fill="currentColor" />
+                <circle cx="11" cy="19.5" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="7.8" cy="18.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="14.2" cy="18.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
                 <circle
                   cx="11"
-                  cy="13"
+                  cy="10.5"
                   r="8"
                   stroke="currentColor"
                   strokeWidth="1.4"
                 />
                 <text
                   x="11"
-                  y="13"
+                  y="10.5"
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="currentColor"
