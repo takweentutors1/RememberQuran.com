@@ -231,7 +231,9 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                 "text-[#1E1B18] dark:text-[#E8E2D5]",
                 isCenteredOpeningPage
                   ? "flex flex-col items-center justify-center space-y-3 py-2 text-center text-[1.65rem] sm:text-[1.85rem] md:text-[2.05rem] leading-[2.1]"
-                  : "flex flex-col justify-between min-h-[560px] sm:min-h-[640px] md:min-h-[720px] py-1",
+                  : page.hasSurahStart
+                    ? "flex flex-col gap-2.5 sm:gap-3.5 md:gap-4 py-1"
+                    : "flex flex-col justify-between min-h-[540px] sm:min-h-[620px] md:min-h-[700px] py-1",
               )}
             >
               {isCenteredOpeningPage ? (
@@ -248,40 +250,47 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                 ))
               ) : (
                 // Standard 15-Line Madani Page: Exact line-by-line justified rendering
-                page.lines.map(({ lineNumber, words }) => (
-                  <div
-                    key={lineNumber}
-                    data-line-number={lineNumber}
-                    className={cn(
-                      "w-full flex items-center justify-between text-justify",
-                      "text-[1.42rem] sm:text-[1.65rem] md:text-[1.85rem]",
-                      "leading-none my-0.5",
-                    )}
-                  >
-                    {words.map(({ word, verse }) => {
-                      if (word.char_type_name === "end") {
+                page.lines.map(({ lineNumber, words }, index) => {
+                  const isLastLine = index === page.lines.length - 1
+                  const isShortLastLine = isLastLine && words.length <= 5
+
+                  return (
+                    <div
+                      key={lineNumber}
+                      data-line-number={lineNumber}
+                      className={cn(
+                        "w-full flex items-center leading-none",
+                        isShortLastLine
+                          ? "justify-center gap-4 sm:gap-6"
+                          : "justify-between",
+                        "text-[1.4rem] sm:text-[1.6rem] md:text-[1.8rem]",
+                      )}
+                    >
+                      {words.map(({ word, verse }) => {
+                        if (word.char_type_name === "end") {
+                          return (
+                            <AyahEndMarker
+                              key={word.id}
+                              digits={word.qpc_uthmani_hafs || word.text_uthmani}
+                              ariaLabel={`Ayah ${verse.verse_number}`}
+                              onClick={() => handleAyahClick(verse)}
+                            />
+                          )
+                        }
+
                         return (
-                          <AyahEndMarker
+                          <ArabicWord
                             key={word.id}
-                            digits={word.qpc_uthmani_hafs || word.text_uthmani}
-                            ariaLabel={`Ayah ${verse.verse_number}`}
-                            onClick={() => handleAyahClick(verse)}
+                            word={word}
+                            verseKey={verse.verse_key}
+                            disableTooltip={true}
+                            onWordClick={handleWordClick}
                           />
                         )
-                      }
-
-                      return (
-                        <ArabicWord
-                          key={word.id}
-                          word={word}
-                          verseKey={verse.verse_key}
-                          disableTooltip={true}
-                          onWordClick={handleWordClick}
-                        />
-                      )
-                    })}
-                  </div>
-                ))
+                      })}
+                    </div>
+                  )
+                })
               )}
             </div>
           </MushafPageFrame>
