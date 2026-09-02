@@ -10,103 +10,128 @@ interface AyahEndMarkerProps {
 }
 
 /**
- * Authentic Madani Mushaf Ayah End Marker (علامة نهاية الآية المذهبة)
+ * Authentic Madani Mushaf Circular Rosette Ayah End Marker (علامة نهاية الآية الدائرية المذهبة)
  * Inspired by King Fahd Complex Quran illuminated manuscript page & ayah ornaments:
- * - Oval/cartouche floral emblem with top/bottom floral crown crests (shurufat)
- * - Fine double gold outline with inner parchment illumination
- * - Perfectly centered Eastern Arabic numeral isolated from line-height and word-spacing
+ * - Perfect round circular rosette geometry
+ * - Scalloped lace filigree border (16 rounded crenellations)
+ * - 4 Cardinal Pointed Diamond Finials (North, South, East, West) + Top/Bottom crown crests
+ * - Authentic Uthmanic Hafs calligraphy digits with exact mathematical centering
  */
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
-  // Dynamic SVG font size for 1, 2, or 3+ digits
-  const svgFontSize = digitCount >= 3 ? "9px" : digitCount === 2 ? "11.5px" : "13.5px"
+  // Dynamic SVG font size for 1, 2, or 3+ digits to keep spacious & perfectly centered
+  const svgFontSize = digitCount >= 3 ? "11px" : digitCount === 2 ? "13.5px" : "16px"
 
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center align-middle select-none mx-1",
-        "translate-y-[-1px]",
+        "inline-flex items-center justify-center align-middle select-none mx-0.5",
+        "translate-y-[-2px]",
         className,
       )}
       aria-label={ariaLabel}
     >
-      <span className="relative inline-flex items-center justify-center w-[1.35em] h-[1.5em] shrink-0">
-        {/* Authentic Madani Mushaf Oval Cartouche Ornament SVG */}
+      <span className="relative inline-flex items-center justify-center size-[1.42em] shrink-0">
+        {/* Authentic Madani Mushaf Circular Lace Rosette SVG */}
         <svg
-          viewBox="0 0 32 38"
+          viewBox="0 0 44 44"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="size-full text-[#9C7944] dark:text-[#C5A365] drop-shadow-2xs overflow-visible"
+          className="size-full text-[#9E783E] dark:text-[#C5A365] drop-shadow-2xs overflow-visible"
         >
-          {/* Inner Cream/Parchment Tint Fill */}
-          <ellipse
-            cx="16"
-            cy="19"
-            rx="12.5"
-            ry="14.5"
-            fill="#FAF4E8"
-            fillOpacity="0.85"
-            className="dark:fill-[#201C17] dark:fill-opacity-90"
+          {/* Inner Warm Parchment Background Fill */}
+          <circle
+            cx="22"
+            cy="22"
+            r="16.5"
+            fill="#FAF5EB"
+            fillOpacity="0.9"
+            className="dark:fill-[#1E1912] dark:fill-opacity-95"
           />
 
-          {/* Top Crown Floral Finial / Palmette (Zakhrafah) */}
+          {/* ─── 4 CARDINAL POINTED FLEURONS / FINIALS ─── */}
+          {/* Top Diamond Point + Crown Arc */}
           <path
-            d="M 16,1.5 C 17.5,3.8 20.5,4.5 22,6.5 C 20.5,7.2 18.5,6.5 16,8.5 C 13.5,6.5 11.5,7.2 10,6.5 C 11.5,4.5 14.5,3.8 16,1.5 Z"
+            d="M 22,2.2 L 23.8,5.5 L 22,7.2 L 20.2,5.5 Z"
             fill="currentColor"
-            fillOpacity="0.8"
           />
-          <circle cx="16" cy="1.2" r="0.9" fill="currentColor" />
-          <circle cx="11.5" cy="5.5" r="0.65" fill="currentColor" opacity="0.7" />
-          <circle cx="20.5" cy="5.5" r="0.65" fill="currentColor" opacity="0.7" />
-
-          {/* Bottom Crown Floral Finial / Palmette (Flipped) */}
           <path
-            d="M 16,36.5 C 17.5,34.2 20.5,33.5 22,31.5 C 20.5,30.8 18.5,31.5 16,29.5 C 13.5,31.5 11.5,30.8 10,31.5 C 11.5,33.5 14.5,34.2 16,36.5 Z"
+            d="M 18.5,6 C 20,4.5 24,4.5 25.5,6 C 24,7.2 20,7.2 18.5,6 Z"
             fill="currentColor"
-            fillOpacity="0.8"
+            opacity="0.8"
           />
-          <circle cx="16" cy="36.8" r="0.9" fill="currentColor" />
-          <circle cx="11.5" cy="32.5" r="0.65" fill="currentColor" opacity="0.7" />
-          <circle cx="20.5" cy="32.5" r="0.65" fill="currentColor" opacity="0.7" />
+          <circle cx="22" cy="1.8" r="0.75" fill="currentColor" />
 
-          {/* Outer Heavy Cartouche Frame */}
-          <ellipse
-            cx="16"
-            cy="19"
-            rx="13.2"
-            ry="14.8"
+          {/* Bottom Diamond Point + Crown Arc */}
+          <path
+            d="M 22,41.8 L 23.8,38.5 L 22,36.8 L 20.2,38.5 Z"
+            fill="currentColor"
+          />
+          <path
+            d="M 18.5,38 C 20,39.5 24,39.5 25.5,38 C 24,36.8 20,36.8 18.5,38 Z"
+            fill="currentColor"
+            opacity="0.8"
+          />
+          <circle cx="22" cy="42.2" r="0.75" fill="currentColor" />
+
+          {/* Right Diamond Point */}
+          <path
+            d="M 41.8,22 L 38.5,23.8 L 36.8,22 L 38.5,20.2 Z"
+            fill="currentColor"
+          />
+          <circle cx="42.2" cy="22" r="0.75" fill="currentColor" />
+
+          {/* Left Diamond Point */}
+          <path
+            d="M 2.2,22 L 5.5,23.8 L 7.2,22 L 5.5,20.2 Z"
+            fill="currentColor"
+          />
+          <circle cx="1.8" cy="22" r="0.75" fill="currentColor" />
+
+          {/* ─── SCALLOPED / BEADED LACE FILIGREE BORDER (16 Petal Arcs) ─── */}
+          <circle
+            cx="22"
+            cy="22"
+            r="16.5"
             stroke="currentColor"
             strokeWidth="1.2"
           />
-
-          {/* Inner Delicate Concentric Framing Ellipse */}
-          <ellipse
-            cx="16"
-            cy="19"
-            rx="11.2"
-            ry="12.8"
+          <circle
+            cx="22"
+            cy="22"
+            r="14.8"
             stroke="currentColor"
-            strokeWidth="0.7"
-            strokeDasharray="1.5 1"
-            opacity="0.9"
+            strokeWidth="0.8"
+            strokeDasharray="2 1.5"
+            opacity="0.95"
+          />
+          <circle
+            cx="22"
+            cy="22"
+            r="13.2"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            opacity="0.6"
           />
 
-          {/* Side Floral Accent Beads */}
-          <circle cx="2.2" cy="19" r="0.85" fill="currentColor" />
-          <circle cx="29.8" cy="19" r="0.85" fill="currentColor" />
+          {/* 8 Delicate Corner Accent Dots around the perimeter */}
+          <circle cx="33.5" cy="10.5" r="0.8" fill="currentColor" opacity="0.8" />
+          <circle cx="10.5" cy="10.5" r="0.8" fill="currentColor" opacity="0.8" />
+          <circle cx="33.5" cy="33.5" r="0.8" fill="currentColor" opacity="0.8" />
+          <circle cx="10.5" cy="33.5" r="0.8" fill="currentColor" opacity="0.8" />
 
-          {/* Mathematically Centered Eastern Arabic Numeral */}
+          {/* ─── MATHEMATICALLY CENTERED CALLIGRAPHIC NUMERAL ─── */}
           <text
-            x="16"
-            y="19"
+            x="22"
+            y="22"
             textAnchor="middle"
             dominantBaseline="central"
             fill="#231A0F"
             className="dark:fill-[#F4ECE0]"
             style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontWeight: "700",
+              fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
+              fontWeight: "bold",
               fontSize: svgFontSize,
               letterSpacing: "0",
             }}
