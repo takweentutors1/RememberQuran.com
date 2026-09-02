@@ -29,12 +29,7 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
       aria-label={ariaLabel}
     >
       <span className="relative inline-flex items-center justify-center w-[1.15em] h-[1.15em] shrink-0">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
-        >
+       
           {/* Inner Light Room */}
         
 
@@ -63,7 +58,7 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
           >
             {digits}
           </text>
-        </svg>
+      
       </span>
     </span>
   )
