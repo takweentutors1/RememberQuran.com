@@ -10,101 +10,99 @@ interface AyahEndMarkerProps {
 }
 
 /**
- * Authentic Madani Mushaf Ayah End Marker (علامة نهاية الآية)
- * Styled exactly like the traditional King Fahd Complex ornate oval cartouche / page medallion:
- * - Vertical oval medallion with top & bottom decorative finials and palmette scrolls
- * - Warm illuminated antique gold outline and subtle inner background fill
- * - Dynamic font sizing according to digit count (1, 2, or 3 digits) with strict isolation
+ * Authentic Madani Mushaf Ayah End Marker (علامة نهاية الآية المذهبة)
+ * Inspired by King Fahd Complex Quran illuminated manuscript page & ayah ornaments:
+ * - Oval/cartouche floral emblem with top/bottom floral crown crests (shurufat)
+ * - Fine double gold outline with inner parchment illumination
+ * - Perfectly centered Eastern Arabic numeral isolated from line-height and word-spacing
  */
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
-  // Dynamic font sizing for 1, 2, or 3+ digits
+  // Dynamic font sizing for 1, 2, or 3+ digits to keep perfectly centered inside the oval
   const digitSizeClass =
     digitCount >= 3
-      ? "text-[0.34em] tracking-[-0.04em]"
+      ? "text-[0.40em] tracking-[-0.04em]"
       : digitCount === 2
-        ? "text-[0.44em] tracking-[-0.02em]"
-        : "text-[0.54em] tracking-normal font-semibold"
+        ? "text-[0.52em] tracking-[-0.02em]"
+        : "text-[0.64em] tracking-normal"
 
   return (
     <span
       className={cn(
         "inline-flex items-center justify-center align-middle select-none mx-1",
-        "translate-y-[-2px]",
+        "translate-y-[-1px]",
         className,
       )}
       aria-label={ariaLabel}
     >
-      <span className="relative inline-flex items-center justify-center w-[1.35em] h-[1.65em] shrink-0">
+      <span className="relative inline-flex items-center justify-center w-[1.35em] h-[1.5em] shrink-0">
         {/* Authentic Madani Mushaf Oval Cartouche Ornament SVG */}
         <svg
-          viewBox="0 0 32 40"
+          viewBox="0 0 32 38"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="absolute inset-0 size-full text-[#9E783E] dark:text-[#C5A365] drop-shadow-2xs"
+          className="absolute inset-0 size-full text-[#9C7944] dark:text-[#C5A365] drop-shadow-2xs overflow-visible"
         >
-          {/* Inner Medallion Soft Parchment Fill */}
+          {/* Inner Cream/Parchment Tint Fill */}
           <ellipse
             cx="16"
-            cy="20"
-            rx="11.5"
+            cy="19"
+            rx="12.5"
             ry="14.5"
-            fill="#FAF6EE"
+            fill="#FAF4E8"
             fillOpacity="0.85"
-            className="dark:fill-[#1E1912] dark:fill-opacity-85"
+            className="dark:fill-[#201C17] dark:fill-opacity-90"
           />
 
-          {/* Top Decorative Finial & Foliage Crest */}
+          {/* Top Crown Floral Finial / Palmette (Zakhrafah) */}
           <path
-            d="M 16,1.5 C 17.2,3.5 19.5,4.8 21.5,5.2 C 19.5,6.5 17.5,7 16,9 C 14.5,7 12.5,6.5 10.5,5.2 C 12.5,4.8 14.8,3.5 16,1.5 Z"
+            d="M 16,1.5 C 17.5,3.8 20.5,4.5 22,6.5 C 20.5,7.2 18.5,6.5 16,8.5 C 13.5,6.5 11.5,7.2 10,6.5 C 11.5,4.5 14.5,3.8 16,1.5 Z"
             fill="currentColor"
+            fillOpacity="0.8"
           />
-          {/* Top Side Scroll Wings */}
-          <path
-            d="M 16,4 C 18.5,4 23,6 23.5,9 C 21,9 18.5,7.5 16,6.5 C 13.5,7.5 11,9 8.5,9 C 9,6 13.5,4 16,4 Z"
-            fill="currentColor"
-            opacity="0.85"
-          />
+          <circle cx="16" cy="1.2" r="0.9" fill="currentColor" />
+          <circle cx="11.5" cy="5.5" r="0.65" fill="currentColor" opacity="0.7" />
+          <circle cx="20.5" cy="5.5" r="0.65" fill="currentColor" opacity="0.7" />
 
-          {/* Bottom Decorative Finial & Foliage Base */}
+          {/* Bottom Crown Floral Finial / Palmette (Flipped) */}
           <path
-            d="M 16,38.5 C 17.2,36.5 19.5,35.2 21.5,34.8 C 19.5,33.5 17.5,33 16,31 C 14.5,33 12.5,33.5 10.5,34.8 C 12.5,35.2 14.8,36.5 16,38.5 Z"
+            d="M 16,36.5 C 17.5,34.2 20.5,33.5 22,31.5 C 20.5,30.8 18.5,31.5 16,29.5 C 13.5,31.5 11.5,30.8 10,31.5 C 11.5,33.5 14.5,34.2 16,36.5 Z"
             fill="currentColor"
+            fillOpacity="0.8"
           />
-          {/* Bottom Side Scroll Wings */}
-          <path
-            d="M 16,36 C 18.5,36 23,34 23.5,31 C 21,31 18.5,32.5 16,33.5 C 13.5,33.5 11,31 8.5,31 C 9,34 13.5,36 16,36 Z"
-            fill="currentColor"
-            opacity="0.85"
-          />
+          <circle cx="16" cy="36.8" r="0.9" fill="currentColor" />
+          <circle cx="11.5" cy="32.5" r="0.65" fill="currentColor" opacity="0.7" />
+          <circle cx="20.5" cy="32.5" r="0.65" fill="currentColor" opacity="0.7" />
 
-          {/* Outer Heavy Oval Border */}
+          {/* Outer Heavy Cartouche Frame */}
           <ellipse
             cx="16"
-            cy="20"
-            rx="12"
-            ry="15"
+            cy="19"
+            rx="13.2"
+            ry="14.8"
             stroke="currentColor"
             strokeWidth="1.2"
           />
 
-          {/* Inner Delicate Framing Border */}
+          {/* Inner Delicate Concentric Framing Ellipse */}
           <ellipse
             cx="16"
-            cy="20"
-            rx="9.8"
-            ry="12.6"
+            cy="19"
+            rx="11.2"
+            ry="12.8"
             stroke="currentColor"
-            strokeWidth="0.75"
+            strokeWidth="0.7"
+            strokeDasharray="1.5 1"
+            opacity="0.9"
           />
 
-          {/* Side Arabesque Point Embellishments */}
-          <circle cx="3.2" cy="20" r="0.85" fill="currentColor" />
-          <circle cx="28.8" cy="20" r="0.85" fill="currentColor" />
+          {/* Side Floral Accent Beads */}
+          <circle cx="2.2" cy="19" r="0.85" fill="currentColor" />
+          <circle cx="29.8" cy="19" r="0.85" fill="currentColor" />
         </svg>
 
-        {/* Eastern Arabic numeral inside the cartouche with strict isolation */}
+        {/* Eastern Arabic numeral inside the cartouche */}
         <span
           className={cn(
             "relative z-10 font-bold font-mono tabular-nums leading-none text-[#231A0F] dark:text-[#F4ECE0]",
