@@ -110,38 +110,38 @@ export function MushafPageFrame({
           "relative overflow-hidden transition-all duration-300",
           "bg-[#FAF7EE] dark:bg-[#161412] text-[#1E1B18] dark:text-[#ECE6DA]",
           "border border-[#D4C8B0] dark:border-[#3A3328] rounded-sm shadow-xl",
-          "p-2.5 sm:p-4 md:p-5",
+          "p-2 sm:p-3.5 md:p-4",
         )}
       >
         {/* Authentic Madani Double Gold Hairline Border Frame */}
         <div className="relative rounded-xs border-2 border-[#C2A676] dark:border-[#8E7348] p-1 sm:p-1.5">
-          <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 p-2 sm:p-3 md:p-4">
+          <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2.5 md:py-3">
             {/* Top Page Header: Dual Rectangular Boxes matching 2nd image (Surah on right/left per classical Mushaf) */}
-            <header className="mb-3 grid grid-cols-2 gap-0 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] select-none text-center rounded-xs overflow-hidden">
-              <div className="py-1 px-2 border-l border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center">
-                <span className="font-uthmani text-sm sm:text-base font-normal text-[#4A3B2C] dark:text-[#E2D5C3]">
+            <header className="mb-2 sm:mb-2.5 grid grid-cols-2 gap-0 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] select-none text-center rounded-xs overflow-hidden">
+              <div className="py-0.5 sm:py-1 px-2 border-l border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center">
+                <span className="font-uthmani text-xs sm:text-sm font-normal text-[#4A3B2C] dark:text-[#E2D5C3]">
                   {cleanSurahName ? `سورة ${cleanSurahName}` : ""}
                 </span>
               </div>
-              <div className="py-1 px-2 flex items-center justify-center">
-                <span className="font-uthmani text-sm sm:text-base font-normal text-[#4A3B2C] dark:text-[#E2D5C3]">
+              <div className="py-0.5 sm:py-1 px-2 flex items-center justify-center">
+                <span className="font-uthmani text-xs sm:text-sm font-normal text-[#4A3B2C] dark:text-[#E2D5C3]">
                   {juzOrdinal ? `الجزء ${juzOrdinal}` : juzNumber ? `الجزء ${toArabicDigits(juzNumber)}` : ""}
                 </span>
               </div>
             </header>
 
             {/* Main Quranic Text Body (15-line flow) */}
-            <main className="relative z-10 min-h-[380px] py-1">
+            <main className="relative z-10 min-h-[360px] py-0.5">
               {children}
             </main>
 
             {/* Bottom Page Footer: Simple clean Eastern Arabic page numeral */}
             <footer
               aria-label={`Page ${pageNumber}`}
-              className="mt-3 sm:mt-5 pt-2 flex items-center justify-center select-none"
+              className="mt-2.5 sm:mt-4 pt-1.5 flex items-center justify-center select-none"
             >
-              <div className="inline-flex items-center justify-center px-3.5 py-0.5 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] rounded-xs shadow-2xs">
-                <span className="font-arabic-ui text-sm sm:text-base font-medium text-[#4A3B2C] dark:text-[#E2D5C3] leading-none">
+              <div className="inline-flex items-center justify-center px-3 py-0.5 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] rounded-xs shadow-2xs">
+                <span className="font-arabic-ui text-xs sm:text-sm font-medium text-[#4A3B2C] dark:text-[#E2D5C3] leading-none">
                   {toArabicDigits(pageNumber)}
                 </span>
               </div>
