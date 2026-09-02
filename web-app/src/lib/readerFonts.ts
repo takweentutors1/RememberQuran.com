@@ -15,8 +15,8 @@ export const QURAN_FONT_OPTIONS: {
   },
   {
     value: "amiri",
-    label: "Amiri Quran",
-    description: "Clear Naskh, good for screens",
+    label: "King Fahd Complex V2",
+    description: "KFGQPC Hafs V2 — Digital Nastaleeq & Naskh",
   },
 ]
 
