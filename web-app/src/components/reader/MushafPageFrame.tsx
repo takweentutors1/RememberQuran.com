@@ -114,7 +114,7 @@ export function MushafPageFrame({
             {children}
           </main>
 
-          {/* Bottom Page Footer: Centered Oriental Page Numeral in matching Madani Cartouche Emblem */}
+          {/* Bottom Page Footer: Centered Oriental Page Numeral in Image-2 Lace Emblem */}
           <footer
             aria-label={`Page ${pageNumber}`}
             className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-3 flex items-center justify-center select-none"
@@ -129,57 +129,47 @@ export function MushafPageFrame({
                 <ellipse
                   cx="16"
                   cy="19"
-                  rx="12.5"
-                  ry="14.5"
+                  rx="13.2"
+                  ry="12"
                   fill="#FFFDF9"
                   className="dark:fill-[#181512]"
                 />
                 <path
                   d="
-                    M 16,1.2 
-                    C 17.8,3.5 21.2,4.2 22.8,6.8 
-                    C 20.8,7.5 18.8,6.8 16,9.2 
-                    C 13.2,6.8 11.2,7.5 9.2,6.8 
-                    C 10.8,4.2 14.2,3.5 16,1.2 Z
+                    M 16,1.5
+                    C 18.5,4.5 22.5,5.2 24.5,7.8
+                    C 21.5,9.5 19,9 16,9.2
+                    C 13,9 10.5,9.5 7.5,7.8
+                    C 9.5,5.2 13.5,4.5 16,1.5 Z
                   "
                   fill="currentColor"
                 />
-                <circle cx="16" cy="1" r="0.9" fill="currentColor" />
-                <circle cx="11.2" cy="5.5" r="0.75" fill="currentColor" />
-                <circle cx="20.8" cy="5.5" r="0.75" fill="currentColor" />
+                <circle cx="16" cy="1.2" r="0.85" fill="currentColor" />
+                <circle cx="16" cy="6" r="0.9" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="11.5" cy="6.8" r="0.8" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="20.5" cy="6.8" r="0.8" fill="#FFFDF9" className="dark:fill-[#181512]" />
                 <path
                   d="
-                    M 16,36.8 
-                    C 17.8,34.5 21.2,33.8 22.8,31.2 
-                    C 20.8,30.5 18.8,31.2 16,28.8 
-                    C 13.2,31.2 11.2,30.5 9.2,31.2 
-                    C 10.8,33.8 14.2,34.5 16,36.8 Z
+                    M 16,36.5
+                    C 18.5,33.5 22.5,32.8 24.5,30.2
+                    C 21.5,28.5 19,29 16,28.8
+                    C 13,29 10.5,28.5 7.5,30.2
+                    C 9.5,32.8 13.5,33.5 16,36.5 Z
                   "
                   fill="currentColor"
                 />
-                <circle cx="16" cy="37" r="0.9" fill="currentColor" />
-                <circle cx="11.2" cy="32.5" r="0.75" fill="currentColor" />
-                <circle cx="20.8" cy="32.5" r="0.75" fill="currentColor" />
+                <circle cx="16" cy="36.8" r="0.85" fill="currentColor" />
+                <circle cx="16" cy="32" r="0.9" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="11.5" cy="31.2" r="0.8" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="20.5" cy="31.2" r="0.8" fill="#FFFDF9" className="dark:fill-[#181512]" />
                 <ellipse
                   cx="16"
                   cy="19"
                   rx="13.2"
-                  ry="14.8"
+                  ry="12"
                   stroke="currentColor"
-                  strokeWidth="1.4"
+                  strokeWidth="1.6"
                 />
-                <ellipse
-                  cx="16"
-                  cy="19"
-                  rx="11.2"
-                  ry="12.8"
-                  stroke="currentColor"
-                  strokeWidth="0.7"
-                  strokeDasharray="1.5 1.2"
-                  opacity="0.9"
-                />
-                <circle cx="2" cy="19" r="0.9" fill="currentColor" />
-                <circle cx="30" cy="19" r="0.9" fill="currentColor" />
                 <text
                   x="16"
                   y="19"
@@ -189,7 +179,7 @@ export function MushafPageFrame({
                   style={{
                     fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
                     fontWeight: "bold",
-                    fontSize: "13px",
+                    fontSize: "13.5px",
                     letterSpacing: "0",
                   }}
                 >
