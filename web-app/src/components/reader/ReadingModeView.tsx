@@ -263,7 +263,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                         isShortLastLine
                           ? "justify-center gap-4 sm:gap-6"
                           : "justify-between",
-                        "text-[1.4rem] sm:text-[1.6rem] md:text-[1.8rem]",
+                        "text-[1.36rem] sm:text-[1.55rem] md:text-[1.75rem]",
                       )}
                     >
                       {words.map(({ word, verse }) => {
