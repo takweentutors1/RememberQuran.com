@@ -114,37 +114,25 @@ export function MushafPageFrame({
             {children}
           </main>
 
-          {/* Bottom Page Footer: Centered Oriental Page Numeral in Pure Circular Medallion */}
+          {/* Bottom Page Footer: Centered Oriental Page Numeral in Pure CSS Circular Medallion */}
           <footer
             aria-label={`Page ${pageNumber}`}
             className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-3 flex items-center justify-center select-none"
           >
-            <div className="relative inline-flex items-center justify-center w-[29px] h-[29px]">
-             
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
-                <text
-                  x="12"
-                  y="12"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill="currentColor"
-                  style={{
-                    fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
-                    fontWeight: "bold",
-                    fontSize: "15.5px",
-                    letterSpacing: "0",
-                  }}
-                >
-                  {toArabicDigits(pageNumber)}
-                </text>
-              
-            </div>
+            <span
+              className={cn(
+                "inline-flex items-center justify-center",
+                "w-[26px] h-[26px] rounded-full",
+                "border-[1.5px] border-[#1A1612] dark:border-[#EDE6DA]",
+                "text-[#1A1612] dark:text-[#EDE6DA]",
+                "font-bold font-uthmani text-[14px] leading-none",
+              )}
+              style={{
+                fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
+              }}
+            >
+              {toArabicDigits(pageNumber)}
+            </span>
           </footer>
         </div>
       </div>

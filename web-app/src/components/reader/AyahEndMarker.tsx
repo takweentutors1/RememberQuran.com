@@ -10,53 +10,43 @@ interface AyahEndMarkerProps {
 }
 
 /**
- * Authentic Madani Mushaf Pure Circular Medallion (علامة نهاية الآية الدائرية النقية)
- * Pure, clean single circle medallion with bold centered Uthmanic Hafs calligraphy numeral.
- * Scaled up by 20% for optimal readability.
+ * Authentic Madani Mushaf CSS Circular Medallion (علامة نهاية الآية الدائرية)
+ * Pure CSS round badge without SVG tags with bold centered Uthmanic Hafs numeral.
  */
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
-  // Dynamic SVG font size scaled +20%
-  const svgFontSize = digitCount >= 3 ? "12.5px" : digitCount === 2 ? "15px" : "18px"
+  // Dynamic font size for 1, 2, or 3 digits
+  const fontStyle =
+    digitCount >= 3
+      ? "text-[0.55em] tracking-tighter"
+      : digitCount === 2
+        ? "text-[0.68em] tracking-tight"
+        : "text-[0.78em]"
 
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center align-middle select-none mx-0.5",
+        "inline-flex items-center justify-center align-middle select-none mx-1",
         "translate-y-[-2px]",
         className,
       )}
       aria-label={ariaLabel}
     >
-      <span className="relative inline-flex items-center justify-center w-[1.38em] h-[1.38em] shrink-0">
-     
-          {/* Clean Single Medallion Ring */}
-          <circle
-            cx="12"
-            cy="12"
-            r="25"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-
-          {/* Centered Uthmanic Numeral */}
-          <text
-            x="12"
-            y="12"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="currentColor"
-            style={{
-              fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
-              fontWeight: "bold",
-              fontSize: svgFontSize,
-              letterSpacing: "0",
-            }}
-          >
-            {digits}
-          </text>
-      
+      <span
+        className={cn(
+          "inline-flex items-center justify-center",
+          "w-[1.25em] h-[1.25em] rounded-full",
+          "border-[1.5px] border-current",
+          "text-[#1A1612] dark:text-[#EDE6DA]",
+          "font-bold font-uthmani leading-none",
+          fontStyle,
+        )}
+        style={{
+          fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
+        }}
+      >
+        {digits}
       </span>
     </span>
   )
