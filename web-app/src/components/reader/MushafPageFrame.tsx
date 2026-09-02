@@ -76,7 +76,7 @@ export function MushafPageFrame({
     <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[760px] px-2 sm:px-4", className)}>
       {/* Outer Margin Badges (Desktop) */}
       {marginBadges.length > 0 && (
-        <div className="absolute -right-3 top-12 hidden flex-col gap-3 lg:flex translate-x-full pr-3">
+        <div className="absolute right-0 top-12 hidden flex-col gap-3 lg:flex translate-x-[calc(100%+6px)]">
           {marginBadges.map((badge) => (
             <div
               key={badge.id}
