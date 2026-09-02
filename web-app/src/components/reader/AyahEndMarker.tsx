@@ -36,7 +36,7 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
           viewBox="0 0 24 28"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="size-full text-[#1A1612] dark:text-[#EDE6DA] overflow-visible"
+          className="size-full text-[#1A1612] dark:text-[#EDE6DA] overflow-visible drop-shadow-2xs"
         >
           {/* Inner White Eye Room */}
           <ellipse

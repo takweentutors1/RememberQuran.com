@@ -104,96 +104,108 @@ export function MushafPageFrame({
         </div>
       )}
 
-      {/* Main Mushaf Page Container - Exact King Fahd Complex Manuscript Geometry */}
+      {/* Main Mushaf Page Container - King Fahd Complex Madani Manuscript Geometry */}
       <div
         className={cn(
-          "relative overflow-hidden transition-colors duration-300",
-          "bg-[#FBF9F4] dark:bg-[#151412] text-[#1E1B18] dark:text-[#ECE6DA]",
-          "border border-[#D8D1C3] dark:border-[#383227] rounded-sm shadow-md",
-          "p-2 sm:p-3 md:p-4",
+          "relative overflow-hidden transition-all duration-300",
+          "bg-[#FAF7EE] dark:bg-[#161412] text-[#1E1B18] dark:text-[#ECE6DA]",
+          "border border-[#D4C8B0] dark:border-[#3A3328] rounded-sm shadow-xl",
+          "p-2.5 sm:p-4 md:p-5",
         )}
       >
-        {/* Subtle Outer Frame Rule */}
-        <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#7A6440]/60 p-2 sm:p-3 md:p-4">
-          {/* Main Quranic Text Body (15-line flow) */}
-          <main className="relative z-10 min-h-[360px] py-1">
-            {children}
-          </main>
+        {/* Authentic Madani Double Gold Hairline Border Frame */}
+        <div className="relative rounded-xs border-2 border-[#C2A676] dark:border-[#8E7348] p-1 sm:p-1.5">
+          <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 p-2 sm:p-3 md:p-4">
+            {/* Top Page Header: Surah Name & Juz Indicator in Classical Style */}
+            <header className="mb-2 flex items-center justify-between border-b border-[#C2A676]/50 dark:border-[#8E7348]/50 pb-1.5 text-xs select-none">
+              <span className="font-uthmani text-[13px] sm:text-[14px] font-medium text-[#8C6D38] dark:text-[#D4AF37]">
+                {cleanSurahName ? `سُورَةُ ${cleanSurahName}` : ""}
+              </span>
+              <span className="font-uthmani text-[13px] sm:text-[14px] font-medium text-[#8C6D38] dark:text-[#D4AF37]">
+                {juzNumber ? `الجزء ${toArabicDigits(juzNumber)}` : ""}
+              </span>
+            </header>
 
-          {/* Bottom Page Footer: Centered Oriental Page Numeral in Ornate Black Eye Cartouche */}
-          <footer
-            aria-label={`Page ${pageNumber}`}
-            className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-3 flex items-center justify-center select-none"
-          >
-            <div className="relative inline-flex items-center justify-center w-[24px] h-[28px]">
-              <svg
-                viewBox="0 0 24 28"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="size-full text-[#1A1612] dark:text-[#EDE6DA] overflow-visible"
-              >
-                <ellipse
-                  cx="12"
-                  cy="14"
-                  rx="7.5"
-                  ry="5.5"
-                  fill="#FFFDF9"
-                  className="dark:fill-[#181512]"
-                />
-                <path
-                  d="
-                    M 12,2.5
-                    C 14,5 18,5.8 19.5,8.5
-                    C 17,9.8 15,9.5 12,9.5
-                    C 9,9.5 7,9.8 4.5,8.5
-                    C 6,5.8 10,5 12,2.5 Z
-                  "
-                  fill="currentColor"
-                />
-                <circle cx="12" cy="2" r="0.75" fill="currentColor" />
-                <circle cx="12" cy="6.2" r="0.65" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="8.5" cy="7" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="15.5" cy="7" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <path
-                  d="
-                    M 12,25.5
-                    C 14,23 18,22.2 19.5,19.5
-                    C 17,18.2 15,18.5 12,18.5
-                    C 9,18.5 7,18.2 4.5,19.5
-                    C 6,22.2 10,23 12,25.5 Z
-                  "
-                  fill="currentColor"
-                />
-                <circle cx="12" cy="26" r="0.75" fill="currentColor" />
-                <circle cx="12" cy="21.8" r="0.65" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="8.5" cy="21" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="15.5" cy="21" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <ellipse
-                  cx="12"
-                  cy="14"
-                  rx="7.5"
-                  ry="5.5"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-                <text
-                  x="12"
-                  y="14"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill="currentColor"
-                  style={{
-                    fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
-                    fontWeight: "bold",
-                    fontSize: "11.5px",
-                    letterSpacing: "0",
-                  }}
+            {/* Main Quranic Text Body (15-line flow) */}
+            <main className="relative z-10 min-h-[380px] py-1">
+              {children}
+            </main>
+
+            {/* Bottom Page Footer: Centered Oriental Page Numeral in Ornate Black Eye Cartouche */}
+            <footer
+              aria-label={`Page ${pageNumber}`}
+              className="mt-3 sm:mt-5 border-t border-[#C2A676]/50 dark:border-[#8E7348]/50 pt-2 flex items-center justify-center select-none"
+            >
+              <div className="relative inline-flex items-center justify-center w-[22px] h-[26px]">
+                <svg
+                  viewBox="0 0 24 28"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="size-full text-[#1A1612] dark:text-[#EDE6DA] overflow-visible"
                 >
-                  {toArabicDigits(pageNumber)}
-                </text>
-              </svg>
-            </div>
-          </footer>
+                  <ellipse
+                    cx="12"
+                    cy="14"
+                    rx="7.5"
+                    ry="5.5"
+                    fill="#FFFDF9"
+                    className="dark:fill-[#181512]"
+                  />
+                  <path
+                    d="
+                      M 12,2.5
+                      C 14,5 18,5.8 19.5,8.5
+                      C 17,9.8 15,9.5 12,9.5
+                      C 9,9.5 7,9.8 4.5,8.5
+                      C 6,5.8 10,5 12,2.5 Z
+                    "
+                    fill="currentColor"
+                  />
+                  <circle cx="12" cy="2" r="0.75" fill="currentColor" />
+                  <circle cx="12" cy="6.2" r="0.65" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                  <circle cx="8.5" cy="7" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                  <circle cx="15.5" cy="7" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                  <path
+                    d="
+                      M 12,25.5
+                      C 14,23 18,22.2 19.5,19.5
+                      C 17,18.2 15,18.5 12,18.5
+                      C 9,18.5 7,18.2 4.5,19.5
+                      C 6,22.2 10,23 12,25.5 Z
+                    "
+                    fill="currentColor"
+                  />
+                  <circle cx="12" cy="26" r="0.75" fill="currentColor" />
+                  <circle cx="12" cy="21.8" r="0.65" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                  <circle cx="8.5" cy="21" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                  <circle cx="15.5" cy="21" r="0.55" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                  <ellipse
+                    cx="12"
+                    cy="14"
+                    rx="7.5"
+                    ry="5.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  />
+                  <text
+                    x="12"
+                    y="14"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill="currentColor"
+                    style={{
+                      fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
+                      fontWeight: "bold",
+                      fontSize: "11px",
+                      letterSpacing: "0",
+                    }}
+                  >
+                    {toArabicDigits(pageNumber)}
+                  </text>
+                </svg>
+              </div>
+            </footer>
+          </div>
         </div>
       </div>
     </div>
