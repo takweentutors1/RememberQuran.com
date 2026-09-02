@@ -10,11 +10,11 @@ interface AyahEndMarkerProps {
 }
 
 /**
- * Authentic Madani Mushaf Compact Black Floral Cartouche (علامة نهاية الآية المفردة المتقنة)
- * Only the single compact inner floral emblem without any outer balloon/lantern chamber:
- * - Tight ornate black top & bottom palmette crowns
- * - Single crisp inner chamber
- * - Bold Uthmanic Hafs calligraphy digits with exact mathematical centering
+ * Authentic Madani Mushaf Single Inner Eye Emblem (علامة نهاية الآية المفردة الدقيقة)
+ * Exact extraction of the inner part only (no outer balloon, no lantern frame):
+ * - Clean horizontal oval chamber with thick black outer ring
+ * - Compact top and bottom crescent floral crown caps
+ * - Pure centered Uthmanic Hafs calligraphy digits
  */
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
@@ -31,70 +31,60 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
       )}
       aria-label={ariaLabel}
     >
-      <span className="relative inline-flex items-center justify-center w-[1.18em] h-[1.38em] shrink-0">
-        {/* Compact Single Black Floral Cartouche SVG */}
+      <span className="relative inline-flex items-center justify-center w-[1.25em] h-[1.38em] shrink-0">
+        {/* Exact Single Inner Eye Emblem SVG */}
         <svg
-          viewBox="0 0 26 30"
+          viewBox="0 0 24 28"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
         >
           {/* Inner Light Fill for Contrast */}
           <ellipse
-            cx="13"
-            cy="15"
-            rx="9.5"
-            ry="9"
+            cx="12"
+            cy="14"
+            rx="9"
+            ry="7.5"
             fill="#FFFDF9"
             className="dark:fill-[#181512]"
           />
 
-          {/* ─── TIGHT TOP BLACK FLORAL CROWN ─── */}
+          {/* ─── TOP CRESCENT CROWN CAP ─── */}
           <path
             d="
-              M 13,0.8
-              C 15,2.8 18.5,3.2 20,5.5
-              C 17.5,6.8 15.5,6.5 13,6.5
-              C 10.5,6.5 8.5,6.8 6,5.5
-              C 7.5,3.2 11,2.8 13,0.8 Z
+              M 4.2,9.8
+              C 6,4.5 18,4.5 19.8,9.8
+              C 17.5,7.8 6.5,7.8 4.2,9.8 Z
             "
             fill="currentColor"
           />
-          <circle cx="13" cy="0.6" r="0.75" fill="currentColor" />
-          <circle cx="13" cy="4.2" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-          <circle cx="9.2" cy="4.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-          <circle cx="16.8" cy="4.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
+          <circle cx="12" cy="3.5" r="0.8" fill="currentColor" />
 
-          {/* ─── TIGHT BOTTOM BLACK FLORAL CROWN ─── */}
+          {/* ─── BOTTOM CRESCENT CROWN CAP ─── */}
           <path
             d="
-              M 13,29.2
-              C 15,27.2 18.5,26.8 20,24.5
-              C 17.5,23.2 15.5,23.5 13,23.5
-              C 10.5,23.5 8.5,23.2 6,24.5
-              C 7.5,26.8 11,27.2 13,29.2 Z
+              M 4.2,18.2
+              C 6,23.5 18,23.5 19.8,18.2
+              C 17.5,20.2 6.5,20.2 4.2,18.2 Z
             "
             fill="currentColor"
           />
-          <circle cx="13" cy="29.4" r="0.75" fill="currentColor" />
-          <circle cx="13" cy="25.8" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-          <circle cx="9.2" cy="25.2" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-          <circle cx="16.8" cy="25.2" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
+          <circle cx="12" cy="24.5" r="0.8" fill="currentColor" />
 
-          {/* ─── SINGLE OVAL BORDER ─── */}
+          {/* ─── SOLID BLACK HORIZONTAL OVAL RING ─── */}
           <ellipse
-            cx="13"
-            cy="15"
-            rx="9.5"
-            ry="9"
+            cx="12"
+            cy="14"
+            rx="9"
+            ry="7.5"
             stroke="currentColor"
-            strokeWidth="1.4"
+            strokeWidth="1.8"
           />
 
-          {/* ─── MATHEMATICALLY CENTERED NUMERAL ─── */}
+          {/* ─── MATHEMATICALLY CENTERED UTHMANIC NUMERAL ─── */}
           <text
-            x="13"
-            y="15"
+            x="12"
+            y="14"
             textAnchor="middle"
             dominantBaseline="central"
             fill="currentColor"

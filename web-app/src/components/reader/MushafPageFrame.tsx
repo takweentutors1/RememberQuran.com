@@ -114,72 +114,62 @@ export function MushafPageFrame({
             {children}
           </main>
 
-          {/* Bottom Page Footer: Centered Oriental Page Numeral in Compact Black Cartouche */}
+          {/* Bottom Page Footer: Centered Oriental Page Numeral in Single Inner Eye Emblem */}
           <footer
             aria-label={`Page ${pageNumber}`}
             className="mt-4 sm:mt-6 border-t border-[#C2A676]/60 dark:border-[#7A6440]/60 pt-3 flex items-center justify-center select-none"
           >
-            <div className="relative inline-flex items-center justify-center w-[26px] h-[30px]">
+            <div className="relative inline-flex items-center justify-center w-[24px] h-[28px]">
               <svg
-                viewBox="0 0 26 30"
+                viewBox="0 0 24 28"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
               >
                 <ellipse
-                  cx="13"
-                  cy="15"
-                  rx="9.5"
-                  ry="9"
+                  cx="12"
+                  cy="14"
+                  rx="9"
+                  ry="7.5"
                   fill="#FFFDF9"
                   className="dark:fill-[#181512]"
                 />
                 <path
                   d="
-                    M 13,0.8
-                    C 15,2.8 18.5,3.2 20,5.5
-                    C 17.5,6.8 15.5,6.5 13,6.5
-                    C 10.5,6.5 8.5,6.8 6,5.5
-                    C 7.5,3.2 11,2.8 13,0.8 Z
+                    M 4.2,9.8
+                    C 6,4.5 18,4.5 19.8,9.8
+                    C 17.5,7.8 6.5,7.8 4.2,9.8 Z
                   "
                   fill="currentColor"
                 />
-                <circle cx="13" cy="0.6" r="0.75" fill="currentColor" />
-                <circle cx="13" cy="4.2" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="9.2" cy="4.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="16.8" cy="4.8" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="12" cy="3.5" r="0.8" fill="currentColor" />
                 <path
                   d="
-                    M 13,29.2
-                    C 15,27.2 18.5,26.8 20,24.5
-                    C 17.5,23.2 15.5,23.5 13,23.5
-                    C 10.5,23.5 8.5,23.2 6,24.5
-                    C 7.5,26.8 11,27.2 13,29.2 Z
+                    M 4.2,18.2
+                    C 6,23.5 18,23.5 19.8,18.2
+                    C 17.5,20.2 6.5,20.2 4.2,18.2 Z
                   "
                   fill="currentColor"
                 />
-                <circle cx="13" cy="29.4" r="0.75" fill="currentColor" />
-                <circle cx="13" cy="25.8" r="0.7" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="9.2" cy="25.2" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
-                <circle cx="16.8" cy="25.2" r="0.6" fill="#FFFDF9" className="dark:fill-[#181512]" />
+                <circle cx="12" cy="24.5" r="0.8" fill="currentColor" />
                 <ellipse
-                  cx="13"
-                  cy="15"
-                  rx="9.5"
-                  ry="9"
+                  cx="12"
+                  cy="14"
+                  rx="9"
+                  ry="7.5"
                   stroke="currentColor"
-                  strokeWidth="1.4"
+                  strokeWidth="1.8"
                 />
                 <text
-                  x="13"
-                  y="15"
+                  x="12"
+                  y="14"
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="currentColor"
                   style={{
                     fontFamily: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
                     fontWeight: "bold",
-                    fontSize: "13px",
+                    fontSize: "12.5px",
                     letterSpacing: "0",
                   }}
                 >
