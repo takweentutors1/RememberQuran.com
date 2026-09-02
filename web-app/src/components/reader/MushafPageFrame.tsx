@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils"
 
 interface MarginBadge {
   id: string
-  label: string
+  title: string
+  number: number
   sublabel?: string
   type: "juz" | "hizb" | "rub"
 }
@@ -81,15 +82,20 @@ export function MushafPageFrame({
               key={badge.id}
               dir="rtl"
               className={cn(
-                "flex flex-col items-center justify-center rounded-sm border border-[#C2A676]/60 bg-[#FAF7EE] dark:bg-[#201C17] px-3.5 py-2 text-center shadow-xs",
+                "flex flex-col items-center justify-center rounded-sm border border-[#C2A676]/60 bg-[#FAF7EE] dark:bg-[#201C17] px-3 py-1.5 text-center shadow-xs",
                 "transition-transform hover:scale-105",
               )}
             >
-              <span className="quran-arabic text-sm font-semibold text-[#8C6D38] dark:text-[#D4AF37] leading-tight">
-                {badge.label}
-              </span>
+              <div className="flex items-center gap-1.5 text-[#1A1612] dark:text-[#EDE6DA]">
+                <span className="font-uthmani text-base font-medium leading-none">
+                  {badge.title}
+                </span>
+                <span className="font-uthmani text-xs font-bold leading-none">
+                  {toArabicDigits(badge.number)}
+                </span>
+              </div>
               {badge.sublabel && (
-                <span className="mt-0.5 text-[10px] font-mono tabular-nums text-muted-foreground">
+                <span className="mt-1 text-[10px] font-mono tabular-nums text-muted-foreground">
                   {badge.sublabel}
                 </span>
               )}

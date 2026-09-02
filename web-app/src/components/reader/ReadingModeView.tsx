@@ -180,14 +180,16 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
         if (isNewJuz && page.juzNumber) {
           marginBadges.push({
             id: `juz-${page.juzNumber}`,
-            label: `الجزء ${toArabicDigits(page.juzNumber)}`,
+            title: "الجزء",
+            number: page.juzNumber,
             sublabel: `Juz ${page.juzNumber}`,
             type: "juz" as const,
           })
         } else if (isNewHizb && page.hizbNumber) {
           marginBadges.push({
             id: `hizb-${page.hizbNumber}`,
-            label: `الحزب ${toArabicDigits(page.hizbNumber)}`,
+            title: "الحزب",
+            number: page.hizbNumber,
             sublabel: `Hizb ${page.hizbNumber}`,
             type: "hizb" as const,
           })
