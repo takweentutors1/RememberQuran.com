@@ -135,13 +135,13 @@ export function MushafPageFrame({
               {children}
             </main>
 
-            {/* Bottom Page Footer: Centered Rectangular Boxed Page Numeral matching screenshot */}
+            {/* Bottom Page Footer: Simple clean Eastern Arabic page numeral */}
             <footer
               aria-label={`Page ${pageNumber}`}
-              className="mt-4 sm:mt-6 pt-3 flex items-center justify-center select-none"
+              className="mt-3 sm:mt-5 pt-2 flex items-center justify-center select-none"
             >
-              <div className="inline-flex items-center justify-center px-4 py-0.5 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] rounded-xs shadow-2xs">
-                <span className="font-uthmani text-sm sm:text-base font-bold text-[#4A3B2C] dark:text-[#E2D5C3] leading-none">
+              <div className="inline-flex items-center justify-center px-3.5 py-0.5 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] rounded-xs shadow-2xs">
+                <span className="font-arabic-ui text-sm sm:text-base font-medium text-[#4A3B2C] dark:text-[#E2D5C3] leading-none">
                   {toArabicDigits(pageNumber)}
                 </span>
               </div>
