@@ -267,25 +267,43 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                       )}
                     >
                       {words.map(({ word, verse }) => {
+                        const isFirstWordOfAyah =
+                          word.position === 1 ||
+                          (verse.words && verse.words[0]?.id === word.id)
+
                         if (word.char_type_name === "end") {
                           return (
-                            <AyahEndMarker
+                            <span
                               key={word.id}
-                              digits={word.qpc_uthmani_hafs || word.text_uthmani}
-                              ariaLabel={`Ayah ${verse.verse_number}`}
-                              onClick={() => handleAyahClick(verse)}
-                            />
+                              id={!isFirstWordOfAyah ? `ayah-marker-${verse.verse_number}` : undefined}
+                              className="inline-flex"
+                            >
+                              <AyahEndMarker
+                                digits={word.qpc_uthmani_hafs || word.text_uthmani}
+                                ariaLabel={`Ayah ${verse.verse_number}`}
+                                onClick={() => handleAyahClick(verse)}
+                              />
+                            </span>
                           )
                         }
 
                         return (
-                          <ArabicWord
+                          <span
                             key={word.id}
-                            word={word}
-                            verseKey={verse.verse_key}
-                            disableTooltip={true}
-                            onWordClick={handleWordClick}
-                          />
+                            id={isFirstWordOfAyah ? `ayah-${verse.verse_number}` : undefined}
+                            data-verse-key={verse.verse_key}
+                            className={cn(
+                              "inline-flex",
+                              targetAyahId === verse.verse_number && "rounded-xs bg-primary/10",
+                            )}
+                          >
+                            <ArabicWord
+                              word={word}
+                              verseKey={verse.verse_key}
+                              disableTooltip={true}
+                              onWordClick={handleWordClick}
+                            />
+                          </span>
                         )
                       })}
                     </div>

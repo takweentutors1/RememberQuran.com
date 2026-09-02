@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useSurahContentOptional } from "@/context/SurahContentContext"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
@@ -15,6 +16,7 @@ interface AyahGridProps {
 export function AyahGrid({ surahId, versesCount, onNavigate, className }: AyahGridProps) {
   const router = useRouter()
   const params = useParams<{ ayahId?: string }>()
+  const surahContent = useSurahContentOptional()
   const [query, setQuery] = useState("")
 
   const parsed = Number(params.ayahId)
@@ -23,7 +25,11 @@ export function AyahGrid({ surahId, versesCount, onNavigate, className }: AyahGr
 
   function goTo(ayah: number) {
     setQuery("")
-    router.push(`/${surahId}/${ayah}`, { scroll: false })
+    if (surahContent) {
+      surahContent.loadSurah(surahId, ayah)
+    } else {
+      router.push(`/${surahId}/${ayah}`, { scroll: false })
+    }
     onNavigate?.()
   }
 

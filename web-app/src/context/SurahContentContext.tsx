@@ -28,7 +28,7 @@ interface SurahContentContextValue {
   pendingSurahId: number | null
   targetAyahId: number | undefined
   isLoading: boolean
-  loadSurah: (id: number) => void
+  loadSurah: (id: number, targetAyahId?: number) => void
   prefetchSurah: (id: number) => void
   /** Full payload from legacy hydrate (complete verses) */
   hydrate: (payload: SurahPayload & { targetAyahId?: number }) => void
@@ -222,21 +222,30 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
   )
 
   const loadSurah = useCallback(
-    (id: number) => {
+    (id: number, nextTargetAyahId?: number) => {
       if (loadingRef.current && pendingSurahId === id) return
-      if (id === surahId && verses.length > 0 && !loadingRef.current) return
+      if (id === surahId && verses.length > 0 && !loadingRef.current) {
+        if (nextTargetAyahId) {
+          setTargetAyahId(nextTargetAyahId)
+          router.push(`/${id}/${nextTargetAyahId}`, { scroll: false })
+        }
+        return
+      }
 
       const generation = ++loadGenerationRef.current
       loadingRef.current = true
       setIsLoading(true)
       setPendingSurahId(id)
-      setTargetAyahId(undefined)
-      router.push(`/${id}`, { scroll: false })
+      setTargetAyahId(nextTargetAyahId)
+      
+      const href = nextTargetAyahId ? `/${id}/${nextTargetAyahId}` : `/${id}`
+      router.push(href, { scroll: false })
 
       void fetchSurahProgressive(id, {
+        targetAyahId: nextTargetAyahId,
         onPartial: (payload, readyForTarget) => {
           if (generation !== loadGenerationRef.current) return
-          applyPayload(payload)
+          applyPayload(payload, nextTargetAyahId)
           if (readyForTarget) {
             loadingRef.current = false
             setIsLoading(false)

@@ -69,7 +69,7 @@ export function JuzList({ onNavigate }: JuzListProps) {
                     scroll={false}
                     onClick={() => {
                       if (surahContent) {
-                        surahContent.loadSurah(j.startSurah)
+                        surahContent.loadSurah(j.startSurah, j.startAyah)
                       }
                       onNavigate?.()
                     }}
@@ -113,15 +113,16 @@ export function JuzList({ onNavigate }: JuzListProps) {
               const isFirstHalf = hizbNumber % 2 !== 0
               const juzDef = JUZ_RANGES[correspondingJuz - 1]!
               const startChap = chapterMap.get(juzDef.startSurah)
+              const targetAyah = isFirstHalf ? juzDef.startAyah : Math.ceil((juzDef.startAyah + juzDef.endAyah) / 2)
 
               return (
                 <li key={hizbNumber}>
                   <Link
-                    href={`/${juzDef.startSurah}/${isFirstHalf ? juzDef.startAyah : Math.ceil((juzDef.startAyah + juzDef.endAyah) / 2)}`}
+                    href={`/${juzDef.startSurah}/${targetAyah}`}
                     scroll={false}
                     onClick={() => {
                       if (surahContent) {
-                        surahContent.loadSurah(juzDef.startSurah)
+                        surahContent.loadSurah(juzDef.startSurah, targetAyah)
                       }
                       onNavigate?.()
                     }}
