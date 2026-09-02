@@ -81,6 +81,13 @@ export default async function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        <link
+          rel="preload"
+          href="/fonts/aqf_bsml.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="font-sans min-h-dvh bg-background text-foreground antialiased">
         <Link

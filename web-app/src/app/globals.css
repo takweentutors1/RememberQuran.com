@@ -22,13 +22,15 @@
   unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }
 
-/* Authentic Bismillah Calligraphic Font */
+/* Authentic Bismillah & Surah Calligraphic Font */
 @font-face {
   font-family: 'aqf_bsml';
-  src: url('https://web.surahapp.com/_nuxt/fonts/aqf_bsml.20c0366.woff2') format('woff2');
+  src:
+    url('/fonts/aqf_bsml.woff2') format('woff2'),
+    url('https://web.surahapp.com/_nuxt/fonts/aqf_bsml.20c0366.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @theme inline {
