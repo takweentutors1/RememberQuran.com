@@ -13,6 +13,7 @@ import 'widgets/radio_facts.dart';
 import 'widgets/waveform_bars.dart';
 import '../../../core/utils/responsive_layout.dart';
 import '../widgets/reciter_selector.dart';
+import 'widgets/sleep_timer_sheet.dart';
 
 class RadioView extends StatefulWidget {
   const RadioView({super.key});
@@ -448,122 +449,7 @@ class _RadioViewState extends State<RadioView> {
   }
 
   void _showSleepTimerSheet(BuildContext context) {
-    showResponsiveSheet(
-      context: context,
-      builder: (context) {
-        final theme = Theme.of(context);
-        final nurColors = theme.extension<NurColorsExtension>();
-        final brandGold = nurColors?.brandGold ?? theme.colorScheme.primary;
-
-        Widget option(
-          String label, {
-          required VoidCallback onTap,
-          bool selected = false,
-          IconData icon = Icons.bedtime_rounded,
-        }) {
-          return ListTile(
-            leading: Icon(
-              icon,
-              color: selected ? brandGold : theme.iconTheme.color,
-            ),
-            title: Text(
-              label,
-              style: TextStyle(
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-            trailing: selected
-                ? Icon(Icons.check_circle, color: brandGold)
-                : null,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Navigator.pop(context);
-              onTap();
-            },
-          );
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SafeArea(
-            child: Obx(() {
-              final mode = _audioController.rxSleepTimerMode.value;
-              final remaining = _audioController.sleepTimerRemaining;
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.outline.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Sleep Timer',
-                      style: TextStyle(
-                        fontSize: context.responsiveBaseTextSize,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (mode == SleepTimerMode.duration &&
-                      remaining != null &&
-                      remaining > Duration.zero)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        '${remaining.inMinutes + 1} min remaining',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: brandGold,
-                        ),
-                      ),
-                    ),
-                  option(
-                    '15 minutes',
-                    onTap: () => _audioController.setSleepTimerDuration(
-                      const Duration(minutes: 15),
-                    ),
-                  ),
-                  option(
-                    '30 minutes',
-                    onTap: () => _audioController.setSleepTimerDuration(
-                      const Duration(minutes: 30),
-                    ),
-                  ),
-                  option(
-                    '1 hour',
-                    onTap: () => _audioController.setSleepTimerDuration(
-                      const Duration(hours: 1),
-                    ),
-                  ),
-                  option(
-                    'End of Surah',
-                    selected: mode == SleepTimerMode.endOfSurah,
-                    onTap: () => _audioController.setSleepTimerEndOfSurah(),
-                  ),
-                  if (mode != SleepTimerMode.off)
-                    option(
-                      'Turn Off',
-                      icon: Icons.close_rounded,
-                      onTap: () => _audioController.cancelSleepTimer(),
-                    ),
-                  const SizedBox(height: 8),
-                ],
-              );
-            }),
-          ),
-        );
-      },
-    );
+    SleepTimerSheet.show(context);
   }
 
   Widget _buildTrackInfo(BuildContext context) {

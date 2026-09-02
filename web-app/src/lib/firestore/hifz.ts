@@ -7,6 +7,11 @@ interface MemorisedAyahDoc {
   surahId: number
   ayahId: number
   memorisedAt: Timestamp
+  repetitions?: number
+  intervalDays?: number
+  easeFactor?: number
+  nextReviewAt?: Timestamp
+  lastReviewedAt?: Timestamp
 }
 
 export interface MemorisedAyahRecord {
@@ -14,6 +19,11 @@ export interface MemorisedAyahRecord {
   surahId: number
   ayahId: number
   memorisedAt: Date
+  repetitions?: number
+  intervalDays?: number
+  easeFactor?: number
+  nextReviewAt?: Date
+  lastReviewedAt?: Date
 }
 
 function hifzRef(userId: string) {
@@ -32,6 +42,11 @@ function fromSnapshot(
     surahId: data.surahId,
     ayahId: data.ayahId,
     memorisedAt: data.memorisedAt?.toDate() ?? new Date(0),
+    repetitions: data.repetitions,
+    intervalDays: data.intervalDays,
+    easeFactor: data.easeFactor,
+    nextReviewAt: data.nextReviewAt?.toDate(),
+    lastReviewedAt: data.lastReviewedAt?.toDate(),
   }
 }
 
@@ -100,6 +115,33 @@ export async function markMemorised(
     created: outcome.created,
     ayah: fromSnapshot(snap as FirebaseFirestore.QueryDocumentSnapshot<MemorisedAyahDoc>),
   }
+}
+
+export async function recordReviewSRS(
+  userId: string,
+  verseKey: string,
+  srsUpdate: {
+    repetitions: number
+    intervalDays: number
+    easeFactor: number
+    nextReviewAt: Date
+    lastReviewedAt: Date
+  },
+): Promise<MemorisedAyahRecord | null> {
+  const ref = hifzRef(userId).doc(verseKey)
+  const snap = await ref.get()
+  if (!snap.exists) return null
+
+  await ref.update({
+    repetitions: srsUpdate.repetitions,
+    intervalDays: srsUpdate.intervalDays,
+    easeFactor: srsUpdate.easeFactor,
+    nextReviewAt: Timestamp.fromDate(srsUpdate.nextReviewAt),
+    lastReviewedAt: Timestamp.fromDate(srsUpdate.lastReviewedAt),
+  })
+
+  const updatedSnap = await ref.get()
+  return fromSnapshot(updatedSnap as FirebaseFirestore.QueryDocumentSnapshot<MemorisedAyahDoc>)
 }
 
 export async function unmarkMemorised(userId: string, verseKey: string): Promise<boolean> {

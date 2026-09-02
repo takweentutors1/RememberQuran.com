@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link"
 import type { Chapter } from "@/types/quran"
+import { useHifz } from "@/context/HifzContext"
 import { cn } from "@/lib/utils"
 
 interface SurahCardProps {
@@ -21,6 +24,12 @@ interface SurahCardProps {
  */
 export function SurahCard({ chapter }: SurahCardProps) {
   const isMakki = chapter.revelation_place === "makkah"
+  const { getMemorisedCountForSurah } = useHifz()
+
+  const memorisedCount = getMemorisedCountForSurah(chapter.id)
+  const memorisedPct = chapter.verses_count > 0
+    ? Math.round((memorisedCount / chapter.verses_count) * 100)
+    : 0
 
   return (
     <Link
@@ -35,7 +44,10 @@ export function SurahCard({ chapter }: SurahCardProps) {
         <svg
           aria-hidden
           viewBox="0 0 40 40"
-          className="absolute inset-0 size-full text-muted-foreground transition-colors duration-(--dur-slow) ease-(--ease-out) group-hover:text-gold"
+          className={cn(
+            "absolute inset-0 size-full transition-colors duration-(--dur-slow) ease-(--ease-out)",
+            memorisedCount > 0 ? "text-primary" : "text-muted-foreground group-hover:text-gold",
+          )}
         >
           <rect
             x="8"
@@ -45,7 +57,7 @@ export function SurahCard({ chapter }: SurahCardProps) {
             rx="4"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.25"
+            strokeWidth={memorisedCount > 0 ? "1.75" : "1.25"}
             style={{ transformOrigin: "20px 20px" }}
             className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:-rotate-[14deg]"
           />
@@ -58,7 +70,7 @@ export function SurahCard({ chapter }: SurahCardProps) {
               rx="4"
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.25"
+              strokeWidth={memorisedCount > 0 ? "1.75" : "1.25"}
               style={{ transformOrigin: "20px 20px" }}
               className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:rotate-[59deg]"
             />
@@ -66,7 +78,10 @@ export function SurahCard({ chapter }: SurahCardProps) {
         </svg>
         <span
           data-numeric
-          className="relative font-mono text-xs font-medium text-muted-foreground transition-colors duration-(--dur-slow) ease-(--ease-out) group-hover:text-gold"
+          className={cn(
+            "relative font-mono text-xs font-medium transition-colors duration-(--dur-slow) ease-(--ease-out)",
+            memorisedCount > 0 ? "text-primary font-semibold" : "text-muted-foreground group-hover:text-gold",
+          )}
         >
           {chapter.id}
         </span>
@@ -92,6 +107,14 @@ export function SurahCard({ chapter }: SurahCardProps) {
           >
             {isMakki ? "Makki" : "Madani"}
           </span>
+          {memorisedCount > 0 && (
+            <>
+              <span aria-hidden>·</span>
+              <span className="rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary leading-none">
+                {memorisedPct}% Hifz
+              </span>
+            </>
+          )}
         </span>
       </span>
 

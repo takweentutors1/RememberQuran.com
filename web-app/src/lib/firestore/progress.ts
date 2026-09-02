@@ -127,3 +127,33 @@ export async function sumAyahsForDay(userId: string, day: Date): Promise<number>
   }
   return total
 }
+
+/** Get activity map (day key -> ayah count) for the last 52 weeks (364 days). */
+export async function getYearActivityHeatmap(
+  userId: string,
+  timeZone: string,
+  startDate: Date,
+): Promise<Record<string, number>> {
+  const startTs = Timestamp.fromDate(startDate)
+  const snap = await progressRef(userId).where("date", ">=", startTs).get()
+
+  const map: Record<string, number> = {}
+  for (const doc of snap.docs) {
+    const data = doc.data()
+    const date = data.date instanceof Timestamp ? data.date.toDate() : new Date()
+    const key = localDayKey(timeZone, date)
+    const ayahs = sumRanges(extractRanges(data))
+    map[key] = (map[key] ?? 0) + ayahs
+  }
+  return map
+}
+
+/** Sum total unique ayahs read across all recorded history */
+export async function sumTotalAyahsRead(userId: string): Promise<number> {
+  const snap = await progressRef(userId).get()
+  let total = 0
+  for (const doc of snap.docs) {
+    total += sumRanges(extractRanges(doc.data()))
+  }
+  return total
+}

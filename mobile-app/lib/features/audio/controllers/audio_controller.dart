@@ -82,7 +82,10 @@ class AudioController extends GetxController {
   final Rx<SleepTimerMode> rxSleepTimerMode = SleepTimerMode.off.obs;
   /// Only meaningful when [rxSleepTimerMode] is [SleepTimerMode.duration].
   final Rxn<DateTime> rxSleepTimerEndsAt = Rxn<DateTime>();
+  Rxn<DateTime> get rxSleepTimerEnd => rxSleepTimerEndsAt;
+  final RxnString rxSleepTimerRemaining = RxnString();
   Timer? _sleepTimer;
+  Timer? _sleepTimerTicker;
   final rxHasAudio = false.obs;
   final rxIsBusy = false.obs;
   /// True while just_audio is natively buffering (AudioProcessingState.loading
@@ -440,6 +443,7 @@ class AudioController extends GetxController {
   void onClose() {
     _stopHighlightTimer();
     _sleepTimer?.cancel();
+    _sleepTimerTicker?.cancel();
     _connectivitySub?.cancel();
     super.onClose();
   }
@@ -470,6 +474,19 @@ class AudioController extends GetxController {
   /// Drives word-by-word highlight sync — resolves the current verse/word
   /// from raw playback position via word_sync.dart's binary search.
   void _onPositionTick(Duration position) {
+    // Background execution safeguard: if an OS Doze or background throttle
+    // suspended the Dart Timer, check the timestamp target directly on ticks.
+    final endsAt = rxSleepTimerEndsAt.value;
+    if (endsAt != null && DateTime.now().isAfter(endsAt)) {
+      pause();
+      _clearSleepTimer();
+      AppFeedback.showInfo(
+        'Sleep timer finished recitation.',
+        title: 'Sleep Timer',
+      );
+      return;
+    }
+
     if (_timings.isEmpty) return;
     final t = position.inMilliseconds;
 
@@ -840,40 +857,97 @@ class AudioController extends GetxController {
     rxHasAudio.value = false;
   }
 
+  /// Sets or clears the sleep timer.
+  /// If [duration] is null, cancels any active sleep timer.
+  /// If [duration] is provided, pauses audio after the given duration,
+  /// ticking [rxSleepTimerRemaining] every second, and notifies the user.
+  void setSleepTimer(Duration? duration) {
+    if (duration == null) {
+      cancelSleepTimer();
+      return;
+    }
+    setSleepTimerDuration(duration);
+  }
+
   /// Pauses playback after [duration] of real (wall-clock) time, regardless
   /// of intermediate manual pauses — matches how sleep timers behave in
   /// most audio apps. Replaces any previously scheduled sleep timer.
   void setSleepTimerDuration(Duration duration) {
     _sleepTimer?.cancel();
+    _sleepTimerTicker?.cancel();
+
     rxSleepTimerMode.value = SleepTimerMode.duration;
-    rxSleepTimerEndsAt.value = DateTime.now().add(duration);
+    final end = DateTime.now().add(duration);
+    rxSleepTimerEndsAt.value = end;
+    _updateSleepTimerRemaining(end);
+
+    _sleepTimerTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      final endsAt = rxSleepTimerEndsAt.value;
+      if (endsAt == null) {
+        _sleepTimerTicker?.cancel();
+        _sleepTimerTicker = null;
+        rxSleepTimerRemaining.value = null;
+        return;
+      }
+      final rem = endsAt.difference(DateTime.now());
+      if (rem.isNegative || rem == Duration.zero) {
+        _sleepTimerTicker?.cancel();
+        _sleepTimerTicker = null;
+        rxSleepTimerRemaining.value = null;
+      } else {
+        _updateSleepTimerRemaining(endsAt);
+      }
+    });
+
     _sleepTimer = Timer(duration, () {
       pause();
       _clearSleepTimer();
+      AppFeedback.showInfo(
+        'Sleep timer finished recitation.',
+        title: 'Sleep Timer',
+      );
     });
+  }
+
+  void _updateSleepTimerRemaining(DateTime endsAt) {
+    final diff = endsAt.difference(DateTime.now());
+    if (diff.isNegative) {
+      rxSleepTimerRemaining.value = '0:00';
+      return;
+    }
+    final totalSeconds = diff.inSeconds;
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    rxSleepTimerRemaining.value =
+        '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   /// Stops at the end of whatever is currently playing instead of a fixed
   /// duration — honored in [_onPlaybackCompleted].
   void setSleepTimerEndOfSurah() {
     _sleepTimer?.cancel();
+    _sleepTimerTicker?.cancel();
     _sleepTimer = null;
+    _sleepTimerTicker = null;
     rxSleepTimerMode.value = SleepTimerMode.endOfSurah;
     rxSleepTimerEndsAt.value = null;
+    rxSleepTimerRemaining.value = 'End of Surah';
   }
 
   void cancelSleepTimer() => _clearSleepTimer();
 
   void _clearSleepTimer() {
     _sleepTimer?.cancel();
+    _sleepTimerTicker?.cancel();
     _sleepTimer = null;
+    _sleepTimerTicker = null;
     rxSleepTimerMode.value = SleepTimerMode.off;
     rxSleepTimerEndsAt.value = null;
+    rxSleepTimerRemaining.value = null;
   }
 
   /// One-shot read of time left on a [SleepTimerMode.duration] timer — null
-  /// if no duration timer is active. Not reactive; callers that display it
-  /// (e.g. the picker sheet) read it once rather than tick a live countdown.
+  /// if no duration timer is active.
   Duration? get sleepTimerRemaining {
     final endsAt = rxSleepTimerEndsAt.value;
     if (endsAt == null) return null;

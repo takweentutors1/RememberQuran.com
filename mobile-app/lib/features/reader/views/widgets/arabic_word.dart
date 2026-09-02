@@ -11,9 +11,14 @@ import '../../../../core/utils/responsive_layout.dart';
 class ArabicWord extends StatelessWidget {
   final Word word;
   final String verseKey;
+  final double? fontSize;
 
-  const ArabicWord({Key? key, required this.word, required this.verseKey})
-    : super(key: key);
+  const ArabicWord({
+    super.key,
+    required this.word,
+    required this.verseKey,
+    this.fontSize,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +27,7 @@ class ArabicWord extends StatelessWidget {
 
     return Obx(() {
       final font = settings.font.value;
-      final fontSize = settings.fontSize.value;
+      final effectiveFontSize = fontSize ?? settings.fontSize.value;
       final isTajweedEnabled = settings.rxTajweedEnabled.value;
       final isActiveWord =
           audioController.rxActiveVerseKey.value == verseKey &&
@@ -30,7 +35,7 @@ class ArabicWord extends StatelessWidget {
 
       final textStyle = TextStyle(
         fontFamily: font,
-        fontSize: fontSize,
+        fontSize: effectiveFontSize,
         height: 1.8,
         color: _getColor(Theme.of(context), word.charTypeName),
       );

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../app/routes/app_pages.dart';
 import '../../../../app/routes/app_routes.dart';
-import '../../../../core/models/translation.dart';
 import '../../../../data/repositories/quran_repository.dart';
 import '../../../../data/datasources/local/quran_db.dart';
 import '../../../../core/utils/responsive_layout.dart';
+import 'juz_navigation_sheet.dart';
 
 class QuickJumpSheet extends StatefulWidget {
   final int? currentChapterId;
@@ -143,87 +142,101 @@ class _QuickJumpSheetState extends State<QuickJumpSheet> {
         color: theme.scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.dividerColor.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(2),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
 
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Row(
-              children: [
-                if (_step == 1)
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    tooltip: 'Back',
-                    onPressed: () {
-                      setState(() {
-                        _step = 0;
-                        _selectedChapter = null;
-                      });
-                    },
-                  ),
-                Expanded(
-                  child: Text(
-                    _step == 0 ? 'Choose a Surah' : 'Choose an Ayah',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Close',
-                  onPressed: () => Get.back(),
-                ),
-              ],
-            ),
-          ),
-
-          if (_step == 0)
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 16.0,
                 vertical: 8.0,
               ),
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Surah name, number, or 2:255...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: theme.cardColor,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              child: Row(
+                children: [
+                  if (_step == 1)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      tooltip: 'Back',
+                      onPressed: () {
+                        setState(() {
+                          _step = 0;
+                          _selectedChapter = null;
+                        });
+                      },
+                    ),
+                  Expanded(
+                    child: Text(
+                      _step == 0 ? 'Choose a Surah' : 'Choose an Ayah',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  if (_step == 0)
+                    IconButton(
+                      icon: const Icon(Icons.menu_book_rounded),
+                      tooltip: 'Juz & Hizb Navigation',
+                      onPressed: () {
+                        Navigator.pop(context);
+                        JuzNavigationSheet.show(
+                          context,
+                          currentChapterId: widget.currentChapterId,
+                        );
+                      },
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Close',
+                    onPressed: () => Get.back(),
+                  ),
+                ],
               ),
             ),
 
-          if (_isLoading)
-            const Expanded(child: Center(child: CircularProgressIndicator()))
-          else
-            Expanded(
-              child: _step == 0
-                  ? _buildSurahList(theme)
-                  : _buildAyahGrid(theme),
-            ),
-        ],
+            if (_step == 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Surah name, number, or 2:255...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: theme.cardColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+
+            if (_isLoading)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else
+              Expanded(
+                child: _step == 0
+                    ? _buildSurahList(theme)
+                    : _buildAyahGrid(theme),
+              ),
+          ],
+        ),
       ),
     );
   }

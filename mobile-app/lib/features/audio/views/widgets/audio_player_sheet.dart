@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../widgets/reciter_selector.dart';
 import 'radio_art_card.dart';
+import 'sleep_timer_sheet.dart';
 
 class AudioPlayerSheet extends StatefulWidget {
   final bool expandSettings;
@@ -316,8 +317,31 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Balanced left action / spacer matching the stop button width
-        const SizedBox(width: 48),
+        // Sleep timer action button on the left
+        SizedBox(
+          width: 48,
+          child: Obx(() {
+            final timerActive = _audioController.rxSleepTimerMode.value !=
+                SleepTimerMode.off;
+            final remaining = _audioController.rxSleepTimerRemaining.value;
+            final nurColors = theme.extension<NurColorsExtension>();
+            final brandGold = nurColors?.brandGold ?? theme.colorScheme.primary;
+
+            return IconButton(
+              icon: Icon(
+                timerActive
+                    ? Icons.bedtime_rounded
+                    : Icons.bedtime_outlined,
+              ),
+              tooltip: timerActive
+                  ? 'Sleep timer ($remaining)'
+                  : 'Sleep timer',
+              iconSize: 26,
+              color: timerActive ? brandGold : theme.colorScheme.outline,
+              onPressed: () => SleepTimerSheet.show(context),
+            );
+          }),
+        ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [

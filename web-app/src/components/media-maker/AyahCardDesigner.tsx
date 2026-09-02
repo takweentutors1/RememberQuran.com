@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Check, Clipboard, Download, ImageIcon, Share2 } from "lucide-react"
+import { Check, Clipboard, Download, ImageIcon, Share2, Video, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   ToggleGroup,
@@ -14,9 +14,9 @@ import {
   getMediaPreset,
   isMediaPresetId,
   truncateText,
-  arabicFontSize,
 } from "@/lib/media/card-presets"
 import { parseVerseKey } from "@/lib/quran/verse-key"
+import { cn } from "@/lib/utils"
 
 interface AyahCardDesignerProps {
   initialVerse?: string
@@ -29,13 +29,16 @@ interface AyahCardData {
   translation: string
   surahName: string
   surahArabic: string
+  surahId?: number
+  startAyah?: number
+  endAyah?: number
 }
 
 function arabicSizeClass(length: number) {
-  if (length > 280) return "text-[3cqw]"
-  if (length > 180) return "text-[3.6cqw]"
-  if (length > 100) return "text-[4.2cqw]"
-  return "text-[5.3cqw]"
+  if (length > 280) return "text-[2.8cqw]"
+  if (length > 180) return "text-[3.4cqw]"
+  if (length > 100) return "text-[4cqw]"
+  return "text-[5.2cqw]"
 }
 
 function supportsFileShare() {
@@ -50,17 +53,18 @@ function supportsFileShare() {
 
 export function AyahCardDesigner({
   initialVerse = "2:255",
-  initialPreset = "jade",
+  initialPreset = "minimal",
 }: AyahCardDesignerProps) {
   const [preset, setPreset] = useState<MediaPresetId>(
-    isMediaPresetId(initialPreset) ? initialPreset : "jade",
+    isMediaPresetId(initialPreset) ? initialPreset : "minimal",
   )
   const [appliedVerse, setAppliedVerse] = useState(() => {
-    const parsed = parseVerseKey(initialVerse)
-    return parsed ? `${parsed.surahId}:${parsed.ayahId}` : "2:255"
+    return initialVerse || "2:255"
   })
+  const [endAyahOffset, setEndAyahOffset] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [videoBusy, setVideoBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [card, setCard] = useState<AyahCardData | null>(null)
   const [canNativeShare, setCanNativeShare] = useState(false)
@@ -73,10 +77,20 @@ export function AyahCardDesigner({
     queueMicrotask(() => setCanNativeShare(supportsFileShare()))
   }, [])
 
+  const currentQueryKey = (() => {
+    const base = parseVerseKey(appliedVerse)
+    if (!base) return appliedVerse
+    if (endAyahOffset > 0) {
+      return `${base.surahId}:${base.ayahId}-${base.ayahId + endAyahOffset}`
+    }
+    return `${base.surahId}:${base.ayahId}`
+  })()
+
   useEffect(() => {
     const controller = new AbortController()
+    setLoading(true)
 
-    fetch(`/api/media/ayah?verse=${encodeURIComponent(appliedVerse)}`, {
+    fetch(`/api/media/ayah?verse=${encodeURIComponent(currentQueryKey)}`, {
       signal: controller.signal,
     })
       .then(async (response) => {
@@ -87,7 +101,7 @@ export function AyahCardDesigner({
           throw new Error(
             "error" in body && body.error
               ? body.error
-              : "Could not load this ayah.",
+              : "Could not load this passage.",
           )
         }
         setCard(body)
@@ -95,7 +109,7 @@ export function AyahCardDesigner({
       .catch((reason: unknown) => {
         if (reason instanceof Error && reason.name === "AbortError") return
         setError(
-          reason instanceof Error ? reason.message : "Could not load this ayah.",
+          reason instanceof Error ? reason.message : "Could not load this passage.",
         )
       })
       .finally(() => {
@@ -103,7 +117,7 @@ export function AyahCardDesigner({
       })
 
     return () => controller.abort()
-  }, [appliedVerse])
+  }, [currentQueryKey])
 
   function selectVerse(nextVerse: string) {
     const parsed = parseVerseKey(nextVerse)
@@ -113,10 +127,8 @@ export function AyahCardDesigner({
     }
     const key = `${parsed.surahId}:${parsed.ayahId}`
     setError(null)
-    if (key === appliedVerse) return
-    setLoading(true)
-    setCard(null)
     setAppliedVerse(key)
+    setEndAyahOffset(0)
   }
 
   async function renderPng() {
@@ -132,10 +144,10 @@ export function AyahCardDesigner({
     })
   }
 
-  function downloadDataUrl(dataUrl: string) {
+  function downloadDataUrl(dataUrl: string, ext = "png") {
     const anchor = document.createElement("a")
     anchor.href = dataUrl
-    anchor.download = `rememberquran-${appliedVerse.replace(":", "-")}.png`
+    anchor.download = `rememberquran-${currentQueryKey.replace(/[:–]/g, "-")}.${ext}`
     anchor.click()
   }
 
@@ -143,11 +155,94 @@ export function AyahCardDesigner({
     setBusy(true)
     setError(null)
     try {
-      downloadDataUrl(await renderPng())
+      downloadDataUrl(await renderPng(), "png")
     } catch {
       setError("Couldn’t create the PNG. Try again.")
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function exportVideo() {
+    if (!cardRef.current || !card) return
+    setVideoBusy(true)
+    setError(null)
+
+    try {
+      // 1. Render card image to Image element
+      const pngUrl = await renderPng()
+      const img = new Image()
+      img.src = pngUrl
+      await new Promise((resolve) => {
+        img.onload = resolve
+      })
+
+      // 2. Fetch Verse Recitation Audio (Alafasy default)
+      const surahNum = card.surahId || Number(card.verseKey.split(":")[0]) || 1
+      const ayahNum = card.startAyah || Number(card.verseKey.split(":")[1]?.split("–")[0]) || 1
+      const audioUrl = `https://verses.qurancdn.com/Alafasy/mp3/${String(surahNum).padStart(3, "0")}${String(ayahNum).padStart(3, "0")}.mp3`
+
+      const audio = new Audio()
+      audio.crossOrigin = "anonymous"
+      audio.src = audioUrl
+
+      const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      const source = audioCtx.createMediaElementSource(audio)
+      const dest = audioCtx.createMediaStreamDestination()
+      source.connect(dest)
+      source.connect(audioCtx.destination)
+
+      // 3. Setup canvas stream
+      const canvas = document.createElement("canvas")
+      canvas.width = 1200
+      canvas.height = 630
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(img, 0, 0, 1200, 630)
+
+      const canvasStream = canvas.captureStream(30)
+      const combinedStream = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        ...dest.stream.getAudioTracks(),
+      ])
+
+      const mimeType = MediaRecorder.isTypeSupported("video/mp4;codecs=avc1")
+        ? "video/mp4"
+        : "video/webm"
+      const recorder = new MediaRecorder(combinedStream, { mimeType })
+      const chunks: Blob[] = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data)
+      }
+
+      const recordPromise = new Promise<Blob>((resolve, reject) => {
+        recorder.onstop = () => {
+          resolve(new Blob(chunks, { type: mimeType }))
+        }
+        recorder.onerror = reject
+      })
+
+      recorder.start()
+      await audio.play()
+
+      audio.onended = () => {
+        recorder.stop()
+      }
+
+      // Safety timeout after 30s
+      setTimeout(() => {
+        if (recorder.state === "recording") {
+          recorder.stop()
+        }
+      }, 30000)
+
+      const videoBlob = await recordPromise
+      const videoUrl = URL.createObjectURL(videoBlob)
+      downloadDataUrl(videoUrl, mimeType === "video/mp4" ? "mp4" : "webm")
+    } catch {
+      setError("Video export requires audio permissions or wasn't supported on this device.")
+    } finally {
+      setVideoBusy(false)
     }
   }
 
@@ -160,14 +255,14 @@ export function AyahCardDesigner({
       const blob = await (await fetch(dataUrl)).blob()
       const file = new File(
         [blob],
-        `rememberquran-${appliedVerse.replace(":", "-")}.png`,
+        `rememberquran-${currentQueryKey.replace(/[:–]/g, "-")}.png`,
         { type: "image/png" },
       )
       if (canNativeShare) {
         await navigator.share({
           files: [file],
-          title: `Quran ${appliedVerse}`,
-          text: `Ayah ${appliedVerse} — RememberQuran.com`,
+          title: `Quran ${currentQueryKey}`,
+          text: `Ayah ${currentQueryKey} — RememberQuran.com`,
         })
         return
       }
@@ -194,10 +289,35 @@ export function AyahCardDesigner({
 
   return (
     <div className="flex flex-col gap-8">
-      <AyahPicker value={appliedVerse} onChange={selectVerse} />
+      {/* Passage Selector */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+        <div className="flex-1 w-full">
+          <AyahPicker value={appliedVerse} onChange={selectVerse} />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Passage span:</span>
+          <div className="flex rounded-md border border-border bg-card p-0.5 text-xs">
+            {[0, 1, 2].map((offset) => (
+              <button
+                key={offset}
+                type="button"
+                onClick={() => setEndAyahOffset(offset)}
+                className={cn(
+                  "px-2.5 py-1 rounded-sm font-medium transition-colors",
+                  endAyahOffset === offset
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {offset === 0 ? "Single Ayah" : `+${offset} Verses`}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-xs text-muted-foreground">Preset</legend>
+        <legend className="text-xs text-muted-foreground">Preset Theme</legend>
         <ToggleGroup
           value={[preset]}
           onValueChange={(values) => {
@@ -255,7 +375,7 @@ export function AyahCardDesigner({
                 className="mx-auto max-w-[88%] text-center font-serif text-[2.15cqw] leading-[1.45]"
                 style={{ color: colors.muted }}
               >
-                {truncateText(card.translation, 280)}
+                {truncateText(card.translation, 300)}
               </p>
             </div>
 
@@ -271,7 +391,7 @@ export function AyahCardDesigner({
                   {card.surahName}
                 </p>
                 <p className="text-[1.55cqw]" style={{ color: colors.muted }}>
-                  {card.verseKey}
+                  Ayah {card.verseKey}
                 </p>
               </div>
               <div className="flex items-center gap-[0.7cqw]">
@@ -298,7 +418,7 @@ export function AyahCardDesigner({
         <Button
           type="button"
           size="lg"
-          disabled={busy || loading || !card}
+          disabled={busy || videoBusy || loading || !card}
           onClick={() => void downloadPng()}
         >
           <Download data-icon="inline-start" />
@@ -308,7 +428,18 @@ export function AyahCardDesigner({
           type="button"
           variant="outline"
           size="lg"
-          disabled={busy || loading || !card}
+          disabled={busy || videoBusy || loading || !card}
+          onClick={() => void exportVideo()}
+          className="border-primary/40 hover:bg-primary/5"
+        >
+          {videoBusy ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Video data-icon="inline-start" />}
+          {videoBusy ? "Rendering Video…" : "Export Video (Audio)"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          disabled={busy || videoBusy || loading || !card}
           onClick={() => void exportSecondary()}
           className="border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
         >
@@ -323,7 +454,7 @@ export function AyahCardDesigner({
         </Button>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground sm:ml-2">
           <ImageIcon className="size-3.5" strokeWidth={1.75} />
-          Free — no account needed
+          Free high-res export
         </p>
       </div>
     </div>

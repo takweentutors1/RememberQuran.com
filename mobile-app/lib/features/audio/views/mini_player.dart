@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/audio_controller.dart';
 import '../../../core/models/reciter.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive_layout.dart';
 import 'widgets/audio_player_sheet.dart';
+import 'widgets/sleep_timer_sheet.dart';
 
 class MiniPlayer extends StatefulWidget {
   const MiniPlayer({Key? key}) : super(key: key);
@@ -222,6 +224,31 @@ class _MiniPlayerState extends State<MiniPlayer> {
                                 _audioController.skipToNext();
                               }
                             },
+                    ),
+                    IconButton(
+                      icon: Obx(() {
+                        final timerActive = _audioController.rxSleepTimerMode.value !=
+                            SleepTimerMode.off;
+                        final gold = Theme.of(context)
+                            .extension<NurColorsExtension>()
+                            ?.brandGold;
+                        return Icon(
+                          timerActive
+                              ? Icons.bedtime_rounded
+                              : Icons.bedtime_outlined,
+                          color: timerActive
+                              ? (gold ?? Theme.of(context).colorScheme.primary)
+                              : Theme.of(context).textTheme.bodySmall?.color,
+                        );
+                      }),
+                      tooltip: 'Sleep timer',
+                      iconSize: 20,
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      constraints: const BoxConstraints(
+                        minWidth: 28,
+                        minHeight: 28,
+                      ),
+                      onPressed: () => SleepTimerSheet.show(context),
                     ),
                     IconButton(
                       icon: const Icon(Icons.tune_rounded),

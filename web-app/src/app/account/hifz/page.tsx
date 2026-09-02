@@ -34,6 +34,11 @@ export default async function HifzPage() {
       surahName: chapter?.name_simple ?? `Surah ${r.surahId}`,
       surahArabic: chapter?.name_arabic ?? "",
       memorisedAt: r.memorisedAt.toISOString(),
+      repetitions: r.repetitions ?? 0,
+      intervalDays: r.intervalDays ?? 1,
+      easeFactor: r.easeFactor ?? 2.5,
+      nextReviewAt: r.nextReviewAt ? r.nextReviewAt.toISOString() : null,
+      lastReviewedAt: r.lastReviewedAt ? r.lastReviewedAt.toISOString() : null,
     }
   })
 

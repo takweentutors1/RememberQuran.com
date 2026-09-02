@@ -116,9 +116,9 @@ export function MushafPageFrame({
         {/* Authentic Madani Double Gold Hairline Border Frame */}
         <div className="relative rounded-xs border-2 border-[#C2A676] dark:border-[#8E7348] p-1 sm:p-1.5">
           <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 p-2 sm:p-3 md:p-4">
-            {/* Top Page Header: Exact 50/50 Split Dual Rectangular Boxes matching screenshot */}
+            {/* Top Page Header: Dual Rectangular Boxes matching 2nd image (Surah on right/left per classical Mushaf) */}
             <header className="mb-3 grid grid-cols-2 gap-0 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] select-none text-center rounded-xs overflow-hidden">
-              <div className="py-1 px-2 border-r border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center">
+              <div className="py-1 px-2 border-l border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center">
                 <span className="font-uthmani text-sm sm:text-base font-normal text-[#4A3B2C] dark:text-[#E2D5C3]">
                   {cleanSurahName ? `سورة ${cleanSurahName}` : ""}
                 </span>

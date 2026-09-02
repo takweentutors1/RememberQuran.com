@@ -304,10 +304,72 @@ class AyahBlock extends StatelessWidget {
             if (activeTranslationRows.isNotEmpty) const SizedBox(height: 24),
             for (final t in activeTranslationRows)
               _buildTranslationRow(context, theme, nurColors, readerController, t),
+            if (settings.isHifzMode.value &&
+                settings.hifzRangeStart.value != null &&
+                settings.hifzRangeEnd.value != null &&
+                verse.verseNumber ==
+                    (settings.hifzRangeEnd.value! >= settings.hifzRangeStart.value!
+                        ? settings.hifzRangeEnd.value!
+                        : settings.hifzRangeStart.value!))
+              _buildBulkHifzActionRow(
+                context,
+                theme,
+                readerController,
+                settings.hifzRangeStart.value! <= settings.hifzRangeEnd.value!
+                    ? settings.hifzRangeStart.value!
+                    : settings.hifzRangeEnd.value!,
+                settings.hifzRangeEnd.value! >= settings.hifzRangeStart.value!
+                    ? settings.hifzRangeEnd.value!
+                    : settings.hifzRangeStart.value!,
+              ),
           ],
         ),
       );
     });
+  }
+
+  Widget _buildBulkHifzActionRow(
+    BuildContext context,
+    ThemeData theme,
+    ReaderController readerController,
+    int from,
+    int to,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20.0),
+      child: Obx(() {
+        final isBusy = readerController.isBulkMarking.value;
+        final progress = readerController.bulkMarkProgress.value;
+
+        return Center(
+          child: FilledButton.tonalIcon(
+            onPressed: isBusy
+                ? null
+                : () => readerController.markRangeMemorised(
+                      verse.chapterId,
+                      from,
+                      to,
+                    ),
+            icon: isBusy
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      value: progress > 0 ? progress / 100.0 : null,
+                    ),
+                  )
+                : const Icon(Icons.check_circle_outline, size: 18),
+            label: Text(
+              isBusy
+                  ? 'Marking ($progress%)…'
+                  : 'Mark Ayat $from–$to as memorised',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        );
+      }),
+    );
   }
 
   /// "Surah N:N · Translator" — matches the attribution format used

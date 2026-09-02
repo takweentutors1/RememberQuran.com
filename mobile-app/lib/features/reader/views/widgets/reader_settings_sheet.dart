@@ -53,11 +53,15 @@ class ReaderSettingsSheet extends GetView<ReaderSettingsController> {
                   segments: const [
                     ButtonSegment(
                       value: DisplayMode.verseByVerse,
-                      label: Text('Verse by Verse'),
+                      label: Text('Verse'),
                     ),
                     ButtonSegment(
                       value: DisplayMode.continuous,
                       label: Text('Continuous'),
+                    ),
+                    ButtonSegment(
+                      value: DisplayMode.mushaf,
+                      label: Text('Mushaf'),
                     ),
                   ],
                   selected: {controller.displayMode.value},

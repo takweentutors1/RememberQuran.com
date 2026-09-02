@@ -10,6 +10,7 @@ import { MushafPageFrame } from "./MushafPageFrame"
 import { SurahHeaderCartouche } from "./SurahHeaderCartouche"
 import { BismillahHeader } from "./BismillahHeader"
 import { WordStudyRibbon } from "./WordStudyRibbon"
+import { ReadingAyahToolbar } from "./ReadingAyahToolbar"
 import { toArabicDigits } from "./AyahText"
 import { cn } from "@/lib/utils"
 
@@ -23,10 +24,11 @@ interface ReadingVerseProps {
   verse: Verse
   isTarget: boolean
   onWordClick: (word: Word, verseKey?: string) => void
+  onAyahClick?: (verse: Verse) => void
 }
 
 /** One verse span in continuous Arabic flow */
-function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
+function ReadingVerse({ verse, isTarget, onWordClick, onAyahClick }: ReadingVerseProps) {
   const highlightedPosition = useHighlightedWord(verse.verse_key)
   const words = (verse.words ?? []).filter(
     (w) => w.char_type_name === "word" || w.char_type_name === "end",
@@ -57,13 +59,11 @@ function ReadingVerse({ verse, isTarget, onWordClick }: ReadingVerseProps) {
                 onWordClick={onWordClick}
               />
               {endWord ? (
-                
-                  <AyahEndMarker
-                    digits={endWord.qpc_uthmani_hafs || endWord.text_uthmani}
-                    ariaLabel={`Ayah ${verse.verse_number}`}
-                  />
-                
-                
+                <AyahEndMarker
+                  digits={endWord.qpc_uthmani_hafs || endWord.text_uthmani}
+                  ariaLabel={`Ayah ${verse.verse_number}`}
+                  onClick={() => onAyahClick?.(verse)}
+                />
               ) : (
                 " "
               )}
@@ -115,9 +115,11 @@ function SectionMarker({
  * - Centered calligraphic layout on opening pages (Al-Fatihah / Al-Baqarah 1-5)
  * - Surah title cartouches (Unwan) and calligraphic Basmalah
  * - Docked Word Study Ribbon on word interaction
+ * - Context Toolbar on Ayah End Marker interaction
  */
 export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeViewProps) {
   const [selectedWord, setSelectedWord] = useState<{ word: Word; verseKey?: string } | null>(null)
+  const [selectedAyah, setSelectedAyah] = useState<Verse | null>(null)
 
   // Group verses into authentic printed Mushaf pages and 15 lines per page
   const pages = useMemo(() => {
@@ -166,7 +168,13 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
   }, [verses])
 
   function handleWordClick(word: Word, verseKey?: string) {
+    setSelectedAyah(null)
     setSelectedWord({ word, verseKey })
+  }
+
+  function handleAyahClick(verse: Verse) {
+    setSelectedWord(null)
+    setSelectedAyah(verse)
   }
 
   return (
@@ -234,6 +242,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                       verse={verse}
                       isTarget={targetAyahId === verse.verse_number}
                       onWordClick={handleWordClick}
+                      onAyahClick={handleAyahClick}
                     />
                   </div>
                 ))
@@ -256,6 +265,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                             key={word.id}
                             digits={word.qpc_uthmani_hafs || word.text_uthmani}
                             ariaLabel={`Ayah ${verse.verse_number}`}
+                            onClick={() => handleAyahClick(verse)}
                           />
                         )
                       }
@@ -283,6 +293,12 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
         word={selectedWord?.word ?? null}
         verseKey={selectedWord?.verseKey}
         onClose={() => setSelectedWord(null)}
+      />
+
+      {/* Docked Ayah Action Toolbar when Ayah marker is clicked */}
+      <ReadingAyahToolbar
+        verse={selectedAyah}
+        onClose={() => setSelectedAyah(null)}
       />
     </div>
   )

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/models/translation.dart';
+import '../../../shared/widgets/app_feedback.dart';
 
-enum DisplayMode { verseByVerse, continuous }
+enum DisplayMode { verseByVerse, continuous, mushaf }
 
 class ReaderSettingsController extends GetxController {
   late final SharedPreferences _prefs;
@@ -29,6 +30,7 @@ class ReaderSettingsController extends GetxController {
   /// user moves to a different surah (cleared on chapter load).
   final Rxn<int> hifzRangeStart = Rxn<int>();
   final Rxn<int> hifzRangeEnd = Rxn<int>();
+  final Rxn<int> currentSurahId = Rxn<int>();
 
   final _isLoaded = false.obs;
   bool get isLoaded => _isLoaded.value;
@@ -46,7 +48,13 @@ class ReaderSettingsController extends GetxController {
     fontSize.value = _prefs.getDouble('reader_font_size') ?? 32.0;
     
     final dm = _prefs.getString('reader_display_mode');
-    displayMode.value = dm == 'continuous' ? DisplayMode.continuous : DisplayMode.verseByVerse;
+    if (dm == 'mushaf') {
+      displayMode.value = DisplayMode.mushaf;
+    } else if (dm == 'continuous') {
+      displayMode.value = DisplayMode.continuous;
+    } else {
+      displayMode.value = DisplayMode.verseByVerse;
+    }
     
     final storedIds = _prefs.getStringList('reader_translation_ids');
     if (storedIds != null) {
@@ -95,7 +103,10 @@ class ReaderSettingsController extends GetxController {
 
   void setDisplayMode(DisplayMode mode) {
     displayMode.value = mode;
-    _prefs.setString('reader_display_mode', mode == DisplayMode.continuous ? 'continuous' : 'verseByVerse');
+    String modeStr = 'verseByVerse';
+    if (mode == DisplayMode.continuous) modeStr = 'continuous';
+    if (mode == DisplayMode.mushaf) modeStr = 'mushaf';
+    _prefs.setString('reader_display_mode', modeStr);
   }
 
   void _persistTranslations() {
@@ -131,7 +142,12 @@ class ReaderSettingsController extends GetxController {
       return;
     }
 
-    if (activeTranslations.length >= maxActiveTranslations) return;
+    if (activeTranslations.length >= maxActiveTranslations) {
+      AppFeedback.showInfo(
+        'Maximum of $maxActiveTranslations translations active. Deselect one to add another.',
+      );
+      return;
+    }
     activeTranslations.add(translationId);
     _persistTranslations();
   }
@@ -145,16 +161,46 @@ class ReaderSettingsController extends GetxController {
     }
   }
 
+  Future<void> loadHifzRange(int surahId) async {
+    currentSurahId.value = surahId;
+    final start = _prefs.getInt('hifz_range_start_$surahId');
+    final end = _prefs.getInt('hifz_range_end_$surahId');
+    hifzRangeStart.value = start;
+    hifzRangeEnd.value = end;
+  }
+
+  void saveHifzRange(int surahId, int? start, int? end) {
+    if (start != null) {
+      _prefs.setInt('hifz_range_start_$surahId', start);
+    } else {
+      _prefs.remove('hifz_range_start_$surahId');
+    }
+
+    if (end != null) {
+      _prefs.setInt('hifz_range_end_$surahId', end);
+    } else {
+      _prefs.remove('hifz_range_end_$surahId');
+    }
+  }
+
   /// Restricts hifz hiding to ayahs [start]..[end] (inclusive) instead of
   /// the whole surah. Pass null for both to go back to hiding everything.
   void setHifzRange(int? start, int? end) {
     hifzRangeStart.value = start;
     hifzRangeEnd.value = end;
+    final sid = currentSurahId.value;
+    if (sid != null) {
+      saveHifzRange(sid, start, end);
+    }
   }
 
   void clearHifzRange() {
     hifzRangeStart.value = null;
     hifzRangeEnd.value = null;
+    final sid = currentSurahId.value;
+    if (sid != null) {
+      saveHifzRange(sid, null, null);
+    }
   }
 
   void toggleTajweed() {

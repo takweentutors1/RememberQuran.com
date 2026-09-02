@@ -4,20 +4,36 @@
 
 export const MEDIA_PRESETS = [
   {
+    id: "minimal",
+    label: "Minimal",
+    background: "linear-gradient(145deg, #FAF8F5 0%, #F3EFEA 100%)",
+    foreground: "#1C1917",
+    muted: "rgba(28, 25, 23, 0.65)",
+    accent: "#8C6D38",
+  },
+  {
+    id: "gold",
+    label: "Gold Illuminated",
+    background: "linear-gradient(145deg, #261F14 0%, #15110B 100%)",
+    foreground: "#F7EEDB",
+    muted: "rgba(247, 238, 219, 0.75)",
+    accent: "#D4AF37",
+  },
+  {
+    id: "dark-modern",
+    label: "Dark Modern",
+    background: "linear-gradient(145deg, #18181B 0%, #09090B 100%)",
+    foreground: "#FAFAFA",
+    muted: "rgba(250, 250, 250, 0.65)",
+    accent: "#38BDF8",
+  },
+  {
     id: "jade",
     label: "Jade",
     background: "linear-gradient(145deg, #0e6b57 0%, #094a3c 100%)",
     foreground: "#fdfbf6",
     muted: "rgba(253, 251, 246, 0.7)",
     accent: "#d8bc7e",
-  },
-  {
-    id: "gold",
-    label: "Gold",
-    background: "linear-gradient(145deg, #d8bc7e 0%, #b89b58 100%)",
-    foreground: "#0b0a08",
-    muted: "rgba(11, 10, 8, 0.6)",
-    accent: "#0e6b57",
   },
 ] as const
 

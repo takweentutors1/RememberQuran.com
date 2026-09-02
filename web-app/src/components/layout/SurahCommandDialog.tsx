@@ -93,6 +93,19 @@ export function SurahCommandDialog() {
             </CommandGroup>
           ) : null}
 
+          {/* Active Surah Verses quick filter if currently on a chapter */}
+          {surahContent?.chapter && !ayahMatch && /^\d+$/.test(trimmedInput) && Number(trimmedInput) <= surahContent.chapter.verses_count && (
+            <CommandGroup heading={`Ayah in ${surahContent.chapter.name_simple}`}>
+              <CommandItem
+                value={`ayah:${surahContent.chapter.id}:${trimmedInput}`}
+                onSelect={() => handleSelect(`/${surahContent.chapter?.id}/${trimmedInput}`)}
+              >
+                <span className="text-primary font-medium">{surahContent.chapter.id}:{trimmedInput}</span>
+                <span className="ml-1 text-muted-foreground">— Jump to Ayah {trimmedInput} in {surahContent.chapter.name_simple}</span>
+              </CommandItem>
+            </CommandGroup>
+          )}
+
           {!ayahMatch ? (
             <CommandGroup heading="Surahs">
               {chapters.map((chapter) => (

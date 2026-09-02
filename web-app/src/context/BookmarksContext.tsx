@@ -6,11 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react"
 import { useSession } from "next-auth/react"
+import { useRemoteSet } from "@/hooks/useRemoteSet"
 
 interface BookmarkEntry {
   verseKey: string
@@ -56,158 +56,69 @@ async function fetchCollections(): Promise<CollectionSummary[]> {
   return data.collections ?? []
 }
 
-/**
- * One GET per session holds every saved verseKey (and the collection list)
- * in memory, so ayah icons — and the "save to…" picker — render instantly
- * with no per-verse or per-open requests.
- *
- * The effect uses Promise.then() chaining so setState is always called
- * inside a microtask callback, never synchronously in the effect body.
- */
+async function addBookmarkKey(verseKey: string): Promise<void> {
+  const res = await fetch("/api/account/bookmarks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ verseKey }),
+  })
+  if (!res.ok) throw new Error(`Bookmark toggle failed: ${res.status}`)
+}
+
+async function deleteBookmarkKey(verseKey: string): Promise<void> {
+  const res = await fetch(
+    `/api/account/bookmarks?verseKey=${encodeURIComponent(verseKey)}`,
+    { method: "DELETE" },
+  )
+  if (!res.ok) throw new Error(`Bookmark toggle failed: ${res.status}`)
+}
+
 export function BookmarksProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
   const userId = session?.user?.id ?? null
 
-  const [keys, setKeys] = useState<Set<string> | null>(null)
+  const fetchCallback = useCallback(() => fetchBookmarkKeys(), [])
+  const addCallback = useCallback((key: string) => addBookmarkKey(key), [])
+  const deleteCallback = useCallback((key: string) => deleteBookmarkKey(key), [])
+
+  const remote = useRemoteSet({
+    fetchKeys: fetchCallback,
+    onAdd: addCallback,
+    onDelete: deleteCallback,
+  })
+
   const [collections, setCollections] = useState<CollectionSummary[]>([])
-  /** Which user `keys` belongs to — prevents showing the previous account briefly */
-  const [keysUserId, setKeysUserId] = useState<string | null>(null)
-  const [pending, setPending] = useState<Set<string>>(new Set())
+  const [collectionsUserId, setCollectionsUserId] = useState<string | null>(null)
 
-  // Only expose keys when they match the signed-in user
-  const effectiveKeys =
-    userId && keysUserId === userId ? keys : null
-  // Stable reference when empty — a `[]` literal here would be a new array
-  // every render, defeating the `value` useMemo below.
-  const effectiveCollections =
-    userId && keysUserId === userId ? collections : EMPTY_COLLECTIONS
-
-  // Synced after every render via useEffect so toggle/saveTo always read the
-  // latest value without stale closures — written only in effects, never
-  // during render.
-  const effectiveKeysRef = useRef<Set<string> | null>(null)
-  const pendingRef = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    effectiveKeysRef.current = effectiveKeys
-  })
-  useEffect(() => {
-    pendingRef.current = pending
-  })
-
-  // Effect uses .then() so setState runs in a microtask, not synchronously in
-  // the effect body — this is what react-hooks/set-state-in-effect requires.
   useEffect(() => {
     let cancelled = false
-    const fetchFor = userId
+    if (!userId) {
+      setCollections([])
+      setCollectionsUserId(null)
+      return
+    }
 
-    Promise.resolve()
-      .then(() => {
-        if (cancelled) return
-        setKeys(null)
-        setKeysUserId(null)
-        setCollections([])
-        setPending(new Set())
-        if (!fetchFor) return
-        return Promise.all([fetchBookmarkKeys(), fetchCollections()])
-      })
-      .then((result) => {
-        if (cancelled || !result || !fetchFor) return
-        const [newKeys, newCollections] = result
-        setKeys(newKeys)
-        setCollections(newCollections)
-        setKeysUserId(fetchFor)
-      })
-      .catch(() => {})
+    fetchCollections().then((cols) => {
+      if (!cancelled) {
+        setCollections(cols)
+        setCollectionsUserId(userId)
+      }
+    })
 
     return () => {
       cancelled = true
     }
   }, [userId])
 
-  const refresh = useCallback(async () => {
-    if (!userId) return
-    try {
-      const [newKeys, newCollections] = await Promise.all([
-        fetchBookmarkKeys(),
-        fetchCollections(),
-      ])
-      setKeys(newKeys)
-      setCollections(newCollections)
-      setKeysUserId(userId)
-    } catch {
-      // Reader stays usable — icons show unsaved state until next refresh
-    }
-  }, [userId])
+  const effectiveCollections =
+    userId && collectionsUserId === userId ? collections : EMPTY_COLLECTIONS
 
-  const isBookmarked = useCallback(
-    (verseKey: string) => effectiveKeys?.has(verseKey) ?? false,
-    [effectiveKeys],
-  )
-
-  const isPending = useCallback(
-    (verseKey: string) => pending.has(verseKey),
-    [pending],
-  )
-
-  const toggle = useCallback(async (verseKey: string) => {
-    // Wait until this user's keys have loaded — otherwise we cannot tell
-    // save vs remove and would always POST.
-    if (effectiveKeysRef.current === null) return
-    if (pendingRef.current.has(verseKey)) return
-    const wasSaved = effectiveKeysRef.current.has(verseKey)
-
-    // Optimistic flip — revert on failure, never block reading
-    setPending((prev) => new Set(prev).add(verseKey))
-    setKeys((prev) => {
-      const next = new Set(prev ?? [])
-      if (wasSaved) next.delete(verseKey)
-      else next.add(verseKey)
-      return next
-    })
-
-    try {
-      const res = wasSaved
-        ? await fetch(
-            `/api/account/bookmarks?verseKey=${encodeURIComponent(verseKey)}`,
-            { method: "DELETE" },
-          )
-        : await fetch("/api/account/bookmarks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ verseKey }),
-          })
-      if (!res.ok) throw new Error(`Bookmark toggle failed: ${res.status}`)
-    } catch {
-      // Revert optimistic update
-      setKeys((prev) => {
-        const next = new Set(prev ?? [])
-        if (wasSaved) next.add(verseKey)
-        else next.delete(verseKey)
-        return next
-      })
-    } finally {
-      setPending((prev) => {
-        const next = new Set(prev)
-        next.delete(verseKey)
-        return next
-      })
-    }
-  }, [])
-
-  /**
-   * Save into a specific collection (the fix for "no way to choose which
-   * collection a bookmark goes into" — this is a POST when the ayah isn't
-   * saved yet, and a PATCH move when it already is, in either case ending
-   * with the ayah filed under `collectionId`).
-   */
   const saveTo = useCallback(
     async (verseKey: string, collectionId: string | null) => {
-      if (effectiveKeysRef.current === null) return false
-      if (pendingRef.current.has(verseKey)) return false
-      const wasSaved = effectiveKeysRef.current.has(verseKey)
+      if (!remote.keys || remote.isPending(verseKey)) return false
+      const wasSaved = remote.has(verseKey)
 
-      setPending((prev) => new Set(prev).add(verseKey))
-      setKeys((prev) => new Set(prev ?? []).add(verseKey))
+      remote.setKeysDirect((prev) => new Set(prev ?? []).add(verseKey))
 
       try {
         const res = wasSaved
@@ -225,22 +136,16 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
         return true
       } catch {
         if (!wasSaved) {
-          setKeys((prev) => {
+          remote.setKeysDirect((prev) => {
             const next = new Set(prev ?? [])
             next.delete(verseKey)
             return next
           })
         }
         return false
-      } finally {
-        setPending((prev) => {
-          const next = new Set(prev)
-          next.delete(verseKey)
-          return next
-        })
       }
     },
-    [],
+    [remote],
   )
 
   const createCollection = useCallback(async (name: string) => {
@@ -260,26 +165,35 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const refreshAll = useCallback(async () => {
+    await remote.refresh()
+    if (userId) {
+      const cols = await fetchCollections()
+      setCollections(cols)
+      setCollectionsUserId(userId)
+    }
+  }, [remote, userId])
+
   const value = useMemo(
     () => ({
-      loaded: effectiveKeys !== null,
+      loaded: remote.loaded,
       collections: effectiveCollections,
-      isBookmarked,
-      isPending,
-      toggle,
+      isBookmarked: remote.has,
+      isPending: remote.isPending,
+      toggle: remote.toggle,
       saveTo,
       createCollection,
-      refresh,
+      refresh: refreshAll,
     }),
     [
-      effectiveKeys,
+      remote.loaded,
       effectiveCollections,
-      isBookmarked,
-      isPending,
-      toggle,
+      remote.has,
+      remote.isPending,
+      remote.toggle,
       saveTo,
       createCollection,
-      refresh,
+      refreshAll,
     ],
   )
 
@@ -295,3 +209,4 @@ export function useBookmarks() {
   if (!ctx) throw new Error("useBookmarks must be used within BookmarksProvider")
   return ctx
 }
+

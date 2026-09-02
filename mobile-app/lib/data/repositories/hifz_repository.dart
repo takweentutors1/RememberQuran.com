@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../features/account/models/hifz_srs.dart';
 
 class JuzRange {
   final int juz;
@@ -21,12 +22,22 @@ class MemorisedAyahRecord {
   final int surahId;
   final int ayahId;
   final DateTime memorisedAt;
+  final int repetitions;
+  final int intervalDays;
+  final double easeFactor;
+  final DateTime? nextReviewAt;
+  final DateTime? lastReviewedAt;
 
   MemorisedAyahRecord({
     required this.verseKey,
     required this.surahId,
     required this.ayahId,
     required this.memorisedAt,
+    this.repetitions = 0,
+    this.intervalDays = 1,
+    this.easeFactor = 2.5,
+    this.nextReviewAt,
+    this.lastReviewedAt,
   });
 
   factory MemorisedAyahRecord.fromSnapshot(DocumentSnapshot snap) {
@@ -36,6 +47,11 @@ class MemorisedAyahRecord {
       surahId: data['surahId'] as int,
       ayahId: data['ayahId'] as int,
       memorisedAt: (data['memorisedAt'] as Timestamp?)?.toDate() ?? DateTime(1970),
+      repetitions: (data['repetitions'] as num?)?.toInt() ?? 0,
+      intervalDays: (data['intervalDays'] as num?)?.toInt() ?? 1,
+      easeFactor: (data['easeFactor'] as num?)?.toDouble() ?? 2.5,
+      nextReviewAt: (data['nextReviewAt'] as Timestamp?)?.toDate(),
+      lastReviewedAt: (data['lastReviewedAt'] as Timestamp?)?.toDate(),
     );
   }
 }
@@ -198,11 +214,93 @@ class HifzRepository {
     }
   }
 
+  Future<List<MarkMemorisedResult>> markMemorisedBatch(
+    String userId,
+    List<({String verseKey, int surahId, int ayahId})> ayahs,
+  ) async {
+    if (ayahs.isEmpty) return [];
+
+    if (ayahs.length > 500) {
+      final results = <MarkMemorisedResult>[];
+      for (final a in ayahs) {
+        final res = await markMemorised(userId, a.verseKey, a.surahId, a.ayahId);
+        results.add(res);
+      }
+      return results;
+    }
+
+    final countSnap = await _hifzRef(userId).count().get();
+    final currentCount = countSnap.count ?? 0;
+    if (currentCount + ayahs.length > MAX_MEMORISED) {
+      return [
+        MarkMemorisedResult(ok: false, created: false, error: 'limit-reached'),
+      ];
+    }
+
+    try {
+      final batch = _db.batch();
+      for (final a in ayahs) {
+        final ref = _hifzRef(userId).doc(a.verseKey);
+        batch.set(ref, {
+          'surahId': a.surahId,
+          'ayahId': a.ayahId,
+          'memorisedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      await batch.commit();
+
+      return ayahs.map((a) => MarkMemorisedResult(ok: true, created: true)).toList();
+    } catch (e) {
+      return [
+        MarkMemorisedResult(ok: false, created: false, error: e.toString()),
+      ];
+    }
+  }
+
   Future<bool> unmarkMemorised(String userId, String verseKey) async {
     final ref = _hifzRef(userId).doc(verseKey);
     final snap = await ref.get();
     if (!snap.exists) return false;
     await ref.delete();
     return true;
+  }
+
+  /// Fetches ayahs that are due for review (where nextReviewAt is null or in the past).
+  Future<List<MemorisedAyahRecord>> getDueReviews(String userId) async {
+    final all = await listMemorisedAyahs(userId);
+    final now = DateTime.now();
+    return all.where((item) {
+      if (item.nextReviewAt == null) return true;
+      return item.nextReviewAt!.isBefore(now) ||
+          item.nextReviewAt!.isAtSameMomentAs(now);
+    }).toList();
+  }
+
+  /// Submits an SRS review grade for an ayah and updates its intervals in Firestore.
+  Future<void> submitReview(
+    String userId,
+    String verseKey,
+    SRSGrade grade,
+  ) async {
+    final ref = _hifzRef(userId).doc(verseKey);
+    final snap = await ref.get();
+    if (!snap.exists) return;
+
+    final record = MemorisedAyahRecord.fromSnapshot(snap);
+    final nextState = calculateNextSRS(
+      currentRepetitions: record.repetitions,
+      currentIntervalDays: record.intervalDays,
+      currentEaseFactor: record.easeFactor,
+      grade: grade,
+      reviewDate: DateTime.now(),
+    );
+
+    await ref.update({
+      'repetitions': nextState.repetitions,
+      'intervalDays': nextState.intervalDays,
+      'easeFactor': nextState.easeFactor,
+      'nextReviewAt': Timestamp.fromDate(nextState.nextReviewAt),
+      'lastReviewedAt': Timestamp.fromDate(nextState.lastReviewedAt!),
+    });
   }
 }

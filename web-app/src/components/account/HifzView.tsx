@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { Brain } from "lucide-react"
+import { Brain, RotateCw, Sparkles, CheckCircle2 } from "lucide-react"
 import { useHifz } from "@/context/HifzContext"
 import { getAyahCount } from "@/lib/quran/verse-key"
 import { JUZ_RANGES, getJuzAyahCount, getJuzForVerse } from "@/lib/quran/juz"
@@ -15,6 +15,11 @@ export interface HifzAyahDto {
   surahName: string
   surahArabic: string
   memorisedAt: string
+  repetitions?: number
+  intervalDays?: number
+  easeFactor?: number
+  nextReviewAt?: string | null
+  lastReviewedAt?: string | null
 }
 
 interface HifzViewProps {
@@ -48,6 +53,14 @@ export function HifzView({ initialAyahs }: HifzViewProps) {
   const [pendingKey, setPendingKey] = useState<string | null>(null)
 
   const totalMemorised = ayahs.length
+
+  const dueAyahs = useMemo(() => {
+    const now = new Date().getTime()
+    return ayahs.filter((a) => {
+      if (!a.nextReviewAt) return true
+      return new Date(a.nextReviewAt).getTime() <= now
+    })
+  }, [ayahs])
 
   const bySurah = useMemo(() => {
     const map = new Map<
@@ -147,6 +160,44 @@ export function HifzView({ initialAyahs }: HifzViewProps) {
           <ProgressBar value={(totalMemorised / 6236) * 100} />
         </div>
       </div>
+
+      {totalMemorised > 0 && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <RotateCw className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Spaced Repetition Review
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {dueAyahs.length === 0 ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="size-3" /> All caught up for today!
+                  </span>
+                ) : (
+                  <span>
+                    <strong className="text-foreground">{dueAyahs.length}</strong> {dueAyahs.length === 1 ? "ayah" : "ayahs"} due for retention review
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/account/hifz/review"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold shadow-xs transition-colors",
+              dueAyahs.length > 0
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground",
+            )}
+          >
+            <Sparkles className="size-3.5" />
+            {dueAyahs.length > 0 ? `Review Now (${dueAyahs.length})` : "Practice Any Ayahs"}
+          </Link>
+        </div>
+      )}
 
       <div
         role="tablist"

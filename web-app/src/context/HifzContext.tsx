@@ -4,13 +4,10 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
-  useState,
   type ReactNode,
 } from "react"
-import { useSession } from "next-auth/react"
+import { useRemoteSet } from "@/hooks/useRemoteSet"
 
 interface HifzEntry {
   verseKey: string
@@ -25,6 +22,7 @@ interface HifzContextValue {
   toggle: (verseKey: string) => Promise<void>
   refresh: () => Promise<void>
   memorisedCount: number
+  getMemorisedCountForSurah: (surahId: number) => number
 }
 
 const HifzContext = createContext<HifzContextValue | null>(null)
@@ -36,122 +34,60 @@ async function fetchHifzKeys(): Promise<Set<string>> {
   return new Set((data.ayahs ?? []).map((a) => a.verseKey))
 }
 
+async function addHifzKey(verseKey: string): Promise<void> {
+  const res = await fetch("/api/account/hifz", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ verseKey }),
+  })
+  if (!res.ok) throw new Error(`Hifz add failed: ${res.status}`)
+}
+
+async function deleteHifzKey(verseKey: string): Promise<void> {
+  const res = await fetch(
+    `/api/account/hifz?verseKey=${encodeURIComponent(verseKey)}`,
+    { method: "DELETE" },
+  )
+  if (!res.ok) throw new Error(`Hifz delete failed: ${res.status}`)
+}
+
 export function HifzProvider({ children }: { children: ReactNode }) {
-  const { data: session } = useSession()
-  const userId = session?.user?.id ?? null
+  const fetchCallback = useCallback(() => fetchHifzKeys(), [])
+  const addCallback = useCallback((key: string) => addHifzKey(key), [])
+  const deleteCallback = useCallback((key: string) => deleteHifzKey(key), [])
 
-  const [keys, setKeys] = useState<Set<string> | null>(null)
-  const [keysUserId, setKeysUserId] = useState<string | null>(null)
-  const [pending, setPending] = useState<Set<string>>(new Set())
-
-  const effectiveKeys = userId && keysUserId === userId ? keys : null
-
-  const effectiveKeysRef = useRef<Set<string> | null>(null)
-  const pendingRef = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    effectiveKeysRef.current = effectiveKeys
-  })
-  useEffect(() => {
-    pendingRef.current = pending
+  const remote = useRemoteSet({
+    fetchKeys: fetchCallback,
+    onAdd: addCallback,
+    onDelete: deleteCallback,
   })
 
-  useEffect(() => {
-    let cancelled = false
-    const fetchFor = userId
-
-    Promise.resolve()
-      .then(() => {
-        if (cancelled) return
-        setKeys(null)
-        setKeysUserId(null)
-        setPending(new Set())
-        if (!fetchFor) return
-        return fetchHifzKeys()
-      })
-      .then((newKeys) => {
-        if (cancelled || !newKeys || !fetchFor) return
-        setKeys(newKeys)
-        setKeysUserId(fetchFor)
-      })
-      .catch(() => {})
-
-    return () => {
-      cancelled = true
-    }
-  }, [userId])
-
-  const refresh = useCallback(async () => {
-    if (!userId) return
-    try {
-      const newKeys = await fetchHifzKeys()
-      setKeys(newKeys)
-      setKeysUserId(userId)
-    } catch {
-      // Reader stays usable
-    }
-  }, [userId])
-
-  const isMemorised = useCallback(
-    (verseKey: string) => effectiveKeys?.has(verseKey) ?? false,
-    [effectiveKeys],
+  const getMemorisedCountForSurah = useCallback(
+    (surahId: number) => {
+      if (!remote.keys) return 0
+      let count = 0
+      const prefix = `${surahId}:`
+      for (const k of remote.keys) {
+        if (k.startsWith(prefix)) {
+          count++
+        }
+      }
+      return count
+    },
+    [remote.keys],
   )
 
-  const isPending = useCallback(
-    (verseKey: string) => pending.has(verseKey),
-    [pending],
-  )
-
-  const toggle = useCallback(async (verseKey: string) => {
-    if (effectiveKeysRef.current === null) return
-    if (pendingRef.current.has(verseKey)) return
-    const wasSaved = effectiveKeysRef.current.has(verseKey)
-
-    setPending((prev) => new Set(prev).add(verseKey))
-    setKeys((prev) => {
-      const next = new Set(prev ?? [])
-      if (wasSaved) next.delete(verseKey)
-      else next.add(verseKey)
-      return next
-    })
-
-    try {
-      const res = wasSaved
-        ? await fetch(
-            `/api/account/hifz?verseKey=${encodeURIComponent(verseKey)}`,
-            { method: "DELETE" },
-          )
-        : await fetch("/api/account/hifz", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ verseKey }),
-          })
-      if (!res.ok) throw new Error(`Hifz toggle failed: ${res.status}`)
-    } catch {
-      setKeys((prev) => {
-        const next = new Set(prev ?? [])
-        if (wasSaved) next.add(verseKey)
-        else next.delete(verseKey)
-        return next
-      })
-    } finally {
-      setPending((prev) => {
-        const next = new Set(prev)
-        next.delete(verseKey)
-        return next
-      })
-    }
-  }, [])
-
-  const value = useMemo(
+  const value = useMemo<HifzContextValue>(
     () => ({
-      loaded: effectiveKeys !== null,
-      isMemorised,
-      isPending,
-      toggle,
-      refresh,
-      memorisedCount: effectiveKeys?.size ?? 0,
+      loaded: remote.loaded,
+      isMemorised: remote.has,
+      isPending: remote.isPending,
+      toggle: remote.toggle,
+      refresh: remote.refresh,
+      memorisedCount: remote.size,
+      getMemorisedCountForSurah,
     }),
-    [effectiveKeys, isMemorised, isPending, toggle, refresh],
+    [remote.loaded, remote.has, remote.isPending, remote.toggle, remote.refresh, remote.size, getMemorisedCountForSurah],
   )
 
   return <HifzContext.Provider value={value}>{children}</HifzContext.Provider>
@@ -159,6 +95,8 @@ export function HifzProvider({ children }: { children: ReactNode }) {
 
 export function useHifz() {
   const ctx = useContext(HifzContext)
-  if (!ctx) throw new Error("useHifz must be used within HifzProvider")
+  if (!ctx) {
+    throw new Error("useHifz must be used within HifzProvider")
+  }
   return ctx
 }

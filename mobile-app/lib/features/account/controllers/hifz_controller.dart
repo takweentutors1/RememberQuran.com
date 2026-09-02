@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import '../../../data/repositories/hifz_repository.dart';
 import '../../account/controllers/auth_controller.dart';
@@ -27,21 +28,47 @@ class HifzController extends GetxController {
   
   final RxBool isLoading = true.obs;
   final RxList<MemorisedAyahRecord> memorisedAyahs = <MemorisedAyahRecord>[].obs;
+  final RxList<MemorisedAyahRecord> dueReviews = <MemorisedAyahRecord>[].obs;
   
   final RxList<SurahProgress> surahProgress = <SurahProgress>[].obs;
   final RxList<JuzProgress> juzProgress = <JuzProgress>[].obs;
 
+  StreamSubscription? _authSub;
+
   @override
   void onInit() {
     super.onInit();
-    _loadData();
+    loadData();
+
+    if (Get.isRegistered<AuthController>()) {
+      _authSub = Get.find<AuthController>().firebaseUser.listen((user) {
+        if (user == null) {
+          memorisedAyahs.clear();
+          dueReviews.clear();
+          surahProgress.clear();
+          juzProgress.clear();
+        } else {
+          loadData();
+        }
+      });
+    }
   }
 
-  Future<void> _loadData() async {
+  @override
+  void onClose() {
+    _authSub?.cancel();
+    super.onClose();
+  }
+
+  Future<void> loadData() async {
     final authController = Get.find<AuthController>();
     final user = authController.firebaseUser.value;
     
     if (user == null) {
+      memorisedAyahs.clear();
+      dueReviews.clear();
+      surahProgress.clear();
+      juzProgress.clear();
       isLoading.value = false;
       return;
     }
@@ -50,6 +77,9 @@ class HifzController extends GetxController {
       isLoading.value = true;
       final ayahs = await repository.listMemorisedAyahs(user.uid);
       memorisedAyahs.assignAll(ayahs);
+      
+      final due = await repository.getDueReviews(user.uid);
+      dueReviews.assignAll(due);
       
       _calculateProgress(ayahs);
     } finally {

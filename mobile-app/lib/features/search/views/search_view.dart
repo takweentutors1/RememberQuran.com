@@ -4,13 +4,14 @@ import '../controllers/search_controller.dart' as my_search;
 import '../../../core/utils/search_highlight_text.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_feedback.dart';
+import 'widgets/search_scope_filter.dart';
 
 class SearchView extends GetView<my_search.SearchController> {
-  const SearchView({Key? key}) : super(key: key);
+  const SearchView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.put(my_search.SearchController());
     final theme = Theme.of(context);
     final nurColors = theme.extension<NurColorsExtension>();
 
@@ -63,6 +64,70 @@ class SearchView extends GetView<my_search.SearchController> {
                   onChanged: controller.onSearchChanged,
                 ),
               ),
+              const SearchScopeFilter(),
+              const SizedBox(height: 8),
+              Obx(() {
+                if (controller.currentQuery.isNotEmpty ||
+                    controller.recentSearches.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Recent searches',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Long press to remove',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: controller.recentSearches.map((q) {
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                right: 8.0,
+                                bottom: 8.0,
+                              ),
+                              child: GestureDetector(
+                                onLongPress: () {
+                                  controller.removeRecent(q);
+                                  AppFeedback.showSuccess(
+                                    'Removed "$q" from recent searches',
+                                    title: 'Recent Search',
+                                  );
+                                },
+                                child: ActionChip(
+                                  avatar: const Icon(Icons.history, size: 16),
+                                  label: Text(q),
+                                  onPressed: () => controller.selectRecent(q),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                );
+              }),
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value &&
@@ -299,8 +364,7 @@ class SearchView extends GetView<my_search.SearchController> {
                         ),
                       ),
                     ),
-                  )
-                  .toList(),
+                  ),
             ],
           ],
         ),

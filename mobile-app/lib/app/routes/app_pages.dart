@@ -4,7 +4,6 @@ import 'package:rememberquran/app/routes/app_routes.dart';
 import 'package:rememberquran/features/splash/views/splash_loading_view.dart';
 import 'package:rememberquran/features/splash/controllers/splash_controller.dart';
 import 'package:rememberquran/shared/widgets/app_state_views.dart';
-import 'package:rememberquran/features/home/views/home_view.dart';
 import 'package:rememberquran/features/home/controllers/home_controller.dart';
 import 'package:rememberquran/shared/widgets/app_scaffold.dart';
 import 'package:rememberquran/features/reader/views/surah_reader_view.dart';
@@ -12,11 +11,10 @@ import 'package:rememberquran/features/reader/controllers/reader_controller.dart
 import 'package:rememberquran/data/repositories/quran_repository.dart';
 import 'package:rememberquran/features/audio/views/radio_view.dart';
 import 'package:rememberquran/features/search/views/search_view.dart';
-import 'package:rememberquran/features/search/controllers/search_controller.dart' as my_search;
+import 'package:rememberquran/features/search/search_binding.dart';
 import 'package:rememberquran/features/account/views/login_view.dart';
 import 'package:rememberquran/features/account/views/register_view.dart';
 import 'package:rememberquran/features/account/views/reset_view.dart';
-import 'package:rememberquran/features/account/controllers/auth_controller.dart';
 import 'package:rememberquran/features/account/views/account_home_view.dart';
 import 'package:rememberquran/features/account/views/bookmarks_view.dart';
 import 'package:rememberquran/features/account/controllers/bookmarks_controller.dart';
@@ -24,8 +22,8 @@ import 'package:rememberquran/features/account/views/collection_details_view.dar
 import 'package:rememberquran/features/account/views/goals_view.dart';
 import 'package:rememberquran/features/account/controllers/goals_controller.dart';
 import 'package:rememberquran/features/account/views/hifz_view.dart';
+import 'package:rememberquran/features/account/views/hifz_review_view.dart';
 import 'package:rememberquran/features/account/views/notes_view.dart';
-import 'package:rememberquran/features/account/controllers/notes_controller.dart';
 import 'package:rememberquran/features/account/views/progress_view.dart';
 import 'package:rememberquran/features/account/controllers/progress_controller.dart';
 import 'package:rememberquran/features/account/views/settings_view.dart';
@@ -97,9 +95,7 @@ class AppPages {
     GetPage(
       name: Routes.SEARCH,
       page: () => const SearchView(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut(() => my_search.SearchController());
-      }),
+      binding: SearchBinding(),
     ),
     GetPage(
       name: Routes.LOGIN,
@@ -178,6 +174,14 @@ class AppPages {
     GetPage(
       name: Routes.ACCOUNT_HIFZ,
       page: () => const HifzView(),
+      middlewares: [AuthMiddleware()],
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => HifzController());
+      }),
+    ),
+    GetPage(
+      name: Routes.ACCOUNT_HIFZ_REVIEW,
+      page: () => const HifzReviewView(),
       middlewares: [AuthMiddleware()],
       binding: BindingsBuilder(() {
         Get.lazyPut(() => HifzController());

@@ -62,6 +62,8 @@ export interface AudioPlayerState {
   /** verse_key a play button is waiting on while status === "loading" */
   loadingVerseKey: string | null
   errorMessage: string | null
+  /** Timestamp (ms) when audio should fade and pause, or null if off */
+  sleepTimerEnd: number | null
 }
 
 export interface AudioPlayerActions {
@@ -76,6 +78,7 @@ export interface AudioPlayerActions {
   setReciter: (id: number) => void
   setSpeed: (speed: PlaybackSpeed) => void
   setRepeat: (config: Omit<RepeatConfig, "remaining">) => void
+  setSleepTimer: (minutes: number | null) => void
   playWord: (word: Word) => void
   retry: () => void
   stop: () => void
@@ -98,6 +101,7 @@ const INITIAL_STATE: AudioPlayerState = {
   durationMs: null,
   loadingVerseKey: null,
   errorMessage: null,
+  sleepTimerEnd: null,
 }
 
 type Action =
@@ -122,6 +126,7 @@ type Action =
   | { type: "SET_MODE"; mode: PlaybackMode }
   | { type: "SET_REPEAT"; repeat: RepeatConfig }
   | { type: "REPEAT_REMAINING"; remaining: number }
+  | { type: "SET_SLEEP_TIMER"; sleepTimerEnd: number | null }
   | { type: "STOP" }
 
 function reducer(state: AudioPlayerState, action: Action): AudioPlayerState {
@@ -174,6 +179,8 @@ function reducer(state: AudioPlayerState, action: Action): AudioPlayerState {
       return { ...state, repeat: action.repeat }
     case "REPEAT_REMAINING":
       return { ...state, repeat: { ...state.repeat, remaining: action.remaining } }
+    case "SET_SLEEP_TIMER":
+      return { ...state, sleepTimerEnd: action.sleepTimerEnd }
     case "STOP":
       return INITIAL_STATE
   }
@@ -256,9 +263,15 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const prefetchedNextRef = useRef<number | null>(null)
   const lastIntentRef = useRef<LoadIntent | null>(null)
 
+  const sleepTimerEndRef = useRef<number | null>(null)
+
   useEffect(() => {
     statusRef.current = state.status
   }, [state.status])
+
+  useEffect(() => {
+    sleepTimerEndRef.current = state.sleepTimerEnd
+  }, [state.sleepTimerEnd])
 
   // Prefs hydrate from localStorage after mount — keep refs and element in sync
   useEffect(() => {
@@ -395,6 +408,23 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
               dispatch({ type: "SET_REPEAT", repeat: REPEAT_OFF })
             }
           }
+        }
+      }
+
+      // Sleep Timer Check: Auto fadeout and pause
+      if (sleepTimerEndRef.current !== null) {
+        const remainingMs = sleepTimerEndRef.current - Date.now()
+        if (remainingMs <= 0) {
+          // Timer expired: stop timer, reset volume, and pause
+          sleepTimerEndRef.current = null
+          audio.volume = 1
+          audio.pause()
+          dispatch({ type: "SET_SLEEP_TIMER", sleepTimerEnd: null })
+        } else if (remainingMs < 5000) {
+          // Smoothly fade out volume in the last 5 seconds
+          audio.volume = Math.max(0, remainingMs / 5000)
+        } else if (audio.volume < 1) {
+          audio.volume = 1
         }
       }
 
@@ -768,6 +798,19 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_REPEAT", repeat })
   }, [clearRepeatPause])
 
+  const setSleepTimer = useCallback((minutes: number | null) => {
+    if (minutes === null || minutes <= 0) {
+      sleepTimerEndRef.current = null
+      if (audioRef.current) audioRef.current.volume = 1
+      dispatch({ type: "SET_SLEEP_TIMER", sleepTimerEnd: null })
+      return
+    }
+    const end = Date.now() + minutes * 60 * 1000
+    sleepTimerEndRef.current = end
+    if (audioRef.current) audioRef.current.volume = 1
+    dispatch({ type: "SET_SLEEP_TIMER", sleepTimerEnd: end })
+  }, [])
+
   const playWord = useCallback((word: Word) => {
     const url = getWordAudioUrl(word)
     if (!url) return
@@ -806,9 +849,11 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     ++loadTokenRef.current // invalidate any in-flight load
     clearRepeatPause()
     stopLoop()
+    sleepTimerEndRef.current = null
     const audio = audioRef.current
     if (audio) {
       audio.pause()
+      audio.volume = 1
       audio.removeAttribute("src")
       audio.load()
     }
@@ -833,6 +878,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   // Also fires on OS-level interruptions (calls, other apps taking audio)
   const handlePause = useCallback(() => {
     stopLoop()
+    if (audioRef.current) audioRef.current.volume = 1
     if (repeatGapRef.current) return // memorisation inter-loop pause
     if (!audioRef.current?.currentSrc) return // src cleared by stop()
     // Reassigning `audio.src` (loadChapter, e.g. switching surahs while one
@@ -976,6 +1022,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       setReciter,
       setSpeed,
       setRepeat: setRepeatAction,
+      setSleepTimer,
       playWord,
       retry,
       stop,
@@ -992,6 +1039,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       setReciter,
       setSpeed,
       setRepeatAction,
+      setSleepTimer,
       playWord,
       retry,
       stop,

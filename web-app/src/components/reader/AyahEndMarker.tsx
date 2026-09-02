@@ -7,6 +7,7 @@ interface AyahEndMarkerProps {
   digits: string
   ariaLabel?: string
   className?: string
+  onClick?: (e: React.MouseEvent) => void
 }
 
 /**
@@ -16,7 +17,7 @@ interface AyahEndMarkerProps {
  * - Inner concentric golden hairline ring
  * - Bold high-contrast centered Uthmanic Hafs numeral
  */
-export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
+export function AyahEndMarker({ digits, ariaLabel, className, onClick }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
   // Dynamic SVG font size for 1, 2, or 3 digits
@@ -24,9 +25,23 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
 
   return (
     <span
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                onClick(e as unknown as React.MouseEvent)
+              }
+            }
+          : undefined
+      }
       className={cn(
         "inline-flex items-center justify-center align-middle select-none mx-0.5",
         "translate-y-[-2px]",
+        onClick && "cursor-pointer hover:scale-110 active:scale-95 transition-transform duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-full",
         className,
       )}
       aria-label={ariaLabel}
@@ -53,18 +68,19 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
               C 11.5,4.5 12.5,1.5 14,1.5 Z
             "
             stroke="currentColor"
-            strokeWidth="1.2"
-            fill="#FAF6EE"
-            className="dark:fill-[#1C1813]"
+            strokeWidth="1.3"
+            fill="currentColor"
+            fillOpacity="0.04"
           />
 
           {/* Inner Golden Hairline Ring */}
           <circle
             cx="14"
             cy="14"
-            r="8.5"
+            r="8.8"
             stroke="currentColor"
-            strokeWidth="1.4"
+            strokeWidth="0.9"
+            fill="none"
           />
 
           {/* Centered Bold Numeral */}

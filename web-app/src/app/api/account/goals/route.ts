@@ -33,20 +33,19 @@ export async function PUT(request: Request) {
   if (!body) return privateJson({ error: "Invalid JSON body." }, 400)
 
   if (!isGoalType(body.type)) {
-    return privateJson({ error: "Type must be ayahs or pages." }, 400)
+    return privateJson({ error: "Type must be ayahs, pages, or khatm." }, 400)
   }
   const type = body.type
-  const target = Number(body.target)
-  const targetError = validateGoalTarget(type, target)
+  const target = Number(body.target ?? 0)
+  const targetDate = typeof body.targetDate === "string" ? body.targetDate : null
+
+  const targetError = validateGoalTarget(type, target, targetDate)
   if (targetError) return privateJson({ error: targetError }, 400)
 
-  await setActiveGoal(userId, { type, target })
+  await setActiveGoal(userId, { type, target, targetDate })
 
   const snapshot = await evaluateGoalAndStreak(userId, await getRequestTimeZone())
-  return privateJson({
-    ...(snapshot as unknown as Record<string, unknown>),
-    goal: { type, target },
-  })
+  return privateJson(snapshot as unknown as Record<string, unknown>)
 }
 
 export async function DELETE() {

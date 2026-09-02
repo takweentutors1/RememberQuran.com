@@ -36,6 +36,19 @@ class AppFeedback {
     );
   }
 
+  static void showInfo(String message, {String title = 'Notice'}) {
+    final isDark = Get.isDarkMode;
+    _show(
+      title: title,
+      message: message,
+      mood: MascotMood.empty,
+      background: isDark
+          ? AppColors.darkBrandGoldSoft.withValues(alpha: 0.2)
+          : AppColors.lightBrandGoldSoft.withValues(alpha: 0.4),
+      foreground: isDark ? AppColors.darkForeground : AppColors.lightForeground,
+    );
+  }
+
   static void showError(
     String message, {
     String title = 'Something went wrong',

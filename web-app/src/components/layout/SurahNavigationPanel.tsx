@@ -10,9 +10,10 @@ import { useSurahContent } from "@/context/SurahContentContext"
 import { SurahPickerTrigger } from "@/components/reader/SurahPickerTrigger"
 import { SurahList } from "./SurahList"
 import { AyahGrid } from "./AyahGrid"
+import { JuzList } from "./JuzList"
 import { cn } from "@/lib/utils"
 
-type NavTab = "surah" | "verse"
+type NavTab = "surah" | "juz" | "verse"
 
 interface SurahNavigationPanelProps {
   chapters: Chapter[]
@@ -75,7 +76,7 @@ export function SurahNavigationPanel({
             aria-selected={tab === "surah"}
             onClick={() => setTab("surah")}
             className={cn(
-              "flex-1 rounded-full px-3 py-1 text-xs font-medium transition-colors duration-[120ms]",
+              "flex-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-[120ms]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               tab === "surah"
                 ? "bg-background text-foreground shadow-sm"
@@ -87,11 +88,26 @@ export function SurahNavigationPanel({
           <button
             type="button"
             role="tab"
+            aria-selected={tab === "juz"}
+            onClick={() => setTab("juz")}
+            className={cn(
+              "flex-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-[120ms]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              tab === "juz"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Juz
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={tab === "verse"}
             onClick={() => setTab("verse")}
             disabled={!chapter}
             className={cn(
-              "flex-1 rounded-full px-3 py-1 text-xs font-medium transition-colors duration-[120ms]",
+              "flex-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-[120ms]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               tab === "verse"
                 ? "bg-background text-foreground shadow-sm"
@@ -126,6 +142,8 @@ export function SurahNavigationPanel({
             onNavigate={closeOnNavigate ? handleNavigate : undefined}
             showSearch
           />
+        ) : tab === "juz" ? (
+          <JuzList onNavigate={closeOnNavigate ? handleNavigate : undefined} />
         ) : chapter ? (
           <AyahGrid
             surahId={chapter.id}

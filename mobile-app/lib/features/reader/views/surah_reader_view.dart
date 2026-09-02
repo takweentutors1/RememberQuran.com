@@ -3,15 +3,18 @@ import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../shared/widgets/app_state_views.dart';
 import '../controllers/reader_controller.dart';
+import '../controllers/reader_settings_controller.dart';
 import 'widgets/ayah_block.dart';
+import 'widgets/mushaf_page_view.dart';
 import 'widgets/reader_settings_sheet.dart';
 import 'widgets/quick_jump_sheet.dart';
+import 'widgets/juz_navigation_sheet.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../../core/utils/responsive_layout.dart';
 import '../../audio/views/mini_player.dart';
 
 class SurahReaderView extends GetView<ReaderController> {
-  const SurahReaderView({Key? key}) : super(key: key);
+  const SurahReaderView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +63,14 @@ class SurahReaderView extends GetView<ReaderController> {
                       ),
               );
             }),
+            IconButton(
+              icon: const Icon(Icons.menu_book_rounded),
+              tooltip: 'Juz & Hizb Navigation',
+              onPressed: () => JuzNavigationSheet.show(
+                context,
+                currentChapterId: controller.chapter.value?.id,
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.search),
               tooltip: 'Quick Jump',
@@ -162,19 +173,83 @@ class SurahReaderView extends GetView<ReaderController> {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
-          child: ScrollablePositionedList.builder(
-            itemCount: controller.verses.length,
-            itemScrollController: controller.itemScrollController,
-            itemPositionsListener: controller.itemPositionsListener,
-            padding: context.responsivePadding,
-            itemBuilder: (context, index) {
-              final verse = controller.verses[index];
-              return AyahBlock(
-                verse: verse,
-                words: controller.verseWords[verse.id] ?? [],
-                translations: controller.verseTranslations[verse.id] ?? [],
-              );
-            },
+          child: Column(
+            children: [
+              Obx(() {
+                final message = controller.resumeBannerMessage.value;
+                if (message == null) return const SizedBox.shrink();
+                final theme = Theme.of(context);
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 4.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14.0,
+                    vertical: 10.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer
+                        .withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(10.0),
+                    border: Border.all(
+                      color: theme.colorScheme.primary
+                          .withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.bookmark_outline,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Dismiss',
+                        onPressed: controller.dismissResumeBanner,
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              Expanded(
+                child: Obx(() {
+                  if (Get.isRegistered<ReaderSettingsController>() &&
+                      Get.find<ReaderSettingsController>().displayMode.value ==
+                          DisplayMode.mushaf) {
+                    return const MushafPageView();
+                  }
+
+                  return ScrollablePositionedList.builder(
+                    itemCount: controller.verses.length,
+                    itemScrollController: controller.itemScrollController,
+                    itemPositionsListener: controller.itemPositionsListener,
+                    padding: context.responsivePadding,
+                    itemBuilder: (context, index) {
+                      final verse = controller.verses[index];
+                      return AyahBlock(
+                        verse: verse,
+                        words: controller.verseWords[verse.id] ?? [],
+                        translations:
+                            controller.verseTranslations[verse.id] ?? [],
+                      );
+                    },
+                  );
+                }),
+              ),
+            ],
           ),
         ),
       );

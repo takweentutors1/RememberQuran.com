@@ -18,6 +18,7 @@ import { ElapsedTime, PLAYER_SURFACE_LAYOUT_ID, SeekBar } from "./PlayerPrimitiv
 import { SpeedControl } from "./SpeedControl"
 import { RepeatControls } from "./RepeatControls"
 import { ReciterSelector } from "./ReciterSelector"
+import { SleepTimerControl } from "./SleepTimerControl"
 import { FullScreenPlayer } from "./FullScreenPlayer"
 import { cn } from "@/lib/utils"
 
@@ -192,6 +193,7 @@ export function MiniPlayer() {
             <ElapsedTime durationMs={player.durationMs} />
             <SpeedControl />
             {player.mode !== "radio" && <RepeatControls />}
+            <SleepTimerControl />
             <ReciterSelector />
             <div className="mx-0.5 hidden h-4 w-px bg-border/50 sm:block" aria-hidden="true" />
             <button

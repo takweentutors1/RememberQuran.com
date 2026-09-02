@@ -20,4 +20,5 @@ abstract class Routes {
   static const ACCOUNT_GOALS = '/account/goals';
   static const ACCOUNT_PROGRESS = '/account/progress';
   static const ACCOUNT_HIFZ = '/account/hifz';
+  static const ACCOUNT_HIFZ_REVIEW = '/account/hifz/review';
 }

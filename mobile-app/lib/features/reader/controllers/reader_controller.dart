@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -30,6 +32,10 @@ class ReaderController extends GetxController {
 
   final RxSet<String> bookmarkedVerses = <String>{}.obs;
   final RxSet<String> memorisedVerses = <String>{}.obs;
+
+  final RxnString resumeBannerMessage = RxnString();
+  final RxInt bulkMarkProgress = 0.obs;
+  final RxBool isBulkMarking = false.obs;
 
   final isLoading = true.obs;
   final hasError = false.obs;
@@ -77,7 +83,7 @@ class ReaderController extends GetxController {
             (v) => v.verseNumber == targetAyah,
           );
           if (index != -1) {
-            _scrollToIndex(index);
+            _scrollToIndex(index, smooth: true);
           }
         }
       }
@@ -96,7 +102,7 @@ class ReaderController extends GetxController {
     if (targetAyah == null) return;
     final index = verses.indexWhere((v) => v.verseNumber == targetAyah);
     if (index != -1) {
-      _scrollToIndex(index);
+      _scrollToIndex(index, smooth: true);
     }
   }
 
@@ -111,22 +117,38 @@ class ReaderController extends GetxController {
   /// runs only once the current build has actually finished, whether this
   /// was called mid-build or from a plain async callback (e.g. the verses
   /// listener in onInit).
-  void _scrollToIndex(int index) {
-    void jump() {
+  void _scrollToIndex(int index, {bool smooth = false}) {
+    void performScroll() {
       if (itemScrollController.isAttached) {
         _hasScrolledToAyah = true;
-        itemScrollController.jumpTo(index: index);
+        if (smooth) {
+          itemScrollController.scrollTo(
+            index: index,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        } else {
+          itemScrollController.jumpTo(index: index);
+        }
       } else {
         Future.delayed(const Duration(milliseconds: 100), () {
           if (itemScrollController.isAttached) {
             _hasScrolledToAyah = true;
-            itemScrollController.jumpTo(index: index);
+            if (smooth) {
+              itemScrollController.scrollTo(
+                index: index,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            } else {
+              itemScrollController.jumpTo(index: index);
+            }
           }
         });
       }
     }
 
-    SchedulerBinding.instance.addPostFrameCallback((_) => jump());
+    SchedulerBinding.instance.addPostFrameCallback((_) => performScroll());
   }
 
   void _onScrollPositionsChanged() {
@@ -202,7 +224,7 @@ class ReaderController extends GetxController {
         },
       );
     } catch (e) {
-      // Silent failure
+      FirebaseCrashlytics.instance.recordError(e, null, fatal: false);
     }
   }
 
@@ -252,6 +274,7 @@ class ReaderController extends GetxController {
 
   Future<void> loadChapter(int chapterId) async {
     _lastChapterId = chapterId;
+    _hasScrolledToAyah = false;
     final recoveringFromError = hasError.value;
     isLoading.value = true;
     hasError.value = false;
@@ -259,12 +282,19 @@ class ReaderController extends GetxController {
       if (Get.isRegistered<ReaderSettingsController>()) {
         final settings = Get.find<ReaderSettingsController>();
         settings.clearRevealedAyahs();
-        settings.clearHifzRange();
+        settings.loadHifzRange(chapterId);
       }
 
       chapter.value = await repository.getChapter(chapterId);
       final fetchedVerses = await repository.getVerses(chapterId);
       verses.value = fetchedVerses;
+
+      resumeBannerMessage.value = null;
+      final user = Get.find<AuthController>().firebaseUser.value;
+      final requestedAyahStr = Get.parameters['ayahId'];
+      if (requestedAyahStr == null && user != null && fetchedVerses.isNotEmpty) {
+        _checkAndResumeLastPosition(user.uid, chapterId, fetchedVerses);
+      }
 
       final Map<int, List<Word>> wMap = {};
       final Map<int, List<VerseTranslation>> tMap = {};
@@ -278,7 +308,6 @@ class ReaderController extends GetxController {
       verseTranslations.assignAll(tMap);
 
       // Load bookmarks for this chapter
-      final user = Get.find<AuthController>().firebaseUser.value;
       if (user != null) {
         final bList = await _bookmarksRepo.listBookmarks(
           user.uid,
@@ -305,6 +334,39 @@ class ReaderController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Checks Firestore for user's last read position in this surah and smoothly
+  /// scrolls to it with a feedback toast.
+  Future<void> _checkAndResumeLastPosition(
+    String uid,
+    int chapterId,
+    List<Verse> fetchedVerses,
+  ) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (!doc.exists) return;
+      final data = doc.data();
+      if (data == null) return;
+      final lastPos = data['lastPosition'];
+      if (lastPos is Map<String, dynamic>) {
+        final lastSurahId = lastPos['surahId'] as int?;
+        final lastAyahId = lastPos['ayahId'] as int?;
+        if (lastSurahId == chapterId && lastAyahId != null && lastAyahId > 1) {
+          final targetIndex = fetchedVerses.indexWhere((v) => v.verseNumber == lastAyahId);
+          if (targetIndex != -1) {
+            _scrollToIndex(targetIndex, smooth: true);
+            resumeBannerMessage.value = 'Resumed from Ayah $lastAyahId';
+          }
+        }
+      }
+    } catch (e, st) {
+      FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+    }
+  }
+
+  void dismissResumeBanner() {
+    resumeBannerMessage.value = null;
   }
 
   /// Toggles the bookmark on [verseKey]. [collectionId] only matters for
@@ -379,6 +441,7 @@ class ReaderController extends GetxController {
       }
     } else {
       memorisedVerses.add(verseKey);
+      HapticFeedback.lightImpact();
       final res = await _hifzRepo.markMemorised(
         user.uid,
         verseKey,
@@ -395,6 +458,69 @@ class ReaderController extends GetxController {
               : 'Unable to update this. Please try again.',
         );
       }
+    }
+  }
+
+  /// Bulk marks all ayahs in the range [from]..[to] (inclusive) as memorised.
+  Future<void> markRangeMemorised(int surahId, int from, int to) async {
+    final user = Get.find<AuthController>().firebaseUser.value;
+    if (user == null) {
+      AppFeedback.showError('Please sign in to track memorised ayahs.');
+      return;
+    }
+
+    if (from > to) {
+      final tmp = from;
+      from = to;
+      to = tmp;
+    }
+
+    isBulkMarking.value = true;
+    bulkMarkProgress.value = 0;
+    final total = to - from + 1;
+    int successCount = 0;
+    bool limitReached = false;
+
+    try {
+      for (int i = from; i <= to; i++) {
+        final verseKey = '$surahId:$i';
+        if (!memorisedVerses.contains(verseKey)) {
+          final res = await _hifzRepo.markMemorised(
+            user.uid,
+            verseKey,
+            surahId,
+            i,
+          );
+          if (res.ok) {
+            memorisedVerses.add(verseKey);
+            successCount++;
+          } else if (res.error == 'limit-reached') {
+            limitReached = true;
+            break;
+          }
+        } else {
+          successCount++;
+        }
+        bulkMarkProgress.value = ((i - from + 1) / total * 100).round();
+      }
+
+      if (limitReached) {
+        AppFeedback.showError(
+          'Memorisation limit reached. Marked $successCount of $total ayahs.',
+          title: 'Limit Reached',
+        );
+      } else {
+        AppFeedback.showSuccess(
+          'Marked Ayahs $from–$to as memorised ($successCount total).',
+          title: 'Range Memorised',
+        );
+      }
+    } catch (e, st) {
+      FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+      AppFeedback.showError('Could not finish marking range. Please try again.');
+    } finally {
+      isBulkMarking.value = false;
+      bulkMarkProgress.value = 0;
     }
   }
 

@@ -15,6 +15,7 @@ import { NotesProvider } from "@/context/NotesContext"
 import { HifzProvider } from "@/context/HifzContext"
 import { SoftGateDialog } from "@/components/auth/SoftGateDialog"
 import { RouteChangeEffect } from "@/components/layout/RouteChangeEffect"
+import { ServiceWorkerRegister } from "@/components/providers/ServiceWorkerRegister"
 import type { Chapter } from "@/types/quran"
 
 export default function Providers({
@@ -45,6 +46,7 @@ export default function Providers({
                           <NotesProvider>
                             <HifzProvider>
                               <RouteChangeEffect />
+                              <ServiceWorkerRegister />
                               {children}
                               <SoftGateDialog />
                             </HifzProvider>

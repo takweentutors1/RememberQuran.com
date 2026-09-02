@@ -93,8 +93,18 @@ class SearchRemoteDs {
 
   SearchRemoteDs({required this.client});
 
-  Future<SearchResponse> searchQuran(String q, {int page = 1, int size = 20}) async {
-    final uri = Uri.parse('$_baseUrl?q=${Uri.encodeQueryComponent(q)}&size=$size&page=$page');
+  Future<SearchResponse> searchQuran(
+    String q, {
+    int page = 1,
+    int size = 20,
+    String? scope,
+  }) async {
+    final scopeParam = (scope != null && scope.isNotEmpty && scope != 'all')
+        ? '&scope=${Uri.encodeQueryComponent(scope)}'
+        : '';
+    final uri = Uri.parse(
+      '$_baseUrl?q=${Uri.encodeQueryComponent(q)}&size=$size&page=$page$scopeParam',
+    );
     final response = await client.get(
       uri,
       headers: {'Accept': 'application/json'},
