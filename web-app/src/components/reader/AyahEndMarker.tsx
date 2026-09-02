@@ -36,13 +36,7 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
           className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
         >
           {/* Inner Light Room */}
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            fill="#FFFDF9"
-            className="dark:fill-[#181512]"
-          />
+        
 
           {/* Clean Single Medallion Ring */}
           <circle
