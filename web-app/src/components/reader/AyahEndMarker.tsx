@@ -12,12 +12,13 @@ interface AyahEndMarkerProps {
 /**
  * Authentic Madani Mushaf Pure Circular Medallion (علامة نهاية الآية الدائرية النقية)
  * Pure, clean single circle medallion with bold centered Uthmanic Hafs calligraphy numeral.
+ * Scaled up by 20% for optimal readability.
  */
 export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerProps) {
   const digitCount = digits ? digits.trim().length : 1
 
-  // Dynamic SVG font size for 1, 2, or 3 digits
-  const svgFontSize = digitCount >= 3 ? "10.5px" : digitCount === 2 ? "12.5px" : "15px"
+  // Dynamic SVG font size scaled +20%
+  const svgFontSize = digitCount >= 3 ? "12.5px" : digitCount === 2 ? "15px" : "18px"
 
   return (
     <span
@@ -28,11 +29,13 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
       )}
       aria-label={ariaLabel}
     >
-      <span className="relative inline-flex items-center justify-center w-[1.15em] h-[1.15em] shrink-0">
-       
-          {/* Inner Light Room */}
-        
-
+      <span className="relative inline-flex items-center justify-center w-[1.38em] h-[1.38em] shrink-0">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="size-full text-[#1A1612] dark:text-[#EDE6DA] drop-shadow-2xs overflow-visible"
+        >
           {/* Clean Single Medallion Ring */}
           <circle
             cx="12"
@@ -58,7 +61,7 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
           >
             {digits}
           </text>
-      
+        </svg>
       </span>
     </span>
   )
