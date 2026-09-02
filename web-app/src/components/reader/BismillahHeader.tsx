@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { AQF_BISMILLAH_CHAR } from "@/lib/aqfFontMap"
 
 interface BismillahHeaderProps {
   className?: string
@@ -19,7 +20,7 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
       role="banner"
       aria-label="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
       className={cn(
-        "my-1.5 sm:my-2.5 flex flex-col items-center justify-center text-center select-none",
+        "my-2 sm:my-3 flex flex-col items-center justify-center text-center select-none",
         className,
       )}
     >
@@ -29,9 +30,9 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
         
         {/* Authentic Bismillah Calligraphic Text */}
         <p
-          className="aqf-bsml text-[1.85rem] sm:text-[2.15rem] md:text-[2.45rem] leading-none text-[#8C6D38] dark:text-[#E2C792] drop-shadow-2xs tracking-normal font-normal"
+          className="aqf-bsml text-[2.5rem] sm:text-[3.2rem] md:text-[3.75rem] leading-none text-[#8C6D38] dark:text-[#E2C792] drop-shadow-2xs tracking-normal font-normal"
         >
-          بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
+          {AQF_BISMILLAH_CHAR}
         </p>
 
         <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-l from-transparent to-[#9E783E]/60 dark:to-[#D4AF37]/60 mr-3" />

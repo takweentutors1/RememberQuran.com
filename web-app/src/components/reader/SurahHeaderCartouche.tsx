@@ -3,6 +3,7 @@
 import type { Chapter } from "@/types/quran"
 import { toArabicDigits } from "./AyahText"
 import { cn } from "@/lib/utils"
+import { getSurahCalligraphyChar } from "@/lib/aqfFontMap"
 
 interface SurahHeaderCartoucheProps {
   chapter: Chapter
@@ -23,6 +24,7 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
   const isMadani = chapter.revelation_place === "madinah"
   const placeText = isMadani ? "مَدَنِيَّة" : "مَكِّيَّة"
   const versesText = `${toArabicDigits(chapter.verses_count)} آيَاتُهَا`
+  const surahCalligraphyGlyph = getSurahCalligraphyChar(chapter.id)
 
   return (
     <div
@@ -108,10 +110,16 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
           <div className="pointer-events-none absolute -right-[1px] top-1/2 -translate-y-1/2 w-2 h-4 border-r-2 border-y-2 border-[#9E783E] rounded-r-full bg-[#FAF6EE] dark:bg-[#1E1912]" />
           <div className="pointer-events-none absolute -left-[1px] top-1/2 -translate-y-1/2 w-2 h-4 border-l-2 border-y-2 border-[#9E783E] rounded-l-full bg-[#FAF6EE] dark:bg-[#1E1912]" />
 
-          {/* Surah Name Title */}
-          <h2 className="quran-arabic font-uthmani text-xl sm:text-2xl md:text-[1.85rem] font-extrabold text-[#2C1D0C] dark:text-[#F8EEDB] tracking-wide leading-none drop-shadow-2xs text-center">
-            سُورَةُ {surahNameClean}
-          </h2>
+          {/* Calligraphic Surah Emblem Title */}
+          {surahCalligraphyGlyph ? (
+            <h2 className="aqf-bsml text-2xl sm:text-3xl md:text-[2.25rem] text-[#2C1D0C] dark:text-[#F8EEDB] tracking-normal leading-none drop-shadow-2xs text-center">
+              {surahCalligraphyGlyph}
+            </h2>
+          ) : (
+            <h2 className="quran-arabic font-uthmani text-xl sm:text-2xl md:text-[1.85rem] font-extrabold text-[#2C1D0C] dark:text-[#F8EEDB] tracking-wide leading-none drop-shadow-2xs text-center">
+              سُورَةُ {surahNameClean}
+            </h2>
+          )}
         </div>
 
         {/* ─── LEFT WING: Arabesque Foliage + Ayah Count (آياتها) ─── */}
