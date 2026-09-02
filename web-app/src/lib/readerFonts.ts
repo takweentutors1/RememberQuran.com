@@ -49,8 +49,8 @@ export const TRANSLATION_FONT_SIZES: Record<FontScale, string> = {
 }
 
 export const QURAN_FONT_FAMILY: Record<QuranFont, string> = {
-  uthmani: "var(--font-uthmani), var(--font-amiri-quran), serif",
-  amiri: "var(--font-amiri-quran), var(--font-amiri), serif",
+  uthmani: '"UthmanicHafs", "KFGQPC Uthmanic Hafs", serif',
+  amiri: 'var(--font-amiri-quran), var(--font-amiri), serif',
 }
 
 export const MIN_FONT_SCALE = 1 as FontScale
