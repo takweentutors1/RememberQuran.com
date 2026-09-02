@@ -35,7 +35,7 @@ export function AyahEndMarker({ digits, ariaLabel, className }: AyahEndMarkerPro
           <circle
             cx="12"
             cy="12"
-            r="10"
+            r="25"
             stroke="currentColor"
             strokeWidth="1.5"
           />
