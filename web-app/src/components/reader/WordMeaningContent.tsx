@@ -17,10 +17,10 @@ export function WordMeaningContent({ word, verseKey }: WordMeaningContentProps) 
   const hasAudio = !!getWordAudioUrl(word)
 
   return (
-    <div className="flex min-w-[90px] max-w-[200px] flex-col items-center gap-1 text-center py-0.5 px-1 select-none">
+    <div className="flex min-w-[70px] max-w-[150px] flex-col items-center text-center select-none py-0.5 px-0.5">
       {/* Arabic Word Glyph */}
       <span
-        className="font-arabic text-xl sm:text-2xl font-bold leading-tight text-gold drop-shadow-xs"
+        className="font-arabic text-base sm:text-lg font-bold leading-tight text-gold"
         dir="rtl"
         lang="ar"
       >
@@ -28,46 +28,46 @@ export function WordMeaningContent({ word, verseKey }: WordMeaningContentProps) 
       </span>
 
       {/* English Meaning */}
-      <span className="text-xs font-medium text-foreground/95 leading-snug">
+      <span className="text-[11px] font-medium text-foreground/95 leading-tight mt-0.5 line-clamp-2">
         {word.translation.text}
       </span>
 
       {/* Transliteration */}
       {word.transliteration?.text && (
-        <span className="text-[11px] italic text-muted-foreground/80 leading-none">
+        <span className="text-[10px] italic text-muted-foreground/75 leading-tight mt-0.5">
           {word.transliteration.text}
         </span>
       )}
 
       {/* Micro Quick Actions */}
-      <div className="mt-1.5 flex items-center justify-center gap-1.5 pt-1 border-t border-border/40 w-full">
+      <div className="mt-1 flex items-center justify-center gap-1 pt-1 border-t border-border/40 w-full">
         {hasAudio && actions && (
           <button
             type="button"
-            title="Hear word pronunciation"
-            aria-label="Hear word pronunciation"
+            title="Pronunciation"
+            aria-label="Pronounce"
             onClick={(e) => {
               e.stopPropagation()
               actions.playWord(word)
             }}
-            className="flex size-6 items-center justify-center rounded-full text-muted-foreground transition-all duration-150 hover:bg-gold/15 hover:text-gold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+            className="flex size-5 items-center justify-center rounded-full text-muted-foreground transition-all duration-150 hover:bg-gold/15 hover:text-gold focus-visible:outline-none"
           >
-            <Volume2 className="size-3.5" strokeWidth={2} />
+            <Volume2 className="size-3" strokeWidth={2} />
           </button>
         )}
         {verseKey && (
           <button
             type="button"
-            title="Word grammar & morphology"
-            aria-label="Show word grammar & morphology"
+            title="Grammar"
+            aria-label="Grammar"
             onClick={(e) => {
               e.stopPropagation()
               openWord(verseKey, word.position)
             }}
-            className="flex h-6 items-center justify-center gap-1 rounded-full px-2 text-muted-foreground transition-all duration-150 hover:bg-gold/15 hover:text-gold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+            className="flex h-5 items-center justify-center gap-1 rounded-full px-1.5 text-muted-foreground transition-all duration-150 hover:bg-gold/15 hover:text-gold focus-visible:outline-none"
           >
-            <GraduationCap className="size-3.5" strokeWidth={2} />
-            <span className="text-[10px] font-semibold tracking-wide uppercase">Grammar</span>
+            <GraduationCap className="size-3" strokeWidth={2} />
+            <span className="text-[9px] font-semibold uppercase tracking-wider">Grammar</span>
           </button>
         )}
       </div>
