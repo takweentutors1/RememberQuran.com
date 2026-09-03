@@ -20,6 +20,8 @@ interface UIContextValue {
   focusMode: boolean
   setFocusMode: (focus: boolean) => void
   toggleFocusMode: () => void
+  navTab: "surah" | "juz" | "verse"
+  setNavTab: (tab: "surah" | "juz" | "verse") => void
 }
 
 const UIContext = createContext<UIContextValue | null>(null)
@@ -33,6 +35,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   // session with it off also sidesteps a stale-true value hiding navigation
   // on a route that has no way to turn it back off.
   const [focusMode, setFocusMode] = useState(false)
+  const [navTab, setNavTab] = useState<"surah" | "juz" | "verse">("surah")
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen((v) => !v)
@@ -55,6 +58,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
         focusMode,
         setFocusMode,
         toggleFocusMode,
+        navTab,
+        setNavTab,
       }}
     >
       {children}

@@ -38,8 +38,9 @@ export function SurahNavigationPanel({
   showPickerTrigger = false,
 }: SurahNavigationPanelProps) {
   const pathname = usePathname()
-  const [tab, setTab] = useState<NavTab>("surah")
-  const { sidebarOpen, toggleSidebar } = useUI()
+  const { sidebarOpen, toggleSidebar, navTab, setNavTab } = useUI()
+  const tab = navTab
+  const setTab = setNavTab
   const { pendingSurahId, isLoading } = useSurahContent()
 
   const surahId = parseSurahId(pathname)
