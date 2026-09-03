@@ -55,7 +55,7 @@ function ReadingVerse({ verse, isTarget, onWordClick, onAyahClick }: ReadingVers
                 word={word}
                 isHighlighted={highlightedPosition === word.position}
                 verseKey={verse.verse_key}
-                disableTooltip={true}
+                disableTooltip={false}
                 onWordClick={onWordClick}
               />
               {endWord ? (
@@ -300,7 +300,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                             <ArabicWord
                               word={word}
                               verseKey={verse.verse_key}
-                              disableTooltip={true}
+                              disableTooltip={false}
                               onWordClick={handleWordClick}
                             />
                           </span>
@@ -314,13 +314,6 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
           </MushafPageFrame>
         )
       })}
-
-      {/* Docked Word Study Ribbon when any word is clicked */}
-      <WordStudyRibbon
-        word={selectedWord?.word ?? null}
-        verseKey={selectedWord?.verseKey}
-        onClose={() => setSelectedWord(null)}
-      />
 
       {/* Docked Ayah Action Toolbar when Ayah marker is clicked */}
       <ReadingAyahToolbar
