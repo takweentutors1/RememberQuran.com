@@ -173,31 +173,52 @@ export function AyahCardDesigner({
       const pngUrl = await renderPng()
       const img = new Image()
       img.src = pngUrl
-      await new Promise((resolve) => {
-        img.onload = resolve
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve(true)
+        img.onerror = reject
       })
 
-      // 2. Fetch Verse Recitation Audio (Alafasy default)
+      // 2. Fetch Verse Recitation Audio through local proxy to avoid CORS/tainting
       const surahNum = card.surahId || Number(card.verseKey.split(":")[0]) || 1
       const ayahNum = card.startAyah || Number(card.verseKey.split(":")[1]?.split("–")[0]) || 1
-      const audioUrl = `https://verses.qurancdn.com/Alafasy/mp3/${String(surahNum).padStart(3, "0")}${String(ayahNum).padStart(3, "0")}.mp3`
+      const audioUrl = `/api/media/audio?surah=${surahNum}&ayah=${ayahNum}`
 
-      const audio = new Audio()
-      audio.crossOrigin = "anonymous"
-      audio.src = audioUrl
+      const audioResponse = await fetch(audioUrl)
+      if (!audioResponse.ok) {
+        throw new Error("Could not fetch recitation audio.")
+      }
+      const audioArrayBuffer = await audioResponse.arrayBuffer()
 
-      const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const source = audioCtx.createMediaElementSource(audio)
+      // 3. Setup AudioContext and decode audio data
+      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      const audioCtx = new AudioCtxClass()
+      if (audioCtx.state === "suspended") {
+        await audioCtx.resume()
+      }
+
+      const audioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer.slice(0))
+      const audioDuration = audioBuffer.duration
+
+      const bufferSource = audioCtx.createBufferSource()
+      bufferSource.buffer = audioBuffer
+
       const dest = audioCtx.createMediaStreamDestination()
-      source.connect(dest)
-      source.connect(audioCtx.destination)
+      bufferSource.connect(dest)
+      bufferSource.connect(audioCtx.destination)
 
-      // 3. Setup canvas stream
+      // 4. Setup canvas stream with active redraw loop
       const canvas = document.createElement("canvas")
       canvas.width = 1200
       canvas.height = 630
       const ctx = canvas.getContext("2d")!
       ctx.drawImage(img, 0, 0, 1200, 630)
+
+      let animId: number
+      const drawLoop = () => {
+        ctx.drawImage(img, 0, 0, 1200, 630)
+        animId = requestAnimationFrame(drawLoop)
+      }
+      animId = requestAnimationFrame(drawLoop)
 
       const canvasStream = canvas.captureStream(30)
       const combinedStream = new MediaStream([
@@ -205,42 +226,59 @@ export function AyahCardDesigner({
         ...dest.stream.getAudioTracks(),
       ])
 
-      const mimeType = MediaRecorder.isTypeSupported("video/mp4;codecs=avc1")
-        ? "video/mp4"
-        : "video/webm"
-      const recorder = new MediaRecorder(combinedStream, { mimeType })
+      const supportedMime = [
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
+        "video/webm",
+        "video/mp4;codecs=avc1,mp4a.40.2",
+        "video/mp4",
+      ].find((type) => MediaRecorder.isTypeSupported(type)) || "video/webm"
+
+      const recorder = new MediaRecorder(combinedStream, { mimeType: supportedMime })
       const chunks: Blob[] = []
 
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data)
+        if (e.data && e.data.size > 0) chunks.push(e.data)
       }
 
       const recordPromise = new Promise<Blob>((resolve, reject) => {
         recorder.onstop = () => {
-          resolve(new Blob(chunks, { type: mimeType }))
+          cancelAnimationFrame(animId)
+          resolve(new Blob(chunks, { type: supportedMime }))
         }
-        recorder.onerror = reject
+        recorder.onerror = (err) => {
+          cancelAnimationFrame(animId)
+          reject(err)
+        }
       })
 
-      recorder.start()
-      await audio.play()
+      recorder.start(100)
+      bufferSource.start(0)
 
-      audio.onended = () => {
-        recorder.stop()
+      bufferSource.onended = () => {
+        setTimeout(() => {
+          if (recorder.state === "recording") {
+            recorder.stop()
+          }
+        }, 300)
       }
 
-      // Safety timeout after 30s
+      // Safety fallback timeout
       setTimeout(() => {
         if (recorder.state === "recording") {
           recorder.stop()
         }
-      }, 30000)
+      }, Math.max((audioDuration + 1) * 1000, 5000))
 
       const videoBlob = await recordPromise
+      const ext = supportedMime.includes("mp4") ? "mp4" : "webm"
       const videoUrl = URL.createObjectURL(videoBlob)
-      downloadDataUrl(videoUrl, mimeType === "video/mp4" ? "mp4" : "webm")
-    } catch {
-      setError("Video export requires audio permissions or wasn't supported on this device.")
+      downloadDataUrl(videoUrl, ext)
+
+      void audioCtx.close().catch(() => {})
+    } catch (err) {
+      console.error("Video export error:", err)
+      setError("Video export failed on this browser. Please try on Chrome/Edge or download PNG.")
     } finally {
       setVideoBusy(false)
     }
