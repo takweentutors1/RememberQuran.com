@@ -168,6 +168,9 @@ export function AyahCardDesigner({
     setVideoBusy(true)
     setError(null)
 
+    let animId: number | null = null
+    let audioCtx: AudioContext | null = null
+
     try {
       // 1. Render card image to Image element
       const pngUrl = await renderPng()
@@ -178,63 +181,109 @@ export function AyahCardDesigner({
         img.onerror = reject
       })
 
-      // 2. Fetch Verse Recitation Audio through local proxy to avoid CORS/tainting
+      // 2. Fetch Verse Recitation Audio
       const surahNum = card.surahId || Number(card.verseKey.split(":")[0]) || 1
       const ayahNum = card.startAyah || Number(card.verseKey.split(":")[1]?.split("–")[0]) || 1
       const audioUrl = `/api/media/audio?surah=${surahNum}&ayah=${ayahNum}`
 
-      const audioResponse = await fetch(audioUrl)
-      if (!audioResponse.ok) {
-        throw new Error("Could not fetch recitation audio.")
-      }
-      const audioArrayBuffer = await audioResponse.arrayBuffer()
-
-      // 3. Setup AudioContext and decode audio data
-      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-      const audioCtx = new AudioCtxClass()
-      if (audioCtx.state === "suspended") {
-        await audioCtx.resume()
-      }
-
-      const audioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer.slice(0))
-      const audioDuration = audioBuffer.duration
-
-      const bufferSource = audioCtx.createBufferSource()
-      bufferSource.buffer = audioBuffer
-
-      const dest = audioCtx.createMediaStreamDestination()
-      bufferSource.connect(dest)
-      bufferSource.connect(audioCtx.destination)
-
-      // 4. Setup canvas stream with active redraw loop
+      // 3. Setup canvas stream with continuous redraw loop
       const canvas = document.createElement("canvas")
       canvas.width = 1200
       canvas.height = 630
       const ctx = canvas.getContext("2d")!
       ctx.drawImage(img, 0, 0, 1200, 630)
 
-      let animId: number
       const drawLoop = () => {
         ctx.drawImage(img, 0, 0, 1200, 630)
         animId = requestAnimationFrame(drawLoop)
       }
       animId = requestAnimationFrame(drawLoop)
 
-      const canvasStream = canvas.captureStream(30)
-      const combinedStream = new MediaStream([
-        ...canvasStream.getVideoTracks(),
-        ...dest.stream.getAudioTracks(),
-      ])
+      const canvasStream = canvas.captureStream ? canvas.captureStream(30) : (canvas as unknown as { mozCaptureStream: (fps: number) => MediaStream }).mozCaptureStream(30)
 
-      const supportedMime = [
+      // 4. Setup Audio Stream (WebAudio destination or MediaElementSource)
+      let combinedStream: MediaStream
+      let durationSec = 10
+      let startPlay: () => Promise<void>
+      let onAudioEnd: (cb: () => void) => void
+
+      try {
+        const audioResponse = await fetch(audioUrl)
+        if (!audioResponse.ok) throw new Error("Audio fetch failed")
+        const audioArrayBuffer = await audioResponse.arrayBuffer()
+
+        const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        audioCtx = new AudioCtxClass()
+        if (audioCtx.state === "suspended") {
+          await audioCtx.resume()
+        }
+
+        const audioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer.slice(0))
+        durationSec = audioBuffer.duration || 10
+
+        const bufferSource = audioCtx.createBufferSource()
+        bufferSource.buffer = audioBuffer
+
+        const dest = audioCtx.createMediaStreamDestination()
+        bufferSource.connect(dest)
+        bufferSource.connect(audioCtx.destination)
+
+        combinedStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...dest.stream.getAudioTracks(),
+        ])
+
+        startPlay = async () => {
+          bufferSource.start(0)
+        }
+        onAudioEnd = (cb) => {
+          bufferSource.onended = cb
+        }
+      } catch (audioErr) {
+        console.warn("WebAudio decoding failed, falling back to direct Audio element stream", audioErr)
+        const audio = new Audio()
+        audio.crossOrigin = "anonymous"
+        audio.src = audioUrl
+
+        const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        audioCtx = new AudioCtxClass()
+        if (audioCtx.state === "suspended") {
+          await audioCtx.resume()
+        }
+
+        const source = audioCtx.createMediaElementSource(audio)
+        const dest = audioCtx.createMediaStreamDestination()
+        source.connect(dest)
+        source.connect(audioCtx.destination)
+
+        combinedStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...dest.stream.getAudioTracks(),
+        ])
+
+        startPlay = async () => {
+          await audio.play()
+        }
+        onAudioEnd = (cb) => {
+          audio.onended = cb
+        }
+      }
+
+      // 5. Select compatible MIME type
+      const mimeCandidates = [
         "video/webm;codecs=vp9,opus",
         "video/webm;codecs=vp8,opus",
         "video/webm",
         "video/mp4;codecs=avc1,mp4a.40.2",
         "video/mp4",
-      ].find((type) => MediaRecorder.isTypeSupported(type)) || "video/webm"
+      ]
+      const supportedMime =
+        typeof MediaRecorder !== "undefined" && typeof MediaRecorder.isTypeSupported === "function"
+          ? mimeCandidates.find((type) => MediaRecorder.isTypeSupported(type)) || ""
+          : ""
 
-      const recorder = new MediaRecorder(combinedStream, { mimeType: supportedMime })
+      const recorderOptions: MediaRecorderOptions = supportedMime ? { mimeType: supportedMime } : {}
+      const recorder = new MediaRecorder(combinedStream, recorderOptions)
       const chunks: Blob[] = []
 
       recorder.ondataavailable = (e) => {
@@ -243,43 +292,47 @@ export function AyahCardDesigner({
 
       const recordPromise = new Promise<Blob>((resolve, reject) => {
         recorder.onstop = () => {
-          cancelAnimationFrame(animId)
-          resolve(new Blob(chunks, { type: supportedMime }))
+          if (animId) cancelAnimationFrame(animId)
+          const actualType = supportedMime || recorder.mimeType || "video/webm"
+          resolve(new Blob(chunks, { type: actualType }))
         }
         recorder.onerror = (err) => {
-          cancelAnimationFrame(animId)
+          if (animId) cancelAnimationFrame(animId)
           reject(err)
         }
       })
 
       recorder.start(100)
-      bufferSource.start(0)
+      await startPlay()
 
-      bufferSource.onended = () => {
+      onAudioEnd(() => {
         setTimeout(() => {
           if (recorder.state === "recording") {
             recorder.stop()
           }
         }, 300)
-      }
+      })
 
-      // Safety fallback timeout
+      // Safety timeout after audio ends
       setTimeout(() => {
         if (recorder.state === "recording") {
           recorder.stop()
         }
-      }, Math.max((audioDuration + 1) * 1000, 5000))
+      }, Math.max((durationSec + 2) * 1000, 6000))
 
       const videoBlob = await recordPromise
-      const ext = supportedMime.includes("mp4") ? "mp4" : "webm"
+      const ext = (supportedMime || recorder.mimeType || "").includes("mp4") ? "mp4" : "webm"
       const videoUrl = URL.createObjectURL(videoBlob)
       downloadDataUrl(videoUrl, ext)
-
-      void audioCtx.close().catch(() => {})
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Video export error:", err)
-      setError("Video export failed on this browser. Please try on Chrome/Edge or download PNG.")
+      const msg = err instanceof Error ? err.message : String(err)
+      setError(`Video export error: ${msg}. Please try again or download PNG.`)
     } finally {
+      if (animId) cancelAnimationFrame(animId)
+      if (audioCtx) {
+        void audioCtx.close().catch(() => {})
+      }
       setVideoBusy(false)
     }
   }
