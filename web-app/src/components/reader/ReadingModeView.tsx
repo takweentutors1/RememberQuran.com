@@ -2,6 +2,7 @@
 
 import { Fragment, useMemo, useState } from "react"
 import type { Verse, Word, Chapter } from "@/types/quran"
+import { useChapters } from "@/context/ChaptersContext"
 import { useHighlightedWord } from "@/lib/playbackStore"
 import { ArabicWord } from "./ArabicWord"
 import { AyahEndMarker } from "./AyahEndMarker"
@@ -120,6 +121,8 @@ function SectionMarker({
 export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeViewProps) {
   const [selectedWord, setSelectedWord] = useState<{ word: Word; verseKey?: string } | null>(null)
   const [selectedAyah, setSelectedAyah] = useState<Verse | null>(null)
+  const chapters = useChapters()
+  const chaptersById = useMemo(() => new Map(chapters.map((c) => [c.id, c])), [chapters])
 
   // Group verses into authentic printed Mushaf pages and 15 lines per page
   const pages = useMemo(() => {
@@ -205,16 +208,26 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
 
         const isCenteredOpeningPage = page.pageNumber <= 2
 
+        // The real Madani mushaf's page header names whichever surah opens
+        // the page — not necessarily the surah this route was loaded for,
+        // since a short surah's neighbor can share the page.
+        const pageLeadSurahId = Number(page.verses[0]?.verse_key.split(":")[0])
+        const pageHeaderChapter = chaptersById.get(pageLeadSurahId) ?? chapter
+
         return (
           <MushafPageFrame
             key={page.pageNumber}
             pageNumber={page.pageNumber}
             juzNumber={page.juzNumber}
-            surahNameArabic={chapter?.name_arabic}
+            surahNameArabic={pageHeaderChapter?.name_arabic}
             marginBadges={marginBadges}
           >
-            {/* Surah Title Cartouche (Unwan) when Surah begins on this page */}
-            {page.hasSurahStart && chapter && (
+            {/* Surah Title Cartouche (Unwan) when Surah begins on this page.
+                Only for the centered opening pages (Fatihah / early Baqarah) —
+                those are always single-surah. Every other page's surah-start
+                cartouche is rendered inline, right before its own line, since
+                a shared page can start a surah mid-page. */}
+            {isCenteredOpeningPage && page.hasSurahStart && chapter && (
               <div className="w-full mb-3">
                 <SurahHeaderCartouche chapter={chapter} />
                 {/* For Surahs with bismillah_pre (Surahs 2-114 except 9) */}
@@ -254,18 +267,34 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                   const isLastLine = index === page.lines.length - 1
                   const isShortLastLine = isLastLine && words.length <= 5
 
+                  // A new surah always opens on a fresh printed line — never
+                  // mid-line — so this is enough to catch every surah start
+                  // on a shared page, not just the one this route loaded.
+                  const surahStart = words.find(
+                    ({ word, verse }) => verse.verse_number === 1 && word.position === 1,
+                  )
+                  const startingChapter = surahStart
+                    ? chaptersById.get(Number(surahStart.verse.verse_key.split(":")[0]))
+                    : null
+
                   return (
-                    <div
-                      key={lineNumber}
-                      data-line-number={lineNumber}
-                      className={cn(
-                        "w-full flex items-center leading-none",
-                        isShortLastLine
-                          ? "justify-center gap-4 sm:gap-6"
-                          : "justify-between",
-                        "text-[1.36rem] sm:text-[1.55rem] md:text-[1.75rem]",
+                    <Fragment key={lineNumber}>
+                      {startingChapter && (
+                        <div className="w-full mb-3">
+                          <SurahHeaderCartouche chapter={startingChapter} />
+                          {startingChapter.bismillah_pre && <BismillahHeader />}
+                        </div>
                       )}
-                    >
+                      <div
+                        data-line-number={lineNumber}
+                        className={cn(
+                          "w-full flex items-center leading-none",
+                          isShortLastLine
+                            ? "justify-center gap-4 sm:gap-6"
+                            : "justify-between",
+                          "text-[1.36rem] sm:text-[1.55rem] md:text-[1.75rem]",
+                        )}
+                      >
                       {words.map(({ word, verse }) => {
                         const isFirstWordOfAyah =
                           word.position === 1 ||
@@ -306,7 +335,8 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                           </span>
                         )
                       })}
-                    </div>
+                      </div>
+                    </Fragment>
                   )
                 })
               )}

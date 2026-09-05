@@ -42,6 +42,22 @@ export async function GET(request: NextRequest) {
       return v.qpc_uthmani_hafs || (qpcWords.length ? qpcWords.join(" ") : v.text_uthmani)
     })
 
+    // Per-word breakdown for the video export's word-by-word highlight —
+    // `position` matches the wordPosition in QDC's audio segment timings
+    // (see src/types/audio.ts), so this is the join key between text and audio.
+    // "end" entries are the ayah-number ornament glyph, not spoken words —
+    // kept so the marker still renders, but excluded from highlight timing.
+    const words = verses.map((v) => ({
+      verseNumber: v.verse_number,
+      words: v.words
+        .filter((w) => w.char_type_name === "word" || w.char_type_name === "end")
+        .map((w) => ({
+          position: w.position,
+          text: w.qpc_uthmani_hafs || w.text_uthmani,
+          isEndMarker: w.char_type_name === "end",
+        })),
+    }))
+
     const translations = verses.map((v) => {
       const t =
         v.translations.find(
@@ -54,7 +70,8 @@ export async function GET(request: NextRequest) {
 
     return Response.json({
       verseKey: displayKey,
-      arabic: arabics.join(" ۝ "),
+      arabic: arabics.join(" "),
+      words,
       translation: translations.join(" "),
       surahName: chapter?.name_simple ?? `Surah ${surahId}`,
       surahArabic: chapter?.name_arabic ?? "",

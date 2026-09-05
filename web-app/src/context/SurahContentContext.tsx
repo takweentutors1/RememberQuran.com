@@ -115,9 +115,17 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
               fetchPage(id, i + 2).then((r) => r.verses),
             ),
           )
-          merged = [...first.verses, ...rest.flat()].sort(
-            (a, b) => a.verse_number - b.verse_number,
-          )
+          // Sort by mushaf page, then verse_key — not raw verse_number alone.
+          // Boundary pages can carry a neighboring surah's verses (see
+          // withPageBoundaries in the API route), whose verse_number resets
+          // to 1 just like this surah's own, so a verse_number-only sort
+          // would interleave them.
+          merged = [...first.verses, ...rest.flat()].sort((a, b) => {
+            if (a.page_number !== b.page_number) return a.page_number - b.page_number
+            const [aSurah, aAyah] = a.verse_key.split(":").map(Number)
+            const [bSurah, bAyah] = b.verse_key.split(":").map(Number)
+            return aSurah !== bSurah ? aSurah - bSurah : aAyah - bAyah
+          })
         }
 
         const complete: SurahPayload = {

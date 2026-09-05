@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Check, Clipboard, Download, ImageIcon, Share2, Video, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,11 +16,25 @@ import {
   truncateText,
 } from "@/lib/media/card-presets"
 import { parseVerseKey } from "@/lib/quran/verse-key"
+import { getChapterAudio } from "@/lib/audioApi"
+import { DEFAULT_RECITER_ID, getReciter } from "@/lib/audioSources"
+import { sanitizeTimings } from "@/lib/wordSync"
 import { cn } from "@/lib/utils"
 
 interface AyahCardDesignerProps {
   initialVerse?: string
   initialPreset?: string
+}
+
+interface AyahCardWord {
+  position: number
+  text: string
+  isEndMarker: boolean
+}
+
+interface AyahCardVerseWords {
+  verseNumber: number
+  words: AyahCardWord[]
 }
 
 interface AyahCardData {
@@ -32,6 +46,19 @@ interface AyahCardData {
   surahId?: number
   startAyah?: number
   endAyah?: number
+  words?: AyahCardVerseWords[]
+}
+
+interface FlatWord extends AyahCardWord {
+  verseNumber: number
+}
+
+/** Highlight-eligible words in verse/position order, dropping ayah-number markers. */
+function flattenWords(card: AyahCardData | null): FlatWord[] {
+  if (!card?.words) return []
+  return card.words.flatMap((v) =>
+    v.words.map((w) => ({ ...w, verseNumber: v.verseNumber })),
+  )
 }
 
 function arabicSizeClass(length: number) {
@@ -39,6 +66,101 @@ function arabicSizeClass(length: number) {
   if (length > 180) return "text-[3.4cqw]"
   if (length > 100) return "text-[4cqw]"
   return "text-[5.2cqw]"
+}
+
+interface ActiveSegment {
+  globalIndex: number
+  /** ms from the start of the combined (concatenated) export audio */
+  start: number
+  end: number
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
+function setWordHighlighted(
+  el: HTMLSpanElement | null | undefined,
+  active: boolean,
+  accentColor: string,
+) {
+  if (!el) return
+  if (active) {
+    el.style.backgroundColor = `${accentColor}40`
+    el.style.color = accentColor
+    el.style.boxShadow = `0 0 0 0.15em ${accentColor}40`
+  } else {
+    el.style.backgroundColor = ""
+    el.style.color = ""
+    el.style.boxShadow = ""
+  }
+}
+
+/** Sample-copy concat — buffers come from the same reciter/pipeline so a
+ * shared sample rate is expected; no resampling attempted. */
+function concatAudioBuffers(ctx: AudioContext, buffers: AudioBuffer[]): AudioBuffer {
+  const numberOfChannels = Math.max(...buffers.map((b) => b.numberOfChannels))
+  const sampleRate = buffers[0].sampleRate
+  const totalLength = buffers.reduce((sum, b) => sum + b.length, 0)
+  const out = ctx.createBuffer(numberOfChannels, totalLength, sampleRate)
+  let offset = 0
+  for (const b of buffers) {
+    for (let ch = 0; ch < numberOfChannels; ch++) {
+      out.getChannelData(ch).set(b.getChannelData(ch < b.numberOfChannels ? ch : 0), offset)
+    }
+    offset += b.length
+  }
+  return out
+}
+
+/**
+ * Word-highlight timeline for the video export, reusing the same QDC
+ * chapter-timing segments the reader's listen mode syncs to (see
+ * src/lib/wordSync.ts). Best-effort: any failure (unsupported reciter,
+ * network) just means the video exports without highlighting.
+ */
+async function buildActiveSegments(
+  surahId: number,
+  verseNumbers: number[],
+  verseBuffers: AudioBuffer[],
+  flatWords: FlatWord[],
+): Promise<ActiveSegment[]> {
+  if (!getReciter(DEFAULT_RECITER_ID).hasWordTiming || flatWords.length === 0) return []
+  try {
+    const chapterFile = await getChapterAudio(DEFAULT_RECITER_ID, surahId)
+    const cleanTimings = sanitizeTimings(chapterFile.verse_timings)
+    const wordIndex = new Map<string, number>()
+    flatWords.forEach((w, i) => {
+      if (!w.isEndMarker) wordIndex.set(`${w.verseNumber}:${w.position}`, i)
+    })
+
+    const segments: ActiveSegment[] = []
+    let cumulativeMs = 0
+    verseNumbers.forEach((vn, i) => {
+      const timing = cleanTimings.find((t) => t.verseNumber === vn)
+      if (timing) {
+        for (const [pos, segStart, segEnd] of timing.segments) {
+          const globalIndex = wordIndex.get(`${vn}:${pos}`)
+          if (globalIndex === undefined) continue
+          segments.push({
+            globalIndex,
+            start: cumulativeMs + Math.max(0, segStart - timing.from),
+            end: cumulativeMs + Math.max(0, segEnd - timing.from),
+          })
+        }
+      }
+      cumulativeMs += verseBuffers[i].duration * 1000
+    })
+    return segments.sort((a, b) => a.start - b.start)
+  } catch (err) {
+    console.warn("Word timing unavailable, exporting without highlight", err)
+    return []
+  }
 }
 
 function supportsFileShare() {
@@ -70,8 +192,11 @@ export function AyahCardDesigner({
   const [canNativeShare, setCanNativeShare] = useState(false)
   const [copied, setCopied] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+  const videoFrameRef = useRef<HTMLDivElement>(null)
+  const wordRefs = useRef<(HTMLSpanElement | null)[]>([])
 
   const colors = getMediaPreset(preset)
+  const flatWords = useMemo(() => flattenWords(card), [card])
 
   useEffect(() => {
     queueMicrotask(() => setCanNativeShare(supportsFileShare()))
@@ -163,8 +288,15 @@ export function AyahCardDesigner({
     }
   }
 
+  async function renderVideoFramePng() {
+    if (!videoFrameRef.current) throw new Error("Video frame is not ready")
+    await document.fonts.ready
+    const { toPng } = await import("html-to-image")
+    return toPng(videoFrameRef.current, { cacheBust: true, pixelRatio: 1 })
+  }
+
   async function exportVideo() {
-    if (!cardRef.current || !card) return
+    if (!videoFrameRef.current || !card) return
     setVideoBusy(true)
     setError(null)
 
@@ -172,78 +304,113 @@ export function AyahCardDesigner({
     let audioCtx: AudioContext | null = null
 
     try {
-      // 1. Render card image to Image element
-      const pngUrl = await renderPng()
-      const img = new Image()
-      img.src = pngUrl
-      await new Promise((resolve, reject) => {
-        img.onload = () => resolve(true)
-        img.onerror = reject
-      })
+      // 1. Full-bleed frame (no card chrome), no highlight yet
+      let latestImg = await loadImage(await renderVideoFramePng())
 
-      // 2. Fetch Verse Recitation Audio
-      const surahNum = card.surahId || Number(card.verseKey.split(":")[0]) || 1
-      const ayahNum = card.startAyah || Number(card.verseKey.split(":")[1]?.split("–")[0]) || 1
-      const audioUrl = `/api/media/audio?surah=${surahNum}&ayah=${ayahNum}`
-
-      // 3. Setup canvas stream with continuous redraw loop
+      // 2. Canvas stream with continuous redraw loop. onFrameTick is wired up
+      //    below once we know whether word-highlight timing is available.
       const canvas = document.createElement("canvas")
       canvas.width = 1200
       canvas.height = 630
       const ctx = canvas.getContext("2d")!
-      ctx.drawImage(img, 0, 0, 1200, 630)
+      ctx.drawImage(latestImg, 0, 0, 1200, 630)
 
+      let onFrameTick: (() => void) | null = null
       const drawLoop = () => {
-        ctx.drawImage(img, 0, 0, 1200, 630)
+        ctx.drawImage(latestImg, 0, 0, 1200, 630)
+        onFrameTick?.()
         animId = requestAnimationFrame(drawLoop)
       }
       animId = requestAnimationFrame(drawLoop)
 
       const canvasStream = canvas.captureStream ? canvas.captureStream(30) : (canvas as unknown as { mozCaptureStream: (fps: number) => MediaStream }).mozCaptureStream(30)
 
-      // 4. Setup Audio Stream (WebAudio destination or MediaElementSource)
+      // 3. Verse range for this card — audio is fetched per-verse (small,
+      //    reliable clips) and concatenated so multi-verse cards get full
+      //    audio coverage, not just the first ayah.
+      const surahId = card.surahId || Number(card.verseKey.split(":")[0]) || 1
+      const startAyah = card.startAyah || Number(card.verseKey.split(":")[1]?.split("–")[0]) || 1
+      const endAyah = card.endAyah || startAyah
+      const verseNumbers = Array.from({ length: endAyah - startAyah + 1 }, (_, i) => startAyah + i)
+
+      // 4. Setup Audio Stream (concatenated WebAudio buffers + highlight, or
+      //    single-clip MediaElementSource fallback with no highlight)
       let combinedStream: MediaStream
       let durationSec = 10
       let startPlay: () => Promise<void>
       let onAudioEnd: (cb: () => void) => void
 
       try {
-        const audioResponse = await fetch(audioUrl)
-        if (!audioResponse.ok) throw new Error("Audio fetch failed")
-        const audioArrayBuffer = await audioResponse.arrayBuffer()
-
         const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
         audioCtx = new AudioCtxClass()
         if (audioCtx.state === "suspended") {
           await audioCtx.resume()
         }
 
-        const audioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer.slice(0))
-        durationSec = audioBuffer.duration || 10
+        const verseBuffers = await Promise.all(
+          verseNumbers.map(async (vn) => {
+            const res = await fetch(`/api/media/audio?surah=${surahId}&ayah=${vn}`)
+            if (!res.ok) throw new Error("Audio fetch failed")
+            const arrayBuffer = await res.arrayBuffer()
+            return audioCtx!.decodeAudioData(arrayBuffer.slice(0))
+          }),
+        )
+        const combinedBuffer =
+          verseBuffers.length === 1 ? verseBuffers[0] : concatAudioBuffers(audioCtx, verseBuffers)
+        durationSec = combinedBuffer.duration || 10
+
+        const activeSegments = await buildActiveSegments(surahId, verseNumbers, verseBuffers, flatWords)
 
         const bufferSource = audioCtx.createBufferSource()
-        bufferSource.buffer = audioBuffer
-
+        bufferSource.buffer = combinedBuffer
         const dest = audioCtx.createMediaStreamDestination()
         bufferSource.connect(dest)
-        bufferSource.connect(audioCtx.destination)
 
         combinedStream = new MediaStream([
           ...canvasStream.getVideoTracks(),
           ...dest.stream.getAudioTracks(),
         ])
 
+        let activeIndex = -1
+        let snapshotInFlight = false
+        let startTimestamp = 0
+
+        const updateHighlight = async (nextIndex: number) => {
+          if (snapshotInFlight || nextIndex === activeIndex) return
+          snapshotInFlight = true
+          const previousIndex = activeIndex
+          activeIndex = nextIndex
+          try {
+            setWordHighlighted(wordRefs.current[previousIndex], false, colors.accent)
+            setWordHighlighted(wordRefs.current[nextIndex], true, colors.accent)
+            latestImg = await loadImage(await renderVideoFramePng())
+          } catch {
+            // Keep showing the previous frame — not worth aborting the export over.
+          } finally {
+            snapshotInFlight = false
+          }
+        }
+
+        if (activeSegments.length > 0) {
+          onFrameTick = () => {
+            const elapsedMs = (audioCtx!.currentTime - startTimestamp) * 1000
+            const seg = activeSegments.find((s) => elapsedMs >= s.start && elapsedMs < s.end)
+            void updateHighlight(seg ? seg.globalIndex : -1)
+          }
+        }
+
         startPlay = async () => {
+          startTimestamp = audioCtx!.currentTime
           bufferSource.start(0)
         }
         onAudioEnd = (cb) => {
           bufferSource.onended = cb
         }
       } catch (audioErr) {
-        console.warn("WebAudio decoding failed, falling back to direct Audio element stream", audioErr)
+        console.warn("Multi-verse WebAudio pipeline failed, falling back to single-clip Audio element", audioErr)
         const audio = new Audio()
         audio.crossOrigin = "anonymous"
-        audio.src = audioUrl
+        audio.src = `/api/media/audio?surah=${surahId}&ayah=${startAyah}`
 
         const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
         audioCtx = new AudioCtxClass()
@@ -254,7 +421,6 @@ export function AyahCardDesigner({
         const source = audioCtx.createMediaElementSource(audio)
         const dest = audioCtx.createMediaStreamDestination()
         source.connect(dest)
-        source.connect(audioCtx.destination)
 
         combinedStream = new MediaStream([
           ...canvasStream.getVideoTracks(),
@@ -330,6 +496,7 @@ export function AyahCardDesigner({
       setError(`Video export error: ${msg}. Please try again or download PNG.`)
     } finally {
       if (animId) cancelAnimationFrame(animId)
+      wordRefs.current.forEach((el) => setWordHighlighted(el, false, colors.accent))
       if (audioCtx) {
         void audioCtx.close().catch(() => {})
       }
@@ -498,6 +665,69 @@ export function AyahCardDesigner({
           </div>
         )}
       </div>
+
+      {/* Off-screen render target for video export: full-bleed background (no
+          card chrome) with per-word spans so exportVideo can highlight the
+          currently-recited word, matching the reader's listen-mode look. */}
+      {card && (
+        <div
+          ref={videoFrameRef}
+          aria-hidden
+          className="pointer-events-none fixed left-[-9999px] top-0 flex h-[630px] w-[1200px] flex-col justify-between p-[5cqw] @container"
+          style={{
+            background: colors.background,
+            color: colors.foreground,
+          }}
+        >
+          <div className="flex min-h-0 flex-1 flex-col justify-center gap-[2.2cqw]">
+            <p
+              dir="rtl"
+              lang="ar"
+              className={`font-uthmani text-center leading-[1.8] ${arabicSizeClass(card.arabic.length)}`}
+            >
+              {flatWords.map((w, i) => (
+                <span key={i}>
+                  <span
+                    ref={(el) => {
+                      wordRefs.current[i] = el
+                    }}
+                    data-word-idx={i}
+                    style={{ borderRadius: "0.2em", transition: "background-color 120ms ease, color 120ms ease" }}
+                  >
+                    {w.text}
+                  </span>{" "}
+                </span>
+              ))}
+            </p>
+            <p
+              className="mx-auto max-w-[88%] text-center font-serif text-[2.15cqw] leading-[1.45]"
+              style={{ color: colors.muted }}
+            >
+              {truncateText(card.translation, 300)}
+            </p>
+          </div>
+
+          <div
+            className="mt-[2cqw] flex items-end justify-between border-t pt-[2cqw]"
+            style={{ borderColor: `${colors.accent}55` }}
+          >
+            <div className="flex flex-col gap-[0.2cqw]">
+              <p className="font-serif text-[1.9cqw]" style={{ color: colors.accent }}>
+                {card.surahName}
+              </p>
+              <p className="text-[1.55cqw]" style={{ color: colors.muted }}>
+                Ayah {card.verseKey}
+              </p>
+            </div>
+            <div className="flex items-center gap-[0.7cqw]">
+              <span className="size-[1.1cqw] rounded-full" style={{ backgroundColor: colors.accent }} />
+              <p className="font-serif text-[1.55cqw]" style={{ color: colors.muted }}>
+                Remember Quran
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <p className="text-sm text-destructive" role="alert">

@@ -416,6 +416,16 @@ h1, h2, h3, .font-serif {
   direction: rtl;
 }
 
+/* Silent-alif mark (U+06DF) — UthmanicHafs draws this as a near-full-size
+   base glyph instead of a small combining mark. Shrunk and raised here;
+   see src/lib/quran/uthmani-text.tsx for where it's safe to isolate. */
+.silent-alif-mark {
+  display: inline-block;
+  font-size: 0.42em;
+  line-height: 0;
+  vertical-align: 0.6em;
+}
+
 /* Arabic is the foremost layer on every page — one step darker than body
    text in light mode, one step brighter in dark. Tajweed spans override
    `color` on their own children, so this is safe as a base. */

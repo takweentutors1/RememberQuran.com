@@ -248,6 +248,26 @@ export const getAllVerses = cache(async (
   return verses
 })
 
+/**
+ * All verses on one Madani-mushaf page (by King Fahd Complex page_number),
+ * which can span more than one surah — short surahs routinely share a page.
+ * Arabic + word data only (no translation merge): this exists purely to
+ * complete the reading mode's 15-line page rendering at surah boundaries,
+ * which never shows translations.
+ */
+export const getVersesByPage = cache(async (pageNumber: number): Promise<Verse[]> => {
+  const params = new URLSearchParams({
+    words: "true",
+    word_fields: WORD_FIELDS,
+    fields: VERSE_FIELDS,
+    per_page: "50",
+  })
+  const data = await apiFetch<VersesResponse>(
+    `${VERSES_BASE_URL}/verses/by_page/${pageNumber}?${params}`,
+  )
+  return data.verses.map(sanitizeVerse).map(slimVerse)
+})
+
 /** Single verse by key e.g. "2:255" */
 export const getVerseByKey = cache(async (
   verseKey: string,

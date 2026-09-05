@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { BookOpenText, ImagePlus } from "lucide-react"
 import { getAyahOfTheDay } from "@/lib/quran/ayah-of-the-day"
+import { renderUthmaniText } from "@/lib/quran/uthmani-text"
 import { cn } from "@/lib/utils"
 
 export function AyahOfTheDayCard() {
@@ -21,7 +22,7 @@ export function AyahOfTheDayCard() {
           dir="rtl"
           lang="ar"
         >
-          {ayah.arabic}
+          {renderUthmaniText(ayah.arabic)}
         </p>
 
         <p className="mt-8 font-serif text-lg font-light leading-relaxed text-muted-foreground">
