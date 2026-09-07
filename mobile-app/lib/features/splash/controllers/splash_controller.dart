@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../firebase_options.dart';
@@ -40,6 +41,21 @@ class SplashController extends GetxController {
       // Step 1: Firebase
       loadingText.value = 'Bismillah... Starting with the Name of Allah';
       loadingProgress.value = 0.2;
+
+      // google_fonts fetches these over the network on first use and shows
+      // a system-font fallback in the meantime — normally invisible, but the
+      // fallback can be missing glyphs for characters the real font covers
+      // (reported as broken-glyph boxes in translation text on a fresh
+      // install, before Newsreader had a chance to finish downloading and
+      // cache). Kicking the fetch off now, in parallel with the rest of
+      // this sequence, and waiting on it before Step 5 navigates away means
+      // every one of these fonts is already cached by the time any screen
+      // tries to render with it.
+      GoogleFonts.newsreader();
+      GoogleFonts.publicSans();
+      GoogleFonts.notoNaskhArabic();
+      GoogleFonts.jetBrainsMono();
+
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
@@ -98,6 +114,15 @@ class SplashController extends GetxController {
       // Step 5: Final Check & Navigate
       loadingText.value = 'Alhamdulillah, ready to begin.';
       loadingProgress.value = 1.0;
+
+      // Best-effort: a slow/absent connection shouldn't hang app launch
+      // waiting on fonts that will just fall back gracefully anyway — this
+      // only needs to cover the common case where the network is fine but
+      // wasn't quite done by the time a screen first renders.
+      try {
+        await GoogleFonts.pendingFonts().timeout(const Duration(seconds: 5));
+      } catch (_) {}
+
       final prefs = await SharedPreferences.getInstance();
       final hasSeenOnboarding = prefs.getBool(OnboardingView.prefsKey) ?? false;
       
