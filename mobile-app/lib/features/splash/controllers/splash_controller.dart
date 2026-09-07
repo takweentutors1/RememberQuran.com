@@ -22,6 +22,7 @@ import '../../search/controllers/search_controller.dart' as search;
 import '../../notifications/controllers/notifications_controller.dart';
 import '../../shortcuts/controllers/shortcuts_controller.dart';
 import '../../reader/controllers/reader_settings_controller.dart';
+import '../../../shared/controllers/connectivity_controller.dart';
 
 class SplashController extends GetxController {
   final RxDouble loadingProgress = 0.0.obs;
@@ -82,6 +83,7 @@ class SplashController extends GetxController {
       loadingText.value = 'Setting up your personal journey...';
       loadingProgress.value = 0.8;
       Get.put<AudioController>(AudioController(), permanent: true);
+      Get.put<ConnectivityController>(ConnectivityController(), permanent: true);
       Get.put<AuthController>(AuthController(), permanent: true);
       Get.put<NotesController>(NotesController(), permanent: true);
       // SearchView lives permanently in AppScaffold's IndexedStack (the
