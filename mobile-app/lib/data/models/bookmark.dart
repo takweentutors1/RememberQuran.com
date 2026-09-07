@@ -29,10 +29,17 @@ class Bookmark {
   final String collectionId;
   final DateTime createdAt;
 
+  /// Manual position within its collection, set once the user first
+  /// reorders that collection — null until then, so existing bookmarks
+  /// keep sorting by [createdAt] (unchanged behaviour) until a reorder
+  /// backfills an index for every bookmark in the collection.
+  final int? sortIndex;
+
   Bookmark({
     required this.verseKey,
     required this.collectionId,
     required this.createdAt,
+    this.sortIndex,
   });
 
   factory Bookmark.fromSnapshot(DocumentSnapshot snap) {
@@ -41,6 +48,7 @@ class Bookmark {
       verseKey: snap.id,
       collectionId: data['collectionId'] as String? ?? '',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0),
+      sortIndex: data['sortIndex'] as int?,
     );
   }
 }

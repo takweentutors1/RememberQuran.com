@@ -77,106 +77,117 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
               );
             }
 
-            return GridView.builder(
+            // Drag-to-reorder needs a single column — matches how the grid
+            // above already collapses to one column below 380px anyway.
+            return ReorderableListView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 500,
-                mainAxisExtent: 92,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-              ),
               itemCount: bookmarks.length,
+              onReorder: _controller.reorderCurrentCollection,
               itemBuilder: (context, index) {
                 final bookmark = bookmarks[index];
                 final theme = Theme.of(context);
                 final nurColors = theme.extension<NurColorsExtension>();
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      // Routes.READER referenced here previously doesn't
-                      // exist in this app's route table — this mirrors the
-                      // pattern search results already use to jump to a
-                      // specific ayah (SearchController.onResultTapped).
-                      final parts = bookmark.verseKey.split(':');
-                      if (parts.length != 2) return;
-                      Get.toNamed(
-                        Routes.SURAH_AYAH
-                            .replaceAll(':surahId', parts[0])
-                            .replaceAll(':ayahId', parts[1]),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color:
-                            nurColors?.surfaceSunk ?? theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: theme.colorScheme.outline.withValues(
-                            alpha: 0.1,
+                return Padding(
+                  key: ValueKey(bookmark.verseKey),
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        // Routes.READER referenced here previously doesn't
+                        // exist in this app's route table — this mirrors the
+                        // pattern search results already use to jump to a
+                        // specific ayah (SearchController.onResultTapped).
+                        final parts = bookmark.verseKey.split(':');
+                        if (parts.length != 2) return;
+                        Get.toNamed(
+                          Routes.SURAH_AYAH
+                              .replaceAll(':surahId', parts[0])
+                              .replaceAll(':ayahId', parts[1]),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color:
+                              nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.1,
+                            ),
                           ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.1,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                shape: BoxShape.circle,
                               ),
-                              shape: BoxShape.circle,
+                              child: Icon(
+                                Icons.bookmark,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.bookmark,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  bookmark.verseKey,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    bookmark.verseKey,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  bookmark.createdAt.toString(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: nurColors?.foregroundSubtle,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    bookmark.createdAt.toString(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: nurColors?.foregroundSubtle,
+                                    ),
                                   ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.drive_file_move_outline),
+                              tooltip: 'Move to Collection',
+                              onPressed: () => _moveBookmark(
+                                context,
+                                bookmark.verseKey,
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: theme.colorScheme.error,
+                              ),
+                              tooltip: 'Delete Bookmark',
+                              onPressed: () => _confirmDeleteBookmark(
+                                context,
+                                bookmark.verseKey,
+                              ),
+                            ),
+                            ReorderableDragStartListener(
+                              index: index,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: Icon(
+                                  Icons.drag_handle,
+                                  color: nurColors?.foregroundSubtle,
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.drive_file_move_outline),
-                            tooltip: 'Move to Collection',
-                            onPressed: () => _moveBookmark(
-                              context,
-                              bookmark.verseKey,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: theme.colorScheme.error,
-                            ),
-                            tooltip: 'Delete Bookmark',
-                            onPressed: () => _confirmDeleteBookmark(
-                              context,
-                              bookmark.verseKey,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

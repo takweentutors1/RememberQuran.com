@@ -192,6 +192,30 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
     }
   }
 
+  /// Applies a drag-to-reorder from a [ReorderableListView] to the
+  /// currently-viewed collection: updates the local list immediately so the
+  /// drag feels instant, then persists a fresh sortIndex for every bookmark
+  /// in the collection.
+  Future<void> reorderCurrentCollection(int oldIndex, int newIndex) async {
+    final userId = _auth.firebaseUser.value?.uid;
+    if (userId == null) return;
+
+    if (newIndex > oldIndex) newIndex -= 1;
+    final list = currentCollectionBookmarks.toList();
+    final moved = list.removeAt(oldIndex);
+    list.insert(newIndex, moved);
+    currentCollectionBookmarks.assignAll(list);
+
+    try {
+      await _bookmarksRepo.reorderBookmarks(userId, list.map((b) => b.verseKey).toList());
+    } catch (e) {
+      AppFeedback.showError('We couldn\'t save the new order. Please try again.');
+      if (currentCollection.value != null) {
+        await loadBookmarksForCollection(currentCollection.value!.id);
+      }
+    }
+  }
+
   Future<void> deleteBookmark(String verseKey) async {
     final userId = _auth.firebaseUser.value?.uid;
     if (userId == null) return;

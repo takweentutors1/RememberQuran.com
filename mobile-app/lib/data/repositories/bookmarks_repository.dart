@@ -187,7 +187,32 @@ class BookmarksRepository {
     }
 
     final snap = await query.orderBy('createdAt', descending: true).limit(MAX_BOOKMARKS).get();
-    return snap.docs.map((d) => Bookmark.fromSnapshot(d)).toList();
+    final bookmarks = snap.docs.map((d) => Bookmark.fromSnapshot(d)).toList();
+
+    // Only switch to manual order once the user has actually reordered this
+    // collection at least once (i.e. some bookmark carries a sortIndex).
+    // Until then this stays a no-op and the createdAt-desc order above is
+    // unchanged. Bookmarks without an index (new ones added after the last
+    // reorder) sort to the end, in their original createdAt order.
+    if (bookmarks.any((b) => b.sortIndex != null)) {
+      const unordered = 1 << 30;
+      bookmarks.sort((a, b) => (a.sortIndex ?? unordered).compareTo(b.sortIndex ?? unordered));
+    }
+
+    return bookmarks;
+  }
+
+  /// Persists a manual order for every bookmark in a collection — called
+  /// after a drag-to-reorder. [orderedVerseKeys] must be the collection's
+  /// full bookmark list in its new order so every doc gets a fresh,
+  /// contiguous sortIndex.
+  Future<void> reorderBookmarks(String userId, List<String> orderedVerseKeys) async {
+    final ref = _bookmarksRef(userId);
+    final batch = _db.batch();
+    for (var i = 0; i < orderedVerseKeys.length; i++) {
+      batch.update(ref.doc(orderedVerseKeys[i]), {'sortIndex': i});
+    }
+    await batch.commit();
   }
 
   Future<int> countBookmarks(String userId) async {
