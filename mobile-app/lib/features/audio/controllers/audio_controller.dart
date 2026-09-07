@@ -166,14 +166,26 @@ class AudioController extends GetxController {
         onProgress: (progress) => rxDownloadProgress[key] = progress,
       );
       rxDownloadedKeys.add(key);
+    } catch (e) {
+      // Callers fire this without awaiting (radio_view.dart's download tap),
+      // so an uncaught failure here previously had zero user-visible signal
+      // — the progress indicator just quietly vanished in the finally block
+      // below with no error, no retry prompt, nothing.
+      AppFeedback.showError(
+        'Unable to download this surah. Please check your connection and try again.',
+      );
     } finally {
       rxDownloadProgress.remove(key);
     }
   }
 
   Future<void> deleteDownload(int reciterId, int chapterId) async {
-    await _audioRepository.deleteDownload(reciterId, chapterId);
-    rxDownloadedKeys.remove(downloadKey(reciterId, chapterId));
+    try {
+      await _audioRepository.deleteDownload(reciterId, chapterId);
+      rxDownloadedKeys.remove(downloadKey(reciterId, chapterId));
+    } catch (e) {
+      AppFeedback.showError('Unable to remove this download. Please try again.');
+    }
   }
 
   String _availabilityPrefsKey(int reciterId) => 'rq_unavailable_surahs_$reciterId';
