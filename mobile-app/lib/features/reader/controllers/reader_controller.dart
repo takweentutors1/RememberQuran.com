@@ -504,6 +504,13 @@ class ReaderController extends GetxController {
         ayahId,
       );
       if (res.ok) {
+        // Marking memorised only ever wrote the memorisation record — it
+        // never told Hifz Mode's hide/reveal state about it, so a just
+        // -memorised ayah inside the active hide range stayed blurred
+        // until manually tapped.
+        if (Get.isRegistered<ReaderSettingsController>()) {
+          Get.find<ReaderSettingsController>().revealAyah(verseKey);
+        }
         AppFeedback.showSuccess('Ayah marked as memorised!');
       } else {
         memorisedVerses.remove(verseKey); // Rollback
@@ -535,6 +542,9 @@ class ReaderController extends GetxController {
     final total = to - from + 1;
     int successCount = 0;
     bool limitReached = false;
+    final settings = Get.isRegistered<ReaderSettingsController>()
+        ? Get.find<ReaderSettingsController>()
+        : null;
 
     try {
       for (int i = from; i <= to; i++) {
@@ -548,12 +558,18 @@ class ReaderController extends GetxController {
           );
           if (res.ok) {
             memorisedVerses.add(verseKey);
+            // Same reveal-on-mark fix as toggleMemorised — see there for why.
+            settings?.revealAyah(verseKey);
             successCount++;
           } else if (res.error == 'limit-reached') {
             limitReached = true;
             break;
           }
         } else {
+          // Already memorised (e.g. from before this reveal fix existed) —
+          // still worth revealing so re-running this action on an old range
+          // fixes ayahs stuck hidden from before, not just newly-marked ones.
+          settings?.revealAyah(verseKey);
           successCount++;
         }
         bulkMarkProgress.value = ((i - from + 1) / total * 100).round();
