@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import '../../../data/repositories/hifz_repository.dart';
+import '../../../data/repositories/quran_repository.dart';
 import '../../account/controllers/auth_controller.dart';
 
 class SurahProgress {
   final int surahId;
+  final String surahName;
   final int memorisedCount;
   final int totalCount;
-  
+
   double get percentage => totalCount > 0 ? memorisedCount / totalCount : 0.0;
-  
-  SurahProgress(this.surahId, this.memorisedCount, this.totalCount);
+
+  SurahProgress(this.surahId, this.surahName, this.memorisedCount, this.totalCount);
 }
 
 class JuzProgress {
@@ -25,7 +27,8 @@ class JuzProgress {
 
 class HifzController extends GetxController {
   final HifzRepository repository = HifzRepository();
-  
+  final QuranRepository _quranRepository = Get.find<QuranRepository>();
+
   final RxBool isLoading = true.obs;
   final RxList<MemorisedAyahRecord> memorisedAyahs = <MemorisedAyahRecord>[].obs;
   final RxList<MemorisedAyahRecord> dueReviews = <MemorisedAyahRecord>[].obs;
@@ -80,25 +83,36 @@ class HifzController extends GetxController {
       
       final due = await repository.getDueReviews(user.uid);
       dueReviews.assignAll(due);
-      
-      _calculateProgress(ayahs);
+
+      // Names come from the local Drift DB (seeded at splash), so this is a
+      // single fast local query, not a network round trip — previously the
+      // tracker only ever showed "Surah 2", never the actual surah name.
+      final chapters = await _quranRepository.getChapters();
+      final chapterNames = {for (final c in chapters) c.id: c.nameSimple};
+
+      _calculateProgress(ayahs, chapterNames);
     } finally {
       isLoading.value = false;
     }
   }
-  
-  void _calculateProgress(List<MemorisedAyahRecord> ayahs) {
+
+  void _calculateProgress(
+    List<MemorisedAyahRecord> ayahs,
+    Map<int, String> chapterNames,
+  ) {
     // 1. Calculate Surah Progress
     final Map<int, int> surahCounts = {};
     for (final ayah in ayahs) {
       surahCounts[ayah.surahId] = (surahCounts[ayah.surahId] ?? 0) + 1;
     }
-    
+
     final List<SurahProgress> sProgress = [];
     for (int i = 1; i <= 114; i++) {
       final total = HifzRepository.getAyahCount(i);
       final memorised = surahCounts[i] ?? 0;
-      sProgress.add(SurahProgress(i, memorised, total));
+      sProgress.add(
+        SurahProgress(i, chapterNames[i] ?? 'Surah $i', memorised, total),
+      );
     }
     surahProgress.assignAll(sProgress);
     
