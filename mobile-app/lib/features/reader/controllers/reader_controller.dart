@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../data/repositories/quran_repository.dart';
 import '../../../data/repositories/goals_repository.dart';
+import '../../../data/models/bookmark.dart';
 import '../../../data/repositories/bookmarks_repository.dart';
 import '../../../data/repositories/hifz_repository.dart';
 import '../../../data/datasources/local/quran_db.dart';
@@ -399,14 +400,34 @@ class ReaderController extends GetxController {
         verseKey,
         collectionId,
       );
-      if (res['ok'] == true) {
-        AppFeedback.showSuccess('Ayah successfully bookmarked!');
-      } else {
+      if (res['ok'] != true) {
         bookmarkedVerses.remove(verseKey); // Rollback
         AppFeedback.showError(
           'Unable to save this bookmark. Please try again.',
         );
+        return;
       }
+
+      // Local state can lag the server (e.g. it was bookmarked from another
+      // screen/session before this chapter's bookmark set was loaded), so
+      // `createBookmark` may have found the ayah already bookmarked instead
+      // of creating it. Re-running the "add" flow in that case must not
+      // pretend a fresh bookmark was made — either honour the collection the
+      // user just picked by moving it there, or say it's already saved.
+      if (res['created'] != true) {
+        final existing = res['bookmark'];
+        final alreadyInTarget = collectionId == null ||
+            (existing is Bookmark && existing.collectionId == collectionId);
+        if (alreadyInTarget) {
+          AppFeedback.showInfo('This ayah is already bookmarked.');
+        } else {
+          await _bookmarksRepo.moveBookmark(user.uid, verseKey, collectionId);
+          AppFeedback.showSuccess('Bookmark moved to the selected collection.');
+        }
+        return;
+      }
+
+      AppFeedback.showSuccess('Ayah successfully bookmarked!');
     }
   }
 

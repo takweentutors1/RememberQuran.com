@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/auth_controller.dart';
 import '../controllers/bookmarks_controller.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
 import '../../../shared/widgets/app_dialog.dart';
 import '../../../core/theme/app_colors.dart';
+import 'collection_picker_sheet.dart';
 
 class CollectionDetailsView extends StatefulWidget {
   const CollectionDetailsView({Key? key}) : super(key: key);
@@ -156,6 +158,14 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
                             ),
                           ),
                           IconButton(
+                            icon: const Icon(Icons.drive_file_move_outline),
+                            tooltip: 'Move to Collection',
+                            onPressed: () => _moveBookmark(
+                              context,
+                              bookmark.verseKey,
+                            ),
+                          ),
+                          IconButton(
                             icon: Icon(
                               Icons.delete_outline,
                               color: theme.colorScheme.error,
@@ -210,6 +220,17 @@ class _CollectionDetailsViewState extends State<CollectionDetailsView> {
         );
       },
     );
+  }
+
+  void _moveBookmark(BuildContext context, String verseKey) async {
+    final userId = Get.find<AuthController>().firebaseUser.value?.uid;
+    if (userId == null) return;
+
+    final collectionId = await CollectionPickerSheet.show(context, userId);
+    if (collectionId == null) return; // cancelled
+    if (collectionId == _controller.currentCollection.value?.id) return;
+
+    await _controller.moveBookmark(verseKey, collectionId);
   }
 
   void _confirmDeleteBookmark(BuildContext context, String verseKey) async {

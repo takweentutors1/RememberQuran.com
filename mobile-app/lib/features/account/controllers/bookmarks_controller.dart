@@ -126,7 +126,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
     if (res['ok'] == true) {
       await loadCollections();
     } else {
-      AppFeedback.showError('We couldn\'t create this collection. Please try again: ${res['error']}');
+      AppFeedback.showError(_collectionErrorMessage(res['error'], action: 'create'));
     }
   }
 
@@ -139,7 +139,7 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
       await loadCollections();
       AppFeedback.showSuccess('Collection removed. Its bookmarks have been moved to Favourites.');
     } else {
-      AppFeedback.showError('We couldn\'t delete this collection. Please try again: ${res['error']}');
+      AppFeedback.showError(_collectionErrorMessage(res['error'], action: 'delete'));
     }
   }
 
@@ -155,7 +155,40 @@ class BookmarksController extends GetxController with GetSingleTickerProviderSta
         await loadBookmarksForCollection(id);
       }
     } else {
-      AppFeedback.showError('We couldn\'t update the collection name. Please try again: ${res['error']}');
+      AppFeedback.showError(_collectionErrorMessage(res['error'], action: 'rename'));
+    }
+  }
+
+  // Repository error codes ('duplicate-name', 'limit-reached', ...) aren't
+  // fit for display — they used to be interpolated straight into the toast,
+  // showing users things like "Please try again: duplicate-name".
+  String _collectionErrorMessage(Object? code, {required String action}) {
+    switch (code) {
+      case 'duplicate-name':
+        return 'A collection with that name already exists.';
+      case 'limit-reached':
+        return 'You\'ve reached the collection limit.';
+      case 'is-default':
+        return 'The Favourites collection can\'t be deleted or renamed.';
+      case 'not-found':
+        return 'This collection no longer exists.';
+      default:
+        return 'We couldn\'t $action this collection. Please try again.';
+    }
+  }
+
+  Future<void> moveBookmark(String verseKey, String? collectionId) async {
+    final userId = _auth.firebaseUser.value?.uid;
+    if (userId == null) return;
+
+    final res = await _bookmarksRepo.moveBookmark(userId, verseKey, collectionId);
+    if (res['ok'] == true) {
+      if (currentCollection.value != null) {
+        await loadBookmarksForCollection(currentCollection.value!.id);
+      }
+      await loadCollections(); // To update counts
+    } else {
+      AppFeedback.showError('We couldn\'t move this bookmark. Please try again.');
     }
   }
 

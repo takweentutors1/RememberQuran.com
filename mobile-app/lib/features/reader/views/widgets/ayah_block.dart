@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../data/datasources/local/quran_db.dart';
 import '../../../../shared/widgets/animated_action_button.dart';
+import '../../../../shared/widgets/app_feedback.dart';
 import 'arabic_word.dart';
 import 'hideable_arabic.dart';
 import '../../controllers/reader_settings_controller.dart';
@@ -162,6 +163,16 @@ class AyahBlock extends StatelessWidget {
                         AnimatedActionButton(
                           icon: const Icon(Icons.edit_note),
                           onPressed: () async {
+                            final userId = Get.find<AuthController>()
+                                .firebaseUser
+                                .value
+                                ?.uid;
+                            if (userId == null) {
+                              AppFeedback.showError(
+                                'Please sign in to save your notes.',
+                              );
+                              return;
+                            }
                             NoteSheet.show(
                               context,
                               verse.chapterId,

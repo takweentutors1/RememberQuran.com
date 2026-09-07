@@ -87,12 +87,13 @@ class _NoteSheetState extends State<NoteSheet> {
           ),
         );
       } else {
-        final error = outcome['error'] == 'limit-reached'
-            ? 'Note limit reached. Please delete some notes before adding more.'
-            : 'Failed to save note. Please try again.';
-        final displayError = error.contains('limit')
-            ? error
-            : 'We couldn\'t save your reflection. Please check your connection and try again.';
+        final displayError = switch (outcome['error']) {
+          'limit-reached' =>
+            'Note limit reached. Please delete some notes before adding more.',
+          'not-logged-in' => 'Please sign in to save your notes.',
+          _ =>
+            'We couldn\'t save your reflection. Please check your connection and try again.',
+        };
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(displayError), backgroundColor: Colors.red),
         );
