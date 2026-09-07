@@ -4,8 +4,18 @@ import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import '../../notifications/services/notification_service.dart';
 
 Future<QuranAudioHandler> initAudioService() async {
+  // The playback notification (lock-screen/notification-shade controls) is a
+  // real notification on Android 13+ — POST_NOTIFICATIONS is declared in the
+  // manifest, but declaring it isn't enough; the OS only ever shows the
+  // permission prompt if something actually requests it at runtime. Without
+  // this, the only place that ever asked was the opt-in Daily Reminder
+  // toggle buried in Settings, so anyone who just opened Radio and hit play
+  // never got the prompt and silently never got playback controls either.
+  await NotificationService().requestPermission();
+
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
 
