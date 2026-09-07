@@ -193,7 +193,13 @@ class AyahActionsSheet extends StatelessWidget {
                     arguments: {
                       'textUthmani': arabicText,
                       'translation': shareTranslationText,
-                      'reference': 'Quran ${verse.verseKey}',
+                      // Matches the Ayah-of-the-Day card's reference format
+                      // ("{Surah Name} {verseKey}") — previously this said
+                      // "Quran {verseKey}" while that entry point used the
+                      // surah name, so cards looked inconsistent depending
+                      // on where they were created from.
+                      'reference':
+                          '${readerController.chapter.value?.nameSimple ?? 'Quran'} ${verse.verseKey}',
                       'chapterId': verse.chapterId,
                       'verseNumber': verse.verseNumber,
                     },

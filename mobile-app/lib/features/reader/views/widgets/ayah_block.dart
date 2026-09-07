@@ -201,7 +201,11 @@ class AyahBlock extends StatelessWidget {
                                 'textUthmani':
                                     verse.qpcUthmaniHafs ?? verse.textUthmani,
                                 'translation': shareTranslationText,
-                                'reference': 'Quran ${verse.verseKey}',
+                                // Matches the Ayah-of-the-Day card's
+                                // reference format ("{Surah Name} {verseKey}")
+                                // — see ayah_actions_sheet.dart for why.
+                                'reference':
+                                    '${readerController.chapter.value?.nameSimple ?? 'Quran'} ${verse.verseKey}',
                                 'chapterId': verse.chapterId,
                                 'verseNumber': verse.verseNumber,
                               },
