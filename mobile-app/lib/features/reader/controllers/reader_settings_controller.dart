@@ -6,6 +6,42 @@ import '../../../shared/widgets/app_feedback.dart';
 
 enum DisplayMode { verseByVerse, mushaf }
 
+/// Reading-surface background, independent of [ThemeMode] — a Sepia or
+/// Grey paper tone the user can pick regardless of whether the rest of the
+/// app is following System/Light/Dark. "standard" means "no override, let
+/// the app theme decide" (the pre-existing behaviour).
+enum ReadingBackground { standard, sepia, grey }
+
+extension ReadingBackgroundTheme on ReadingBackground {
+  /// Returns a derived [ThemeData] for [base] painting the reader surface
+  /// in this background, or null for [ReadingBackground.standard] (meaning
+  /// "don't override — use the ambient theme as-is").
+  ThemeData? apply(ThemeData base) {
+    switch (this) {
+      case ReadingBackground.standard:
+        return null;
+      case ReadingBackground.sepia:
+        const bg = Color(0xFFF4ECD8);
+        const surface = Color(0xFFEDE0C0);
+        const ink = Color(0xFF3B2E1E);
+        return base.copyWith(
+          scaffoldBackgroundColor: bg,
+          cardColor: surface,
+          colorScheme: base.colorScheme.copyWith(surface: surface, onSurface: ink),
+        );
+      case ReadingBackground.grey:
+        const bg = Color(0xFFE2E2E0);
+        const surface = Color(0xFFD5D5D3);
+        const ink = Color(0xFF232322);
+        return base.copyWith(
+          scaffoldBackgroundColor: bg,
+          cardColor: surface,
+          colorScheme: base.colorScheme.copyWith(surface: surface, onSurface: ink),
+        );
+    }
+  }
+}
+
 class ReaderSettingsController extends GetxController {
   late final SharedPreferences _prefs;
 
@@ -13,6 +49,7 @@ class ReaderSettingsController extends GetxController {
   final RxDouble fontSize = 32.0.obs;
   final Rx<DisplayMode> displayMode = DisplayMode.mushaf.obs;
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
+  final Rx<ReadingBackground> readingBackground = ReadingBackground.standard.obs;
 
   /// Whether to show translations at all ("Arabic only" when false).
   final RxBool showTranslation = true.obs;
@@ -89,6 +126,15 @@ class ReaderSettingsController extends GetxController {
 
     // Apply theme mode on startup
     Get.changeThemeMode(themeMode.value);
+
+    final rb = _prefs.getString('reader_background');
+    if (rb == 'sepia') {
+      readingBackground.value = ReadingBackground.sepia;
+    } else if (rb == 'grey') {
+      readingBackground.value = ReadingBackground.grey;
+    } else {
+      readingBackground.value = ReadingBackground.standard;
+    }
 
     _isLoaded.value = true;
   }
@@ -225,5 +271,13 @@ class ReaderSettingsController extends GetxController {
     
     _prefs.setString('app_theme_mode', modeStr);
     Get.changeThemeMode(mode);
+  }
+
+  void setReadingBackground(ReadingBackground bg) {
+    readingBackground.value = bg;
+    String bgStr = 'standard';
+    if (bg == ReadingBackground.sepia) bgStr = 'sepia';
+    if (bg == ReadingBackground.grey) bgStr = 'grey';
+    _prefs.setString('reader_background', bgStr);
   }
 }

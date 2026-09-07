@@ -121,6 +121,33 @@ class ReaderSettingsSheet extends GetView<ReaderSettingsController> {
               ),
               const SizedBox(height: 24),
 
+              _buildSectionTitle(context, 'Reading Background'),
+              Obx(
+                () => SegmentedButton<ReadingBackground>(
+                  segments: const [
+                    ButtonSegment(
+                      value: ReadingBackground.standard,
+                      label: Text('Default'),
+                    ),
+                    ButtonSegment(
+                      value: ReadingBackground.sepia,
+                      label: Text('Sepia'),
+                      icon: Icon(Icons.menu_book_outlined),
+                    ),
+                    ButtonSegment(
+                      value: ReadingBackground.grey,
+                      label: Text('Grey'),
+                      icon: Icon(Icons.tonality_outlined),
+                    ),
+                  ],
+                  selected: {controller.readingBackground.value},
+                  onSelectionChanged: (set) {
+                    controller.setReadingBackground(set.first);
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+
               _buildSectionTitle(context, 'Font Size'),
               Obx(
                 () => Row(

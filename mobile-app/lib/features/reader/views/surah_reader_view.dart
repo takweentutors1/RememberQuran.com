@@ -27,84 +27,98 @@ class SurahReaderView extends GetView<ReaderController> {
         await controller.flushPendingProgress();
         if (context.mounted) Navigator.of(context).pop(result);
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Obx(() {
-            final name = controller.chapter.value?.nameSimple;
-            if (name != null) return Text(name);
-            return Text(controller.hasError.value ? 'Reader' : 'Loading…');
+      // Reading Background (Sepia/Grey) is independent of the app's own
+      // System/Light/Dark ThemeMode, so it's applied here as a local Theme
+      // override scoped to just this reader screen rather than a fourth
+      // ThemeMode value — "standard" returns null and this falls through to
+      // the ambient theme unchanged.
+      child: Obx(() {
+        final settings = Get.find<ReaderSettingsController>();
+        final overrideTheme = settings.readingBackground.value.apply(Theme.of(context));
+        final scaffold = _buildScaffold(context);
+        return overrideTheme == null ? scaffold : Theme(data: overrideTheme, child: scaffold);
+      }),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Obx(() {
+          final name = controller.chapter.value?.nameSimple;
+          if (name != null) return Text(name);
+          return Text(controller.hasError.value ? 'Reader' : 'Loading…');
+        }),
+        centerTitle: true,
+        actions: [
+          Obx(() {
+            final currentId = controller.chapter.value?.id;
+            final isBusy = controller.isLoading.value;
+            return IconButton(
+              icon: const Icon(Icons.navigate_before),
+              tooltip: 'Previous surah',
+              onPressed: (isBusy || currentId == null)
+                  ? null
+                  : () => controller.loadChapter(
+                      currentId > 1 ? currentId - 1 : 114,
+                    ),
+            );
           }),
-          centerTitle: true,
-          actions: [
-            Obx(() {
-              final currentId = controller.chapter.value?.id;
-              final isBusy = controller.isLoading.value;
-              return IconButton(
-                icon: const Icon(Icons.navigate_before),
-                tooltip: 'Previous surah',
-                onPressed: (isBusy || currentId == null)
-                    ? null
-                    : () => controller.loadChapter(
-                        currentId > 1 ? currentId - 1 : 114,
-                      ),
-              );
-            }),
-            Obx(() {
-              final currentId = controller.chapter.value?.id;
-              final isBusy = controller.isLoading.value;
-              return IconButton(
-                icon: const Icon(Icons.navigate_next),
-                tooltip: 'Next surah',
-                onPressed: (isBusy || currentId == null)
-                    ? null
-                    : () => controller.loadChapter(
-                        currentId < 114 ? currentId + 1 : 1,
-                      ),
-              );
-            }),
-            IconButton(
-              icon: const Icon(Icons.menu_book_rounded),
-              tooltip: 'Juz & Hizb Navigation',
-              onPressed: () => JuzNavigationSheet.show(
-                context,
-                currentChapterId: controller.chapter.value?.id,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.search),
-              tooltip: 'Quick Jump',
-              onPressed: () => QuickJumpSheet.show(
-                context,
-                currentChapterId: controller.chapter.value?.id,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.settings),
-              tooltip: 'Settings',
-              onPressed: () => ReaderSettingsSheet.show(context),
-            ),
-          ],
-        ),
-        body: _AutoOpenSheetWrapper(
-          child: ResponsiveLayout(
-            mobile: _buildReaderContent(context),
-            desktop: Row(
-              children: [
-                SizedBox(width: 300, child: _buildSurahSidebar(context)),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(child: _buildReaderContent(context)),
-              ],
+          Obx(() {
+            final currentId = controller.chapter.value?.id;
+            final isBusy = controller.isLoading.value;
+            return IconButton(
+              icon: const Icon(Icons.navigate_next),
+              tooltip: 'Next surah',
+              onPressed: (isBusy || currentId == null)
+                  ? null
+                  : () => controller.loadChapter(
+                      currentId < 114 ? currentId + 1 : 1,
+                    ),
+            );
+          }),
+          IconButton(
+            icon: const Icon(Icons.menu_book_rounded),
+            tooltip: 'Juz & Hizb Navigation',
+            onPressed: () => JuzNavigationSheet.show(
+              context,
+              currentChapterId: controller.chapter.value?.id,
             ),
           ),
-        ),
-        // The reader is a separate full-screen route from AppScaffold's tab
-        // shell, which is the only other place MiniPlayer was mounted — so
-        // playback appeared to have no persistent mini player at all the
-        // moment a user actually opened a surah to read. MiniPlayer already
-        // renders nothing (SizedBox.shrink()) when there's no active audio,
-        // so mounting it here unconditionally is safe.
-        bottomNavigationBar: const MiniPlayer(),
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Quick Jump',
+            onPressed: () => QuickJumpSheet.show(
+              context,
+              currentChapterId: controller.chapter.value?.id,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () => ReaderSettingsSheet.show(context),
+          ),
+        ],
       ),
+      body: _AutoOpenSheetWrapper(
+        child: ResponsiveLayout(
+          mobile: _buildReaderContent(context),
+          desktop: Row(
+            children: [
+              SizedBox(width: 300, child: _buildSurahSidebar(context)),
+              const VerticalDivider(width: 1, thickness: 1),
+              Expanded(child: _buildReaderContent(context)),
+            ],
+          ),
+        ),
+      ),
+      // The reader is a separate full-screen route from AppScaffold's tab
+      // shell, which is the only other place MiniPlayer was mounted — so
+      // playback appeared to have no persistent mini player at all the
+      // moment a user actually opened a surah to read. MiniPlayer already
+      // renders nothing (SizedBox.shrink()) when there's no active audio,
+      // so mounting it here unconditionally is safe.
+      bottomNavigationBar: const MiniPlayer(),
     );
   }
 
