@@ -57,6 +57,25 @@ async function identityToolkitFetch(
 }
 
 /**
+ * Resolves the Firebase Auth UID actually backing this user, if any.
+ *
+ * `user.firebaseUid` is only populated by this module's own web
+ * registration/migration paths — it's never set for accounts the mobile app
+ * creates directly against Firebase Auth (mobile writes a bare
+ * `users/{firebaseUid}` doc with no `firebaseUid` field of its own). Those
+ * accounts are recognizable by having no legacy `passwordHash` either: a
+ * *real* unmigrated legacy account always has one (set at its original
+ * bcrypt-based registration), while a mobile-created account never does. In
+ * that case `user.id` — the Firestore doc ID — already *is* the Firebase
+ * UID, since that's what the mobile app used as the doc path.
+ */
+export function resolveFirebaseUid(user: UserRecord): string | null {
+  if (user.firebaseUid) return user.firebaseUid
+  if (!user.passwordHash) return user.id
+  return null
+}
+
+/**
  * Verifies a password against Firebase Auth (if this user has been
  * migrated/created there) or the legacy bcrypt hash otherwise. Any Firebase
  * error response — invalid password, unknown email, disabled account — is
@@ -68,7 +87,7 @@ export async function verifyPassword(
   user: UserRecord,
   password: string,
 ): Promise<boolean> {
-  if (!user.firebaseUid) {
+  if (!resolveFirebaseUid(user)) {
     return compare(password, user.passwordHash)
   }
 
@@ -81,17 +100,18 @@ export async function verifyPassword(
 }
 
 /**
- * Sets a new password — Firebase Auth for migrated users (also bumps
- * `passwordChangedAt` directly, since Firebase now owns the password and
- * there's no hash to write), legacy bcrypt hash + `updatePasswordHash`
- * otherwise.
+ * Sets a new password — Firebase Auth for migrated/mobile-created users
+ * (also bumps `passwordChangedAt` directly, since Firebase now owns the
+ * password and there's no hash to write), legacy bcrypt hash +
+ * `updatePasswordHash` otherwise.
  */
 export async function setPassword(
   user: UserRecord,
   newPassword: string,
 ): Promise<void> {
-  if (user.firebaseUid) {
-    await getAdminAuth().updateUser(user.firebaseUid, { password: newPassword })
+  const firebaseUid = resolveFirebaseUid(user)
+  if (firebaseUid) {
+    await getAdminAuth().updateUser(firebaseUid, { password: newPassword })
     await touchPasswordChangedAt(user.id)
     return
   }

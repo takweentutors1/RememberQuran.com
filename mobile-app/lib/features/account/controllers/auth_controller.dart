@@ -57,6 +57,10 @@ class AuthController extends GetxController {
   }
 
   Future<void> login(String email, String password) async {
+    // Normalized to match the web app's convention (src/lib/auth/credentials.ts
+    // validateEmail) — the web backend's account lookups (e.g. password
+    // reset) match on this exact stored casing.
+    email = email.trim().toLowerCase();
     try {
       isLoading.value = true;
       error.value = '';
@@ -83,6 +87,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> register(String email, String password) async {
+    email = email.trim().toLowerCase();
     try {
       isLoading.value = true;
       error.value = '';

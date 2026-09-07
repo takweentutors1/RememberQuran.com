@@ -1,5 +1,5 @@
 import { privateJson } from "@/lib/auth/api-response"
-import { confirmPasswordReset } from "@/lib/auth/firebase-credentials"
+import { confirmPasswordReset, resolveFirebaseUid } from "@/lib/auth/firebase-credentials"
 import { getUserByEmail, touchPasswordChangedAt } from "@/lib/firestore/users"
 
 export const runtime = "nodejs"
@@ -35,9 +35,16 @@ export async function POST(request: Request) {
   // revalidation in src/auth.ts).
   const user = await getUserByEmail(result.email)
   if (user) {
-    // If the user hasn't been fully migrated to Firebase Auth in Firestore,
-    // their login flow still relies on the legacy bcrypt hash. We must update it.
-    if (!user.firebaseUid) {
+    // confirmPasswordReset() above already changed the *real* Firebase Auth
+    // password via the oobCode, unconditionally — that part needs no branch.
+    // Only a genuinely still-legacy account (never linked to Firebase Auth
+    // at all — see resolveFirebaseUid) also needs its bcrypt hash updated,
+    // since that hash is still what its login flow checks. Writing a bcrypt
+    // hash for a Firebase/mobile-backed account here was actively harmful:
+    // it would make resolveFirebaseUid start misclassifying that account as
+    // legacy on every subsequent request, since its heuristic for "created
+    // by the mobile app" is precisely the absence of a passwordHash.
+    if (!resolveFirebaseUid(user)) {
       const { hash } = await import("bcryptjs")
       const { updatePasswordHash } = await import("@/lib/firestore/users")
       const passwordHash = await hash(body.password as string, 12)

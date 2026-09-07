@@ -133,8 +133,20 @@ export async function getUserById(userId: string): Promise<UserRecord | null> {
 export async function getUserByEmail(email: string): Promise<UserRecord | null> {
   const emailSnap = await userEmailsCol().doc(email).get()
   const userId = emailSnap.data()?.userId
-  if (typeof userId !== "string") return null
-  return getUserById(userId)
+  if (typeof userId === "string") {
+    const user = await getUserById(userId)
+    if (user) return user
+  }
+
+  // Falls back to a direct query for accounts that never went through this
+  // module's write path — the mobile app registers straight against Firebase
+  // Auth plus a bare `users/{firebaseUid}` doc, so it never creates the
+  // `userEmails` reservation doc above. Every user doc still carries its own
+  // `email` field regardless of how it was created, so this finds mobile
+  // accounts the reservation-doc lookup misses.
+  const query = await usersCol().where("email", "==", email).limit(1).get()
+  if (query.empty) return null
+  return fromSnapshot(query.docs[0].id, query.docs[0].data())
 }
 
 export type CreateUserResult =

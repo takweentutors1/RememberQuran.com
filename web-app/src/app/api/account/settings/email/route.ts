@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { privateJson } from "@/lib/auth/api-response"
 import { validateEmail } from "@/lib/auth/credentials"
-import { verifyPassword } from "@/lib/auth/firebase-credentials"
+import { resolveFirebaseUid, verifyPassword } from "@/lib/auth/firebase-credentials"
 import { getAdminAuth } from "@/lib/firestore/admin"
 import { getUserById, changeEmail } from "@/lib/firestore/users"
 
@@ -43,10 +43,15 @@ export async function PATCH(request: Request) {
   // it's the source of truth `authorize()` checks against, so Firestore and
   // Firebase disagreeing on the email would silently break their next
   // login. If the Firestore transaction below fails, the Firebase email is
-  // rolled back in the catch block.
-  if (user.firebaseUid) {
+  // rolled back in the catch block. resolveFirebaseUid (not the raw field)
+  // matters here specifically: a mobile-created account has a real Firebase
+  // Auth identity but no `firebaseUid` field, so skipping this on the raw
+  // check would silently leave the mobile app's actual sign-in email
+  // unchanged while Firestore reports the new one.
+  const firebaseUid = resolveFirebaseUid(user)
+  if (firebaseUid) {
     try {
-      await getAdminAuth().updateUser(user.firebaseUid, { email: email.email })
+      await getAdminAuth().updateUser(firebaseUid, { email: email.email })
     } catch (error) {
       if (isFirebaseCode(error, "auth/email-already-exists")) {
         return privateJson(
@@ -62,7 +67,7 @@ export async function PATCH(request: Request) {
   try {
     const result = await changeEmail(session.user.id, email.email)
     if (!result.ok) {
-      await rollbackFirebaseEmail(user.firebaseUid, user.email)
+      await rollbackFirebaseEmail(firebaseUid, user.email)
       return privateJson(
         { error: "An account with this email already exists." },
         409,
@@ -70,7 +75,7 @@ export async function PATCH(request: Request) {
     }
   } catch (error) {
     console.error("Change email failed", error)
-    await rollbackFirebaseEmail(user.firebaseUid, user.email)
+    await rollbackFirebaseEmail(firebaseUid, user.email)
     return privateJson({ error: "Could not change email. Please try again." }, 500)
   }
 
