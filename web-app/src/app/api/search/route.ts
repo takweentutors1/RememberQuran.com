@@ -41,6 +41,10 @@ export async function GET(request: Request) {
 
   const size = Math.min(20, Math.max(1, Number(searchParams.get("size") ?? 20) || 20))
   const page = Math.max(1, Number(searchParams.get("page") ?? 1) || 1)
+  // "arabic" | "translation" | anything else (including absent/"all") — this
+  // was previously read by the mobile app's scope filter chips and silently
+  // dropped here, so switching scopes never actually changed the results.
+  const scope = searchParams.get("scope")
 
   const url = `${QDC_SEARCH_URL}?q=${encodeURIComponent(raw)}&size=${size}&page=${page}`
 
@@ -78,8 +82,30 @@ export async function GET(request: Request) {
       }
     })
 
+    // Post-filter rather than a QDC-side param — QDC's search API has no
+    // documented "search only Arabic / only translation" mode, but every
+    // result already carries both, so scoping down to whichever matched is
+    // just a filter here. "arabic" keeps results QDC itself flagged via
+    // word.highlight. "translation" keeps results whose translation text
+    // contains a QDC-inserted <em> tag — QDC marks its own translation
+    // matches this way (see SearchHighlightText on the mobile client, which
+    // parses these same tags to render highlights), so this reuses QDC's
+    // actual match detection rather than re-guessing it with a substring
+    // check that could diverge (stemming, pluralization, etc.).
+    // totalCount/nextPage still reflect QDC's unscoped pagination —
+    // recomputing an accurate scoped total would mean fetching and filtering
+    // every page up front, which isn't worth it for a lightweight filter.
+    const scopedResults =
+      scope === "arabic"
+        ? results.filter((r) => r.words.some((w) => w.highlight))
+        : scope === "translation"
+          ? results.filter((r) =>
+              r.translations.some((t) => t.text.includes("<em>")),
+            )
+          : results
+
     const payload: SearchResponse = {
-      results,
+      results: scopedResults,
       totalCount: pagination?.total_records ?? 0,
       currentPage: pagination?.current_page ?? page,
       nextPage: pagination?.next_page ?? null,
