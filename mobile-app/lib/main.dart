@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:get/get.dart';
@@ -12,6 +13,14 @@ void main() {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      // The reader's responsive layout only has mobile/desktop breakpoints,
+      // not an actual landscape-tuned design — rotating a phone mid-read
+      // breaks it rather than adapting. Locking to portrait avoids that
+      // until landscape is properly supported.
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
       runApp(const RememberQuranApp(initialRoute: Routes.SPLASH));
     },
     (error, stack) {
