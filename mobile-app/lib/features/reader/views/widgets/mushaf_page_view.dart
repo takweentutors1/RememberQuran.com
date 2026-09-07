@@ -215,7 +215,12 @@ class _MushafPageViewState extends State<MushafPageView> {
       // Render RTL page-flipping natural for physical Mushafs
       return Directionality(
         textDirection: TextDirection.rtl,
-        child: Column(
+        // The reader's Scaffold has no bottomNavigationBar to reserve space
+        // for the page-indicator row below, and its AppBar already accounts
+        // for the top inset — without this, the prev/next page buttons and
+        // "Page N" label rendered flush against the bottom edge, landing
+        // partly under the system gesture bar / home indicator.
+        child: SafeArea(top: false, child: Column(
           children: [
             Expanded(
               child: PageView.builder(
@@ -253,7 +258,7 @@ class _MushafPageViewState extends State<MushafPageView> {
             ),
             _buildPageIndicator(context, theme, nurColors),
           ],
-        ),
+        )),
       );
     });
   }
