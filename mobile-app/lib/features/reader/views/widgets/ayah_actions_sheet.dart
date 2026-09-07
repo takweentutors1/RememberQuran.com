@@ -179,7 +179,7 @@ class AyahActionsSheet extends StatelessWidget {
                 onTap: () async {
                   Navigator.of(context).pop();
                   final text =
-                      '$arabicText\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://rememberquran.com/surah/${verse.chapterId}/${verse.verseNumber})';
+                      '$arabicText\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://rememberquran.com/${verse.chapterId}/${verse.verseNumber})';
                   await SharePlus.instance.share(ShareParams(text: text));
                 },
               ),

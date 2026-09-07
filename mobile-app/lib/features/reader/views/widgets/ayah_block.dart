@@ -186,7 +186,7 @@ class AyahBlock extends StatelessWidget {
                           icon: const Icon(Icons.share_outlined),
                           onPressed: () async {
                             final text =
-                                '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://rememberquran.com/surah/${verse.chapterId}/${verse.verseNumber})';
+                                '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://rememberquran.com/${verse.chapterId}/${verse.verseNumber})';
                             await SharePlus.instance.share(ShareParams(text: text));
                           },
                           iconSize: 20,
