@@ -83,14 +83,19 @@ export async function POST(request: Request) {
 
   const result = await sendPasswordResetEmail(user.email)
   if (!result.ok) {
-    // A real web account with no linked Firebase Auth identity yet — either
-    // not migrated, or deliberately left unlinked due to a mobile-app email
-    // collision (see the migration script). The HTTP response must stay
-    // identical either way to preserve enumeration-safety; this is a known,
-    // bounded population that needs manual reconciliation, not a second
-    // delivery mechanism.
-    console.warn("password-reset: no linked Firebase Auth account", {
+    // Two distinct failure modes land here — keep them distinguishable in
+    // logs even though the HTTP response must stay identical either way to
+    // preserve enumeration-safety:
+    //  - "no-firebase-account": a real web account with no linked Firebase
+    //    Auth identity yet (not migrated, or deliberately left unlinked due
+    //    to a mobile-app email collision — see the migration script). A
+    //    known, bounded population needing manual reconciliation.
+    //  - "delivery-failed": the account is fine, but Resend itself failed
+    //    (e.g. RESEND_API_KEY missing/invalid in this environment) — every
+    //    reset request will silently fail to deliver until that's fixed.
+    console.warn("password-reset: email not delivered", {
       userId: user.id,
+      reason: result.reason,
     })
   }
 

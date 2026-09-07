@@ -5,15 +5,23 @@ import { Resend } from "resend"
  */
 export async function sendPasswordResetEmailAction(email: string, resetUrl: string) {
   if (!process.env.RESEND_API_KEY) {
-    console.warn("RESEND_API_KEY is not set. Simulating email send:", resetUrl)
-    return { ok: true }
+    // Never report success for an email that was never sent — that made
+    // a missing/misconfigured production API key indistinguishable from a
+    // real delivery, so nobody could tell why reset emails weren't arriving.
+    console.error("RESEND_API_KEY is not set. Reset email NOT sent:", resetUrl)
+    return { ok: false, error: "RESEND_API_KEY is not configured" }
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   try {
+    // EMAIL_FROM is provisioned in every environment (see .env.example) but
+    // was never actually read here — every send used this hardcoded address
+    // regardless, which fails at Resend if that address/domain isn't the
+    // one verified on the account.
+    const from = process.env.EMAIL_FROM || "Remember Quran <noreply@rememberquran.com>"
     const { error } = await resend.emails.send({
-      from: "Remember Quran <noreply@rememberquran.com>",
+      from,
       to: email,
       subject: "Reset your Remember Quran password",
       html: `

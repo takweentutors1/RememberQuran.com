@@ -102,7 +102,7 @@ export async function setPassword(
 
 export type SendResetEmailResult =
   | { ok: true }
-  | { ok: false; reason: "no-firebase-account" }
+  | { ok: false; reason: "no-firebase-account" | "delivery-failed" }
 
 /**
  * Generates a password-reset link using the Admin SDK, constructs a custom
@@ -125,7 +125,11 @@ export async function sendPasswordResetEmail(
 
     const sendResult = await sendPasswordResetEmailAction(email, directLink)
     if (!sendResult.ok) {
+      // Previously discarded — the caller (and the client response) treated
+      // this identically to a real send, so a misconfigured/failing Resend
+      // integration had no way to surface itself anywhere.
       console.error("Failed to deliver custom reset email:", sendResult.error)
+      return { ok: false, reason: "delivery-failed" }
     }
 
     return { ok: true }
