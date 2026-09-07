@@ -9,6 +9,7 @@ import '../../../../data/datasources/remote/asbab_remote_ds.dart';
 import '../../../../shared/widgets/app_feedback.dart';
 import '../../../../shared/widgets/surah_medallion.dart';
 import '../../../account/controllers/auth_controller.dart';
+import '../../../account/controllers/notes_controller.dart';
 import '../../../account/views/collection_picker_sheet.dart';
 import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_controller.dart';
@@ -74,11 +75,10 @@ class AyahActionsSheet extends StatelessWidget {
           audioController.rxActiveVerseKey.value == verse.verseKey;
       final isPlayingThisVerse =
           isVerseActive && audioController.rxIsPlaying.value;
-      final isBookmarked = readerController.bookmarkedVerses.contains(
-        verseKey,
-      );
-      final isMemorised = readerController.memorisedVerses.contains(
-        verseKey,
+      final isBookmarked = readerController.bookmarkedVerses.contains(verseKey);
+      final isMemorised = readerController.memorisedVerses.contains(verseKey);
+      final hasNote = Get.find<NotesController>().allNotes.any(
+        (n) => n.verseKey == verseKey,
       );
 
       return SafeArea(
@@ -97,7 +97,9 @@ class AyahActionsSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -161,11 +163,14 @@ class AyahActionsSheet extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.edit_note),
-                title: const Text('Add Note'),
+                leading: Icon(
+                  hasNote ? Icons.edit_note : Icons.note_add_outlined,
+                ),
+                title: Text(hasNote ? 'Edit Note' : 'Add Note'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  final userId = Get.find<AuthController>().firebaseUser.value?.uid;
+                  final userId =
+                      Get.find<AuthController>().firebaseUser.value?.uid;
                   if (userId == null) {
                     AppFeedback.showError('Please sign in to save your notes.');
                     return;
@@ -232,7 +237,8 @@ class AyahActionsSheet extends StatelessWidget {
                     await readerController.toggleBookmark(verseKey);
                     return;
                   }
-                  final userId = Get.find<AuthController>().firebaseUser.value?.uid;
+                  final userId =
+                      Get.find<AuthController>().firebaseUser.value?.uid;
                   if (userId == null) {
                     await readerController.toggleBookmark(verseKey);
                     return;

@@ -8,6 +8,7 @@ import '../../../data/models/note.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
 import '../../../shared/widgets/app_dialog.dart';
 import '../../../core/utils/responsive_layout.dart';
+import '../../reader/views/widgets/note_sheet.dart';
 
 class NotesView extends GetView<NotesController> {
   const NotesView({Key? key}) : super(key: key);
@@ -198,103 +199,123 @@ class NotesView extends GetView<NotesController> {
         padding: const EdgeInsets.only(right: 20),
         child: const Icon(Icons.delete_outline, color: Colors.white, size: 30),
       ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color:
-              theme.extension<NurColorsExtension>()?.surfaceSunk ??
-              theme.colorScheme.surface,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.1),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _formatVerseKey(note.verseKey),
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                Text(
-                  formattedDate,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    fontSize: 11,
-                  ),
+          onTap: () {
+            // Same NotesController instance the sheet saves through, so the
+            // list here updates on its own once the sheet closes — no
+            // manual refresh needed.
+            final parts = note.verseKey.split(':');
+            if (parts.length != 2) return;
+            final chapterId = int.tryParse(parts[0]);
+            final verseNumber = int.tryParse(parts[1]);
+            if (chapterId == null || verseNumber == null) return;
+            NoteSheet.show(context, chapterId, verseNumber);
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color:
+                  theme.extension<NurColorsExtension>()?.surfaceSunk ??
+                  theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Obx(() {
-              final verse = controller.verseCache[note.verseKey];
-              final translation = controller.translationCache[note.verseKey];
-              if (verse == null) return const SizedBox.shrink();
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    verse.textUthmani,
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontFamily: 'Uthmani',
-                      fontSize: 20,
-                      height: 1.6,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  if (translation != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      translation,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _formatVerseKey(note.verseKey),
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                         ),
                       ),
                     ),
+                    Text(
+                      formattedDate,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
-                  const SizedBox(height: 12),
-                  Divider(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              );
-            }),
-            Text(
-              note.text,
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 12),
+                Obx(() {
+                  final verse = controller.verseCache[note.verseKey];
+                  final translation =
+                      controller.translationCache[note.verseKey];
+                  if (verse == null) return const SizedBox.shrink();
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        verse.textUthmani,
+                        textAlign: TextAlign.right,
+                        textDirection: TextDirection.rtl,
+                        style: TextStyle(
+                          fontFamily: 'Uthmani',
+                          fontSize: 20,
+                          height: 1.6,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      if (translation != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          translation,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.7,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Divider(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  );
+                }),
+                Text(
+                  note.text,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

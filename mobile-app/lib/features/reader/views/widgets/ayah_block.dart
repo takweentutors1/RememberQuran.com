@@ -15,6 +15,7 @@ import '../../../study/views/widgets/tafsir_sheet.dart';
 import '../../../study/views/widgets/asbab_sheet.dart';
 import '../../../../data/datasources/remote/asbab_remote_ds.dart';
 import 'note_sheet.dart';
+import '../../../account/controllers/notes_controller.dart';
 import '../../../../core/models/translation.dart';
 import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_controller.dart';
@@ -80,14 +81,15 @@ class AyahBlock extends StatelessWidget {
           color: isPlayingThisVerse
               ? jade.withValues(alpha: 0.10)
               : isVerseActive
-                  ? (nurColors?.brandGoldSoft ??
-                        theme.colorScheme.primary.withValues(alpha: 0.05))
-                  : null,
+              ? (nurColors?.brandGoldSoft ??
+                    theme.colorScheme.primary.withValues(alpha: 0.05))
+              : null,
           border: Border(
             bottom: BorderSide(
               color: isPlayingThisVerse
                   ? jade.withValues(alpha: 0.3)
-                  : (nurColors?.borderStrong ?? theme.dividerColor.withValues(alpha: 0.1)),
+                  : (nurColors?.borderStrong ??
+                        theme.dividerColor.withValues(alpha: 0.1)),
             ),
           ),
         ),
@@ -141,7 +143,10 @@ class AyahBlock extends StatelessWidget {
                           tooltip: 'Tafsir',
                         ),
                         FutureBuilder<bool>(
-                          future: AsbabRemoteDataSource().hasAsbab(verse.chapterId, verse.verseNumber),
+                          future: AsbabRemoteDataSource().hasAsbab(
+                            verse.chapterId,
+                            verse.verseNumber,
+                          ),
                           builder: (context, snapshot) {
                             if (snapshot.data == true) {
                               return AnimatedActionButton(
@@ -160,34 +165,44 @@ class AyahBlock extends StatelessWidget {
                             return const SizedBox.shrink();
                           },
                         ),
-                        AnimatedActionButton(
-                          icon: const Icon(Icons.edit_note),
-                          onPressed: () async {
-                            final userId = Get.find<AuthController>()
-                                .firebaseUser
-                                .value
-                                ?.uid;
-                            if (userId == null) {
-                              AppFeedback.showError(
-                                'Please sign in to save your notes.',
+                        Obx(() {
+                          final hasNote = Get.find<NotesController>().allNotes
+                              .any((n) => n.verseKey == verse.verseKey);
+                          return AnimatedActionButton(
+                            icon: Icon(
+                              hasNote
+                                  ? Icons.edit_note
+                                  : Icons.note_add_outlined,
+                            ),
+                            onPressed: () async {
+                              final userId = Get.find<AuthController>()
+                                  .firebaseUser
+                                  .value
+                                  ?.uid;
+                              if (userId == null) {
+                                AppFeedback.showError(
+                                  'Please sign in to save your notes.',
+                                );
+                                return;
+                              }
+                              NoteSheet.show(
+                                context,
+                                verse.chapterId,
+                                verse.verseNumber,
                               );
-                              return;
-                            }
-                            NoteSheet.show(
-                              context,
-                              verse.chapterId,
-                              verse.verseNumber,
-                            );
-                          },
-                          iconSize: 20,
-                          tooltip: 'Add Note',
-                        ),
+                            },
+                            iconSize: 20,
+                            tooltip: hasNote ? 'Edit Note' : 'Add Note',
+                          );
+                        }),
                         AnimatedActionButton(
                           icon: const Icon(Icons.share_outlined),
                           onPressed: () async {
                             final text =
                                 '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://rememberquran.com/${verse.chapterId}/${verse.verseNumber})';
-                            await SharePlus.instance.share(ShareParams(text: text));
+                            await SharePlus.instance.share(
+                              ShareParams(text: text),
+                            );
                           },
                           iconSize: 20,
                           tooltip: 'Share text',
@@ -260,7 +275,10 @@ class AyahBlock extends StatelessWidget {
                                 return;
                               }
                               final collectionId =
-                                  await CollectionPickerSheet.show(context, userId);
+                                  await CollectionPickerSheet.show(
+                                    context,
+                                    userId,
+                                  );
                               if (collectionId == null) return; // cancelled
                               await readerController.toggleBookmark(
                                 verseKey,
@@ -320,12 +338,19 @@ class AyahBlock extends StatelessWidget {
             ),
             if (activeTranslationRows.isNotEmpty) const SizedBox(height: 24),
             for (final t in activeTranslationRows)
-              _buildTranslationRow(context, theme, nurColors, readerController, t),
+              _buildTranslationRow(
+                context,
+                theme,
+                nurColors,
+                readerController,
+                t,
+              ),
             if (settings.isHifzMode.value &&
                 settings.hifzRangeStart.value != null &&
                 settings.hifzRangeEnd.value != null &&
                 verse.verseNumber ==
-                    (settings.hifzRangeEnd.value! >= settings.hifzRangeStart.value!
+                    (settings.hifzRangeEnd.value! >=
+                            settings.hifzRangeStart.value!
                         ? settings.hifzRangeEnd.value!
                         : settings.hifzRangeStart.value!))
               _buildBulkHifzActionRow(
@@ -363,10 +388,10 @@ class AyahBlock extends StatelessWidget {
             onPressed: isBusy
                 ? null
                 : () => readerController.markRangeMemorised(
-                      verse.chapterId,
-                      from,
-                      to,
-                    ),
+                    verse.chapterId,
+                    from,
+                    to,
+                  ),
             icon: isBusy
                 ? SizedBox(
                     width: 16,
@@ -428,7 +453,8 @@ class AyahBlock extends StatelessWidget {
                 style: TextStyle(
                   fontSize: context.responsiveBaseTextSize,
                   height: 1.6,
-                  color: nurColors?.foregroundSubtle ??
+                  color:
+                      nurColors?.foregroundSubtle ??
                       theme.textTheme.bodyLarge?.color?.withValues(alpha: 0.9),
                 ),
               ),
@@ -438,7 +464,9 @@ class AyahBlock extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: nurColors?.foregroundFaint ?? theme.textTheme.bodySmall?.color,
+                  color:
+                      nurColors?.foregroundFaint ??
+                      theme.textTheme.bodySmall?.color,
                 ),
               ),
             ],
