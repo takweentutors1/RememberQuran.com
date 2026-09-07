@@ -49,7 +49,11 @@ class AudioController extends GetxController {
   final rxIsPlaying = false.obs;
   final rxCurrentAyahIndex = 0.obs;
   final rxRepeatSettings = const RepeatSettings().obs;
+  /// Persisted like other playback prefs (waveform, shuffle) below — most
+  /// audio apps remember a chosen speed across launches rather than
+  /// resetting to 1x every time.
   final rxPlaybackSpeed = 1.0.obs;
+  static const _playbackSpeedPrefsKey = 'rq_playback_speed';
   /// Cosmetic waveform bars on the Radio tab — user-toggleable in Settings
   /// for performance-sensitive devices. Defaults on; persisted locally.
   final RxBool rxWaveformEnabled = true.obs;
@@ -329,6 +333,7 @@ class AudioController extends GetxController {
     unawaited(_prepareLockscreenArt());
     unawaited(_loadWaveformPreference());
     unawaited(_loadShufflePreference());
+    unawaited(_loadSpeedPreference());
     unawaited(_initConnectivity());
 
     // Route lock-screen/notification/Bluetooth "skip" taps through the same
@@ -722,6 +727,29 @@ class AudioController extends GetxController {
   Future<void> setSpeed(double speed) async {
     rxPlaybackSpeed.value = speed;
     await _audioHandler.setSpeed(speed);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_playbackSpeedPrefsKey, speed);
+    } catch (_) {
+      // Best-effort — worst case the choice doesn't survive a restart.
+    }
+  }
+
+  /// just_audio's speed is a persistent player property, not something
+  /// re-applied on every track load — so restoring it once here (before any
+  /// playback starts) is enough for it to keep applying to every future
+  /// verse/chapter for the rest of this session, the same as if the user
+  /// had just picked it.
+  Future<void> _loadSpeedPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getDouble(_playbackSpeedPrefsKey);
+      if (saved == null) return;
+      rxPlaybackSpeed.value = saved;
+      await _audioHandler.setSpeed(saved);
+    } catch (_) {
+      // Keep the default (1x) if prefs can't be read.
+    }
   }
 
   Future<void> _loadWaveformPreference() async {

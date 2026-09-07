@@ -425,6 +425,7 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
             return SegmentedButton<double>(
               segments: const [
                 ButtonSegment(value: 0.5, label: Text('0.5x')),
+                ButtonSegment(value: 0.75, label: Text('0.75x')),
                 ButtonSegment(value: 1.0, label: Text('1x')),
                 ButtonSegment(value: 1.5, label: Text('1.5x')),
                 ButtonSegment(value: 2.0, label: Text('2x')),
