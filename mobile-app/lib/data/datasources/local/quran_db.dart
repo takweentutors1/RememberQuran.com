@@ -46,6 +46,7 @@ class Words extends Table {
   IntColumn get position => integer()();
   TextColumn get audioUrl => text().nullable()();
   TextColumn get charTypeName => text()();
+  IntColumn get lineNumber => integer().withDefault(const Constant(1))();
   TextColumn get textUthmani => text()();
   TextColumn get qpcUthmaniHafs => text().nullable()();
   TextColumn get textUthmaniTajweed => text().nullable()();
@@ -78,7 +79,7 @@ class QuranDatabase extends _$QuranDatabase {
   QuranDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +89,9 @@ class QuranDatabase extends _$QuranDatabase {
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
             await m.createTable(downloadedAudio);
+          }
+          if (from < 3) {
+            await m.addColumn(words, words.lineNumber);
           }
         },
       );
@@ -167,6 +171,7 @@ class QuranDatabase extends _$QuranDatabase {
                   position: w['position'] as int,
                   audioUrl: Value(w['audio_url'] as String?),
                   charTypeName: (w['char_type_name'] ?? '') as String,
+                  lineNumber: Value(w['line_number'] as int? ?? 1),
                   textUthmani: (w['text_uthmani'] ?? '') as String,
                   qpcUthmaniHafs: Value(w['qpc_uthmani_hafs'] as String?),
                   textUthmaniTajweed: Value(w['text_uthmani_tajweed'] as String?),

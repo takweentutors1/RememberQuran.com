@@ -118,10 +118,10 @@ class _AsbabSheetState extends State<AsbabSheet> {
                               color: isNotFound
                                   ? Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.2)
+                                    ).colorScheme.onSurface.withValues(alpha: 0.2)
                                   : Theme.of(
                                       context,
-                                    ).colorScheme.error.withOpacity(0.8),
+                                    ).colorScheme.error.withValues(alpha: 0.8),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -131,7 +131,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
                                     fontWeight: FontWeight.bold,
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.8),
+                                    ).colorScheme.onSurface.withValues(alpha: 0.8),
                                   ),
                             ),
                             const SizedBox(height: 12),
@@ -141,7 +141,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
                                 color: isNotFound
                                     ? Theme.of(
                                         context,
-                                      ).colorScheme.onSurface.withOpacity(0.6)
+                                      ).colorScheme.onSurface.withValues(alpha: 0.6)
                                     : Theme.of(context).colorScheme.error,
                                 fontSize: 16,
                                 height: 1.5,
@@ -164,7 +164,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
                             size: 48,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.2),
+                            ).colorScheme.onSurface.withValues(alpha: 0.2),
                           ),
                           const SizedBox(height: 16),
                           const Text(
@@ -192,7 +192,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
                               size: 64,
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.2),
+                              ).colorScheme.onSurface.withValues(alpha: 0.2),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -202,7 +202,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
                                     fontWeight: FontWeight.bold,
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.8),
+                                    ).colorScheme.onSurface.withValues(alpha: 0.8),
                                   ),
                             ),
                             const SizedBox(height: 12),
@@ -211,7 +211,7 @@ class _AsbabSheetState extends State<AsbabSheet> {
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
                                 fontSize: 16,
                                 height: 1.5,
                               ),

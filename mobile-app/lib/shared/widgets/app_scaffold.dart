@@ -5,6 +5,7 @@ import '../../features/audio/views/mini_player.dart';
 import '../../features/home/views/home_view.dart';
 import '../../features/audio/views/radio_view.dart';
 import '../../features/search/views/search_view.dart';
+import '../../features/study/views/study_view.dart';
 import '../../features/account/views/account_home_view.dart';
 import '../../core/utils/responsive_layout.dart';
 
@@ -33,6 +34,7 @@ class AppScaffold extends StatelessWidget {
                   HomeView(),
                   RadioView(),
                   SearchView(),
+                  StudyView(),
                   AccountHomeView(),
                 ],
               )),
@@ -53,6 +55,7 @@ class AppScaffold extends StatelessWidget {
                 BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
                 BottomNavigationBarItem(icon: Icon(Icons.radio_rounded), label: 'Radio'),
                 BottomNavigationBarItem(icon: Icon(Icons.search_rounded), label: 'Search'),
+                BottomNavigationBarItem(icon: Icon(Icons.book_rounded), label: 'Study'),
                 BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Account'),
               ],
             )),
@@ -76,6 +79,7 @@ class AppScaffold extends StatelessWidget {
                       NavigationRailDestination(icon: Icon(Icons.home_rounded), label: Text('Home')),
                       NavigationRailDestination(icon: Icon(Icons.radio_rounded), label: Text('Radio')),
                       NavigationRailDestination(icon: Icon(Icons.search_rounded), label: Text('Search')),
+                      NavigationRailDestination(icon: Icon(Icons.book_rounded), label: Text('Study')),
                       NavigationRailDestination(icon: Icon(Icons.person_rounded), label: Text('Account')),
                     ],
                   )),
@@ -83,12 +87,13 @@ class AppScaffold extends StatelessWidget {
               Expanded(
                 child: Obx(() => IndexedStack(
                       index: controller.rxSelectedIndex.value,
-                      children: const [
-                        HomeView(),
-                        RadioView(),
-                        SearchView(),
-                        AccountHomeView(),
-                      ],
+children: const [
+                          HomeView(),
+                          RadioView(),
+                          SearchView(),
+                          StudyView(),
+                          AccountHomeView(),
+                        ],
                     )),
               ),
             ],

@@ -42,7 +42,7 @@ class OnboardingView extends StatelessWidget {
             width: circleSize,
             height: circleSize,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: iconSize, color: theme.colorScheme.primary),
@@ -116,7 +116,7 @@ class OnboardingView extends StatelessWidget {
               skip: Text(
                 'Skip',
                 style: TextStyle(
-                  color: theme.colorScheme.primary.withOpacity(0.7),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -139,7 +139,7 @@ class OnboardingView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.35),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.35),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -156,7 +156,7 @@ class OnboardingView extends StatelessWidget {
               ),
               dotsDecorator: DotsDecorator(
                 activeColor: theme.colorScheme.primary,
-                color: theme.colorScheme.primary.withOpacity(0.25),
+                color: theme.colorScheme.primary.withValues(alpha: 0.25),
                 size: const Size(8, 8),
                 activeSize: const Size(20, 8),
                 activeShape: RoundedRectangleBorder(

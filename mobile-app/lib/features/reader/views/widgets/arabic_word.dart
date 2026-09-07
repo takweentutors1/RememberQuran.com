@@ -5,6 +5,8 @@ import '../../../../data/datasources/local/quran_db.dart';
 import '../../../audio/controllers/audio_controller.dart';
 import '../../controllers/reader_settings_controller.dart';
 import 'word_meaning_sheet.dart';
+import 'ayah_actions_sheet.dart';
+import 'hideable_arabic.dart';
 import 'tajweed_text.dart';
 import '../../../../core/utils/responsive_layout.dart';
 
@@ -32,6 +34,11 @@ class ArabicWord extends StatelessWidget {
       final isActiveWord =
           audioController.rxActiveVerseKey.value == verseKey &&
           audioController.rxActiveWordPosition.value == word.position;
+      // While this ayah is still hidden under Hifz mode, tapping it should
+      // only reveal it (HideableArabic's own GestureDetector handles that) —
+      // not also open the word/ayah sheet underneath. Both would otherwise
+      // fire for the same tap, since blurring doesn't affect hit-testing.
+      final isHiddenInHifz = HideableArabic.isHidden(settings, verseKey);
 
       final textStyle = TextStyle(
         fontFamily: font,
@@ -41,12 +48,19 @@ class ArabicWord extends StatelessWidget {
       );
 
       return InkWell(
-        onTap: () {
-          showResponsiveSheet(
-            context: context,
-            builder: (context) => WordMeaningSheet(word: word, verseKey: verseKey),
-          );
-        },
+        onTap: isHiddenInHifz
+            ? null
+            : () {
+                if (word.charTypeName == 'end') {
+                  AyahActionsSheet.show(context, verseKey);
+                  return;
+                }
+                showResponsiveSheet(
+                  context: context,
+                  builder: (context) =>
+                      WordMeaningSheet(word: word, verseKey: verseKey),
+                );
+              },
         borderRadius: BorderRadius.circular(4),
         child: Container(
           padding: isActiveWord
@@ -56,7 +70,7 @@ class ArabicWord extends StatelessWidget {
               ? BoxDecoration(
                   color: Theme.of(
                     context,
-                  ).colorScheme.primary.withOpacity(0.15),
+                  ).colorScheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                 )
               : null,

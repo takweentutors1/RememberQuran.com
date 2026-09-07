@@ -12,6 +12,8 @@ import 'widgets/juz_navigation_sheet.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../../core/utils/responsive_layout.dart';
 import '../../audio/views/mini_player.dart';
+import '../../study/views/widgets/tafsir_sheet.dart';
+import '../../study/views/widgets/asbab_sheet.dart';
 
 class SurahReaderView extends GetView<ReaderController> {
   const SurahReaderView({super.key});
@@ -22,9 +24,6 @@ class SurahReaderView extends GetView<ReaderController> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        // Ensures the last (debounced) reading-progress write actually
-        // lands before the pop completes — see
-        // ReaderController.flushPendingProgress for why this matters.
         await controller.flushPendingProgress();
         if (context.mounted) Navigator.of(context).pop(result);
       },
@@ -86,14 +85,16 @@ class SurahReaderView extends GetView<ReaderController> {
             ),
           ],
         ),
-        body: ResponsiveLayout(
-          mobile: _buildReaderContent(context),
-          desktop: Row(
-            children: [
-              SizedBox(width: 300, child: _buildSurahSidebar(context)),
-              const VerticalDivider(width: 1, thickness: 1),
-              Expanded(child: _buildReaderContent(context)),
-            ],
+        body: _AutoOpenSheetWrapper(
+          child: ResponsiveLayout(
+            mobile: _buildReaderContent(context),
+            desktop: Row(
+              children: [
+                SizedBox(width: 300, child: _buildSurahSidebar(context)),
+                const VerticalDivider(width: 1, thickness: 1),
+                Expanded(child: _buildReaderContent(context)),
+              ],
+            ),
           ),
         ),
         // The reader is a separate full-screen route from AppScaffold's tab
@@ -226,9 +227,14 @@ class SurahReaderView extends GetView<ReaderController> {
               }),
               Expanded(
                 child: Obx(() {
-                  if (Get.isRegistered<ReaderSettingsController>() &&
-                      Get.find<ReaderSettingsController>().displayMode.value ==
-                          DisplayMode.mushaf) {
+                  final displayMode =
+                      Get.isRegistered<ReaderSettingsController>()
+                          ? Get.find<ReaderSettingsController>()
+                              .displayMode
+                              .value
+                          : DisplayMode.verseByVerse;
+
+                  if (displayMode == DisplayMode.mushaf) {
                     return const MushafPageView();
                   }
 
@@ -255,4 +261,68 @@ class SurahReaderView extends GetView<ReaderController> {
       );
     });
   }
+}
+
+/// Listens for pending sheet open requests (from Study feature navigation)
+/// and opens the appropriate sheet after the reader loads.
+class _AutoOpenSheetWrapper extends StatefulWidget {
+  final Widget child;
+
+  const _AutoOpenSheetWrapper({required this.child});
+
+  @override
+  State<_AutoOpenSheetWrapper> createState() => _AutoOpenSheetWrapperState();
+}
+
+class _AutoOpenSheetWrapperState extends State<_AutoOpenSheetWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndOpenSheet();
+    });
+  }
+
+  void _checkAndOpenSheet() {
+    final controller = Get.find<ReaderController>();
+    final sheetType = controller.pendingSheetToOpen.value;
+    if (sheetType == null) return;
+
+    final chapter = controller.chapter.value;
+    if (chapter == null || controller.verses.isEmpty) {
+      // Wait for verses to load, then retry
+      ever(controller.verses, (_) {
+        final retrySheet = controller.pendingSheetToOpen.value;
+        if (retrySheet != null) {
+          _openSheet(retrySheet);
+        }
+      });
+      return;
+    }
+
+    _openSheet(sheetType);
+  }
+
+  void _openSheet(String sheetType) {
+    final controller = Get.find<ReaderController>();
+    final chapter = controller.chapter.value;
+    if (chapter == null) return;
+
+    final ayahIdStr = Get.parameters['ayahId'];
+    final ayahId = ayahIdStr != null ? int.tryParse(ayahIdStr) ?? 1 : 1;
+
+    // Clear the pending sheet so it doesn't re-trigger
+    controller.pendingSheetToOpen.value = null;
+
+    if (!mounted) return;
+
+    if (sheetType == 'tafsir') {
+      TafsirSheet.show(context, chapter.id, ayahId);
+    } else if (sheetType == 'asbab') {
+      AsbabSheet.show(context, chapter.id, ayahId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

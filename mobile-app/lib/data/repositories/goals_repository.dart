@@ -31,6 +31,42 @@ class GoalsRepository {
     return _localDayStart(a).isAtSameMomentAs(_localDayStart(b));
   }
 
+  /// Start of the goal's current period, containing [day]. Weeks start
+  /// Monday to match the ISO week convention used elsewhere in the app.
+  DateTime _periodStart(DateTime day, GoalPeriod period) {
+    switch (period) {
+      case GoalPeriod.daily:
+        return day;
+      case GoalPeriod.weekly:
+        return _shiftLocalDay(day, -(day.weekday - 1));
+      case GoalPeriod.monthly:
+        return DateTime(day.year, day.month, 1);
+    }
+  }
+
+  /// Exclusive end of the period starting at [periodStart].
+  DateTime _periodEnd(DateTime periodStart, GoalPeriod period) {
+    switch (period) {
+      case GoalPeriod.daily:
+        return _shiftLocalDay(periodStart, 1);
+      case GoalPeriod.weekly:
+        return _shiftLocalDay(periodStart, 7);
+      case GoalPeriod.monthly:
+        return DateTime(periodStart.year, periodStart.month + 1, 1);
+    }
+  }
+
+  DateTime _previousPeriodStart(DateTime periodStart, GoalPeriod period) {
+    switch (period) {
+      case GoalPeriod.daily:
+        return _shiftLocalDay(periodStart, -1);
+      case GoalPeriod.weekly:
+        return _shiftLocalDay(periodStart, -7);
+      case GoalPeriod.monthly:
+        return DateTime(periodStart.year, periodStart.month - 1, 1);
+    }
+  }
+
   // ===========================================================================
   // Goals Logic
   // ===========================================================================
@@ -60,22 +96,21 @@ class GoalsRepository {
     final userRef = _db.collection('users').doc(userId);
     final now = DateTime.now();
     final today = _localDayStart(now);
-    final yesterday = _shiftLocalDay(now, -1);
 
-    final futures = await Future.wait([
-      userRef.get(),
-      sumAyahsForDay(userId, today),
-    ]);
+    final userSnap = await userRef.get();
+    final data = userSnap.data() ?? {};
 
-    final userSnap = futures[0] as DocumentSnapshot;
-    final todayAyahs = futures[1] as int;
-
-    final data = userSnap.data() as Map<String, dynamic>? ?? {};
-    
     ActiveGoal? goal;
     if (data['activeGoal'] != null) {
       goal = ActiveGoal.fromMap(data['activeGoal'] as Map<String, dynamic>);
     }
+    final period = goal?.period ?? GoalPeriod.daily;
+
+    final periodStart = _periodStart(today, period);
+    final periodEnd = _periodEnd(periodStart, period);
+    final previousPeriodStart = _previousPeriodStart(periodStart, period);
+
+    final periodAyahs = await sumAyahsForRange(userId, periodStart, periodEnd);
 
     final streakData = data['streak'] as Map<String, dynamic>? ?? {};
     int currentStreak = streakData['currentStreak'] as int? ?? 0;
@@ -85,22 +120,26 @@ class GoalsRepository {
       lastMetDate = _localDayStart(lastMetDate);
     }
 
-    final todayCount = goal != null ? _countInGoalUnits(todayAyahs, goal.type) : todayAyahs;
-    final metToday = goal != null && todayCount >= goal.target;
+    final periodCount = goal != null ? _countInGoalUnits(periodAyahs, goal.type) : 0;
+    final metPeriod = goal != null && periodCount >= goal.target;
 
     bool streakChanged = false;
 
+    // lastMetDate stores the *start* of whichever period it was last hit
+    // in (a day, a Monday, or a month's 1st) — comparing it against the
+    // current/previous period start below works the same way regardless
+    // of the goal's period.
     if (goal != null) {
-      if (metToday) {
-        if (_sameLocalDay(lastMetDate, today)) {
-          // already counted today
-        } else if (_sameLocalDay(lastMetDate, yesterday)) {
+      if (metPeriod) {
+        if (_sameLocalDay(lastMetDate, periodStart)) {
+          // already counted this period
+        } else if (_sameLocalDay(lastMetDate, previousPeriodStart)) {
           currentStreak += 1;
-          lastMetDate = today;
+          lastMetDate = periodStart;
           streakChanged = true;
         } else {
           currentStreak = 1;
-          lastMetDate = today;
+          lastMetDate = periodStart;
           streakChanged = true;
         }
 
@@ -108,11 +147,11 @@ class GoalsRepository {
           longestStreak = currentStreak;
           streakChanged = true;
         }
-      } else if (lastMetDate != null && lastMetDate.isBefore(yesterday)) {
+      } else if (lastMetDate != null && lastMetDate.isBefore(previousPeriodStart)) {
         if (currentStreak != 0) streakChanged = true;
         currentStreak = 0;
       }
-    } else if (lastMetDate != null && lastMetDate.isBefore(yesterday)) {
+    } else if (lastMetDate != null && lastMetDate.isBefore(previousPeriodStart)) {
       if (currentStreak != 0) streakChanged = true;
       currentStreak = 0;
     }
@@ -128,11 +167,14 @@ class GoalsRepository {
       }, SetOptions(merge: true));
     }
 
+    // Last-7-days chart context — only meaningful for daily goals (see
+    // GoalSnapshot.week doc), but cheap enough to always compute.
     final priorDays = List.generate(6, (i) => _shiftLocalDay(now, -(6 - i)));
-    final priorAyahs = await Future.wait(priorDays.map((day) => sumAyahsForDay(userId, day)));
-    
-    final weekAyahs = [...priorAyahs, todayAyahs];
-    final week = weekAyahs.asMap().entries.map((entry) {
+    final dayAyahs = await Future.wait(
+      [...priorDays, today].map((day) => sumAyahsForDay(userId, day)),
+    );
+
+    final week = dayAyahs.asMap().entries.map((entry) {
       final i = entry.key;
       final ayahs = entry.value;
       final day = i < 6 ? priorDays[i] : today;
@@ -145,9 +187,8 @@ class GoalsRepository {
 
     return GoalSnapshot(
       goal: goal,
-      todayAyahs: todayAyahs,
-      todayCount: goal != null ? todayCount : 0,
-      metToday: metToday,
+      periodCount: periodCount,
+      metPeriod: metPeriod,
       streak: GoalStreak(
         currentStreak: currentStreak,
         longestStreak: longestStreak,
@@ -259,7 +300,22 @@ class GoalsRepository {
     final snap = await _progressRef(userId)
         .where('date', isEqualTo: Timestamp.fromDate(day))
         .get();
-        
+
+    int total = 0;
+    for (var doc in snap.docs) {
+      total += _sumRanges(_extractRanges(doc.data() as Map<String, dynamic>));
+    }
+    return total;
+  }
+
+  /// Sums ayahs read across [start, endExclusive) — used for weekly/monthly
+  /// goal progress, where a single day's total isn't enough.
+  Future<int> sumAyahsForRange(String userId, DateTime start, DateTime endExclusive) async {
+    final snap = await _progressRef(userId)
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('date', isLessThan: Timestamp.fromDate(endExclusive))
+        .get();
+
     int total = 0;
     for (var doc in snap.docs) {
       total += _sumRanges(_extractRanges(doc.data() as Map<String, dynamic>));

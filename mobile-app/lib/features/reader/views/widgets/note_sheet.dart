@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../shared/widgets/loading_skeleton.dart';
 import '../../../account/controllers/notes_controller.dart';
-import '../../../../data/models/note.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_layout.dart';
 

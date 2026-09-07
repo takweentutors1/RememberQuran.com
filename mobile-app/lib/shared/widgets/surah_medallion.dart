@@ -21,7 +21,7 @@ class SurahMedallion extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.28),
-        border: Border.all(color: gold.withOpacity(0.55), width: 1.5),
+        border: Border.all(color: gold.withValues(alpha: 0.55), width: 1.5),
       ),
       child: Text(
         '$number',

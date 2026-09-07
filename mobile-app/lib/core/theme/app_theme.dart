@@ -13,14 +13,14 @@ class AppTheme {
     return FilledButton.styleFrom(
       backgroundColor: base,
       foregroundColor: foreground,
-      disabledBackgroundColor: base.withOpacity(0.45),
-      disabledForegroundColor: foreground.withOpacity(0.45),
+      disabledBackgroundColor: base.withValues(alpha: 0.45),
+      disabledForegroundColor: foreground.withValues(alpha: 0.45),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.fieldRadius),
       textStyle: AppTypography.sans(fontSize: 15, weight: FontWeight.w600),
       animationDuration: AppMotion.durFast,
     ).copyWith(
       overlayColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.pressed)) return pressed.withOpacity(0.16);
+        if (states.contains(WidgetState.pressed)) return pressed.withValues(alpha: 0.16);
         return null;
       }),
     );
@@ -29,7 +29,7 @@ class AppTheme {
   static ButtonStyle _outlinedButtonStyle({required Color color}) {
     return OutlinedButton.styleFrom(
       foregroundColor: color,
-      side: BorderSide(color: color.withOpacity(0.4)),
+      side: BorderSide(color: color.withValues(alpha: 0.4)),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.fieldRadius),
       textStyle: AppTypography.sans(fontSize: 15, weight: FontWeight.w600),
     );
@@ -91,7 +91,7 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: AppColors.lightCard,
       elevation: 1,
-      shadowColor: const Color(0xFF2B2925).withOpacity(0.5),
+      shadowColor: const Color(0xFF2B2925).withValues(alpha: 0.5),
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.cardRadius,
@@ -106,7 +106,7 @@ class AppTheme {
       backgroundColor: AppColors.lightCard,
       surfaceTintColor: Colors.transparent,
       elevation: 3,
-      shadowColor: const Color(0xFF2B2925).withOpacity(0.5),
+      shadowColor: const Color(0xFF2B2925).withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.xl2Radius),
       titleTextStyle: AppTypography.sans(
         fontSize: 18,
@@ -218,7 +218,7 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: AppColors.darkCard,
       elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.4),
+      shadowColor: Colors.black.withValues(alpha: 0.4),
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.cardRadius,
@@ -229,7 +229,7 @@ class AppTheme {
       backgroundColor: AppColors.darkCard,
       surfaceTintColor: Colors.transparent,
       elevation: 3,
-      shadowColor: Colors.black.withOpacity(0.5),
+      shadowColor: Colors.black.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.xl2Radius),
       titleTextStyle: AppTypography.sans(
         fontSize: 18,

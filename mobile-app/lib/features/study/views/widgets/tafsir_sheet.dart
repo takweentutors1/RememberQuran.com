@@ -127,10 +127,10 @@ class _TafsirSheetState extends State<TafsirSheet> {
                               color: isNotFound
                                   ? Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.2)
+                                    ).colorScheme.onSurface.withValues(alpha: 0.2)
                                   : Theme.of(
                                       context,
-                                    ).colorScheme.error.withOpacity(0.8),
+                                    ).colorScheme.error.withValues(alpha: 0.8),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -140,7 +140,7 @@ class _TafsirSheetState extends State<TafsirSheet> {
                                     fontWeight: FontWeight.bold,
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.8),
+                                    ).colorScheme.onSurface.withValues(alpha: 0.8),
                                   ),
                             ),
                             const SizedBox(height: 12),
@@ -150,7 +150,7 @@ class _TafsirSheetState extends State<TafsirSheet> {
                                 color: isNotFound
                                     ? Theme.of(
                                         context,
-                                      ).colorScheme.onSurface.withOpacity(0.6)
+                                      ).colorScheme.onSurface.withValues(alpha: 0.6)
                                     : Theme.of(context).colorScheme.error,
                                 fontSize: 16,
                                 height: 1.5,
@@ -173,7 +173,7 @@ class _TafsirSheetState extends State<TafsirSheet> {
                             size: 48,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.2),
+                            ).colorScheme.onSurface.withValues(alpha: 0.2),
                           ),
                           const SizedBox(height: 16),
                           const Text(

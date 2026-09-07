@@ -138,6 +138,103 @@ class QuranRepository {
     ).getSingleOrNull();
   }
 
+  /// Upserts a raw `verses` payload (verse + words + translations) into the
+  /// local cache. Shared by [_refreshVerses] (chapter-scoped, `chapterId`
+  /// known upfront) and [getVersesForPage] (a Mushaf page can mix verses
+  /// from two chapters, so each verse's own `verse_key` decides its
+  /// `chapterId`).
+  Future<void> _upsertVersesPayload(
+    List<dynamic> versesList, {
+    int? chapterId,
+  }) async {
+    await localDb.transaction(() async {
+      for (final verse in versesList) {
+        final v = Map<String, dynamic>.from(verse);
+        final vChapterId =
+            chapterId ?? int.parse((v['verse_key'] as String).split(':').first);
+        await localDb.into(localDb.verses).insert(VersesCompanion.insert(
+          id: Value(v['id'] as int),
+          chapterId: vChapterId,
+          verseNumber: v['verse_number'] as int,
+          verseKey: v['verse_key'] as String,
+          pageNumber: v['page_number'] as int,
+          juzNumber: v['juz_number'] as int,
+          hizbNumber: v['hizb_number'] as int,
+          textUthmani: (v['text_uthmani'] ?? '') as String,
+          qpcUthmaniHafs: Value(v['qpc_uthmani_hafs'] as String?),
+        ), mode: InsertMode.insertOrReplace);
+
+        if (v['words'] != null) {
+          final wordsList = v['words'] as List<dynamic>;
+          for (final word in wordsList) {
+            final w = Map<String, dynamic>.from(word);
+            await localDb.into(localDb.words).insert(WordsCompanion.insert(
+              id: Value(w['id'] as int),
+              verseId: v['id'] as int,
+              position: w['position'] as int,
+              audioUrl: Value(w['audio_url'] as String?),
+              charTypeName: (w['char_type_name'] ?? '') as String,
+              lineNumber: Value(w['line_number'] as int? ?? 1),
+              textUthmani: (w['text_uthmani'] ?? '') as String,
+              qpcUthmaniHafs: Value(w['qpc_uthmani_hafs'] as String?),
+              textUthmaniTajweed: Value(w['text_uthmani_tajweed'] as String?),
+              translation: jsonEncode(w['translation']),
+              transliteration: Value(w['transliteration'] != null ? jsonEncode(w['transliteration']) : null),
+            ), mode: InsertMode.insertOrReplace);
+          }
+        }
+
+        if (v['translations'] != null) {
+          final translationsList = v['translations'] as List<dynamic>;
+
+          // Clear old translations for this verse to avoid duplicates since PK is auto-increment
+          await (localDb.delete(localDb.verseTranslations)..where((t) => t.verseId.equals(v['id'] as int))).go();
+
+          for (final trans in translationsList) {
+            final t = Map<String, dynamic>.from(trans);
+            await localDb.into(localDb.verseTranslations).insert(VerseTranslationsCompanion.insert(
+              verseId: v['id'] as int,
+              resourceId: t['resource_id'] as int,
+              translationText: t['text'] as String,
+            ));
+          }
+        }
+      }
+    });
+  }
+
+  /// All verses on one physical Mushaf page, potentially spanning more than
+  /// one chapter (short surahs routinely share a page with their
+  /// neighbour). Used by the Mushaf reading mode to fill in a boundary
+  /// page's lines that belong to a surah other than the one currently
+  /// loaded — a plain chapter-scoped fetch leaves those lines blank.
+  /// Returns whatever's already cached immediately and best-effort
+  /// refreshes/upserts the rest in the background; returns an empty list
+  /// (never throws) if both the cache and the network are unavailable.
+  Future<List<Verse>> getVersesForPage(int pageNumber) async {
+    final cached = await (localDb.select(localDb.verses)
+      ..where((v) => v.pageNumber.equals(pageNumber))
+      ..orderBy([(v) => OrderingTerm(expression: v.id)])
+    ).get();
+
+    try {
+      final data = await remoteDs.getVersesByPage(pageNumber);
+      final versesList = data['verses'] as List<dynamic>;
+      await _upsertVersesPayload(versesList);
+    } catch (e, st) {
+      if (cached.isNotEmpty) {
+        FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+        return cached;
+      }
+      return [];
+    }
+
+    return await (localDb.select(localDb.verses)
+      ..where((v) => v.pageNumber.equals(pageNumber))
+      ..orderBy([(v) => OrderingTerm(expression: v.id)])
+    ).get();
+  }
+
   Future<void> _refreshVerses(int chapterId, {required bool silent}) async {
     try {
       int page = 1;
@@ -147,59 +244,7 @@ class QuranRepository {
         final versesPage = await remoteDs.getVersesPage(chapterId, page: page, translations: bundleTranslationIds);
         totalPages = versesPage['pagination']['total_pages'];
         final versesList = versesPage['verses'] as List<dynamic>;
-
-        // Only wrap inserts in transaction
-        await localDb.transaction(() async {
-          for (final verse in versesList) {
-            final v = Map<String, dynamic>.from(verse);
-            await localDb.into(localDb.verses).insert(VersesCompanion.insert(
-              id: Value(v['id'] as int),
-              chapterId: chapterId,
-              verseNumber: v['verse_number'] as int,
-              verseKey: v['verse_key'] as String,
-              pageNumber: v['page_number'] as int,
-              juzNumber: v['juz_number'] as int,
-              hizbNumber: v['hizb_number'] as int,
-              textUthmani: (v['text_uthmani'] ?? '') as String,
-              qpcUthmaniHafs: Value(v['qpc_uthmani_hafs'] as String?),
-            ), mode: InsertMode.insertOrReplace);
-
-            if (v['words'] != null) {
-              final wordsList = v['words'] as List<dynamic>;
-              for (final word in wordsList) {
-                final w = Map<String, dynamic>.from(word);
-                await localDb.into(localDb.words).insert(WordsCompanion.insert(
-                  id: Value(w['id'] as int),
-                  verseId: v['id'] as int,
-                  position: w['position'] as int,
-                  audioUrl: Value(w['audio_url'] as String?),
-                  charTypeName: (w['char_type_name'] ?? '') as String,
-                  textUthmani: (w['text_uthmani'] ?? '') as String,
-                  qpcUthmaniHafs: Value(w['qpc_uthmani_hafs'] as String?),
-                  textUthmaniTajweed: Value(w['text_uthmani_tajweed'] as String?),
-                  translation: jsonEncode(w['translation']),
-                  transliteration: Value(w['transliteration'] != null ? jsonEncode(w['transliteration']) : null),
-                ), mode: InsertMode.insertOrReplace);
-              }
-            }
-
-            if (v['translations'] != null) {
-              final translationsList = v['translations'] as List<dynamic>;
-
-              // Clear old translations for this verse to avoid duplicates since PK is auto-increment
-              await (localDb.delete(localDb.verseTranslations)..where((t) => t.verseId.equals(v['id'] as int))).go();
-
-              for (final trans in translationsList) {
-                final t = Map<String, dynamic>.from(trans);
-                await localDb.into(localDb.verseTranslations).insert(VerseTranslationsCompanion.insert(
-                  verseId: v['id'] as int,
-                  resourceId: t['resource_id'] as int,
-                  translationText: t['text'] as String,
-                ));
-              }
-            }
-          }
-        });
+        await _upsertVersesPayload(versesList, chapterId: chapterId);
         page++;
       } while (page <= totalPages);
     } catch (e, st) {

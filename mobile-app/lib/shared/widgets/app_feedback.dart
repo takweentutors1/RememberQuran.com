@@ -30,8 +30,8 @@ class AppFeedback {
       message: message,
       mood: MascotMood.success,
       background: isDark
-          ? AppColors.darkBrandGoldSoft.withOpacity(0.2)
-          : AppColors.lightBrandGoldSoft.withOpacity(0.4),
+          ? AppColors.darkBrandGoldSoft.withValues(alpha: 0.2)
+          : AppColors.lightBrandGoldSoft.withValues(alpha: 0.4),
       foreground: isDark ? AppColors.darkForeground : AppColors.lightForeground,
     );
   }
@@ -61,8 +61,8 @@ class AppFeedback {
       message: message,
       mood: MascotMood.error,
       background: isDark
-          ? AppColors.darkDestructive.withOpacity(0.15)
-          : AppColors.lightDestructive.withOpacity(0.15),
+          ? AppColors.darkDestructive.withValues(alpha: 0.15)
+          : AppColors.lightDestructive.withValues(alpha: 0.15),
       foreground: isDark
           ? AppColors.darkDestructive
           : AppColors.lightDestructive,
@@ -234,7 +234,7 @@ class _CenteredToastState extends State<_CenteredToast>
             borderRadius: AppRadius.xl2Radius,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.12),
+                color: Colors.black.withValues(alpha: 0.12),
                 blurRadius: 40,
                 offset: const Offset(0, 16),
               ),
@@ -250,7 +250,7 @@ class _CenteredToastState extends State<_CenteredToast>
                   color: widget.background,
                   borderRadius: AppRadius.xl2Radius,
                   border: Border.all(
-                    color: widget.foreground.withOpacity(0.15),
+                    color: widget.foreground.withValues(alpha: 0.15),
                     width: 1,
                   ),
                 ),
@@ -279,7 +279,7 @@ class _CenteredToastState extends State<_CenteredToast>
                       style: AppTypography.sans(
                         fontSize: 13,
                         weight: FontWeight.w400,
-                        color: widget.foreground.withOpacity(0.9),
+                        color: widget.foreground.withValues(alpha: 0.9),
                         height: 1.4,
                       ),
                     ),

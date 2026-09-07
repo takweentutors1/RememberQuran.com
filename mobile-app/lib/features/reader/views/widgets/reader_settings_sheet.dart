@@ -56,10 +56,6 @@ class ReaderSettingsSheet extends GetView<ReaderSettingsController> {
                       label: Text('Verse'),
                     ),
                     ButtonSegment(
-                      value: DisplayMode.continuous,
-                      label: Text('Continuous'),
-                    ),
-                    ButtonSegment(
                       value: DisplayMode.mushaf,
                       label: Text('Mushaf'),
                     ),
@@ -80,7 +76,10 @@ class ReaderSettingsSheet extends GetView<ReaderSettingsController> {
                       value: AppFonts.uthmanicHafs,
                       label: Text('Hafs'),
                     ),
-                    ButtonSegment(value: AppFonts.amiri, label: Text('Amiri')),
+                    ButtonSegment(
+                      value: AppFonts.kingFahdComplex,
+                      label: Text('King Fahd Complex'),
+                    ),
                     ButtonSegment(
                       value: AppFonts.amiriQuran,
                       label: Text('Amiri Quran'),

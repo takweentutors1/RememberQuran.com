@@ -138,7 +138,7 @@ class ProgressView extends GetView<ProgressController> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -151,7 +151,7 @@ class ProgressView extends GetView<ProgressController> {
           Text(
             'Reading Volume',
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -188,10 +188,10 @@ class ProgressView extends GetView<ProgressController> {
                             color: data.ayahsRead > 0
                                 ? (isToday
                                       ? theme.colorScheme.primary
-                                      : theme.colorScheme.primary.withOpacity(
-                                          0.5,
+                                      : theme.colorScheme.primary.withValues(
+                                          alpha: 0.5,
                                         ))
-                                : theme.colorScheme.onSurface.withOpacity(0.1),
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -308,7 +308,7 @@ class ProgressView extends GetView<ProgressController> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -325,7 +325,7 @@ class ProgressView extends GetView<ProgressController> {
           Text(
             title,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),

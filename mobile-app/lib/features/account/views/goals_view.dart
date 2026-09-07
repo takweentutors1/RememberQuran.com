@@ -14,7 +14,7 @@ class GoalsView extends GetView<GoalsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Daily Goals'), centerTitle: true),
+      appBar: AppBar(title: const Text('Goals'), centerTitle: true),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
@@ -61,18 +61,18 @@ class GoalsView extends GetView<GoalsController> {
             Icon(
               Icons.track_changes_rounded,
               size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             Text(
-              'Set a Daily Goal',
+              'Set a Reading Goal',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
-              'Build a consistent reading habit by setting a daily goal for Ayahs or Pages.',
+              'Build a consistent reading habit by setting a Daily, Weekly, or Monthly goal for Ayahs or Pages.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -108,8 +108,10 @@ class GoalsView extends GetView<GoalsController> {
           _buildStreakCard(context, snapshot),
           const SizedBox(height: 20),
           _buildProgressCard(context, snapshot),
-          const SizedBox(height: 20),
-          _buildWeeklyActivity(context, snapshot),
+          if (snapshot.goal!.period == GoalPeriod.daily) ...[
+            const SizedBox(height: 20),
+            _buildWeeklyActivity(context, snapshot),
+          ],
           const SizedBox(height: 32),
           OutlinedButton.icon(
             onPressed: () => _showSetGoalBottomSheet(context),
@@ -128,7 +130,7 @@ class GoalsView extends GetView<GoalsController> {
               final confirmed = await AppDialog.confirm(
                 context,
                 title: 'Clear goal',
-                message: 'This removes your daily reading goal.',
+                message: 'This removes your reading goal.',
                 confirmLabel: 'Clear',
                 isDestructive: true,
               );
@@ -144,7 +146,20 @@ class GoalsView extends GetView<GoalsController> {
     );
   }
 
+  String _periodNounSingular(GoalPeriod period) => switch (period) {
+    GoalPeriod.daily => 'Day',
+    GoalPeriod.weekly => 'Week',
+    GoalPeriod.monthly => 'Month',
+  };
+
+  String _periodNounPlural(GoalPeriod period) => switch (period) {
+    GoalPeriod.daily => 'Days',
+    GoalPeriod.weekly => 'Weeks',
+    GoalPeriod.monthly => 'Months',
+  };
+
   Widget _buildStreakCard(BuildContext context, GoalSnapshot snapshot) {
+    final period = snapshot.goal!.period;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -172,7 +187,7 @@ class GoalsView extends GetView<GoalsController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${snapshot.streak.currentStreak} Day Streak',
+                  '${snapshot.streak.currentStreak} ${_periodNounSingular(period)} Streak',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -180,11 +195,11 @@ class GoalsView extends GetView<GoalsController> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Longest: ${snapshot.streak.longestStreak} Days',
+                  'Longest: ${snapshot.streak.longestStreak} ${_periodNounPlural(period)}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                    ).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -198,9 +213,14 @@ class GoalsView extends GetView<GoalsController> {
   Widget _buildProgressCard(BuildContext context, GoalSnapshot snapshot) {
     final nurColors = Theme.of(context).extension<NurColorsExtension>()!;
     final target = snapshot.goal!.target;
-    final current = snapshot.todayCount;
+    final current = snapshot.periodCount;
     final progress = (current / target).clamp(0.0, 1.0);
     final unit = snapshot.goal!.type == GoalType.pages ? 'Pages' : 'Ayahs';
+    final progressTitle = switch (snapshot.goal!.period) {
+      GoalPeriod.daily => "Today's Progress",
+      GoalPeriod.weekly => "This Week's Progress",
+      GoalPeriod.monthly => "This Month's Progress",
+    };
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -212,7 +232,7 @@ class GoalsView extends GetView<GoalsController> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -221,7 +241,7 @@ class GoalsView extends GetView<GoalsController> {
       child: Column(
         children: [
           Text(
-            'Today\'s Progress',
+            progressTitle,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -239,7 +259,7 @@ class GoalsView extends GetView<GoalsController> {
                   backgroundColor: Theme.of(
                     context,
                   ).colorScheme.surfaceContainerHighest,
-                  color: snapshot.metToday
+                  color: snapshot.metPeriod
                       ? nurColors.brandGold
                       : Theme.of(context).colorScheme.primary,
                   strokeCap: StrokeCap.round,
@@ -252,7 +272,7 @@ class GoalsView extends GetView<GoalsController> {
                     '$current',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: snapshot.metToday ? nurColors.brandGold : null,
+                      color: snapshot.metPeriod ? nurColors.brandGold : null,
                     ),
                   ),
                   Text(
@@ -266,11 +286,11 @@ class GoalsView extends GetView<GoalsController> {
             ],
           ),
           const SizedBox(height: 24),
-          if (snapshot.metToday)
+          if (snapshot.metPeriod)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: nurColors.brandGold.withOpacity(0.1),
+                color: nurColors.brandGold.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -376,11 +396,12 @@ class _SetGoalSheet extends StatefulWidget {
 }
 
 class _SetGoalSheetState extends State<_SetGoalSheet> {
+  GoalPeriod _selectedPeriod = GoalPeriod.daily;
   GoalType _selectedType = GoalType.pages;
   int _customTarget = 1;
   final TextEditingController _customController = TextEditingController();
 
-  final List<Map<String, dynamic>> _presets = [
+  static const _dailyPresets = [
     {'label': '1 Page', 'type': GoalType.pages, 'target': 1},
     {'label': '5 Pages', 'type': GoalType.pages, 'target': 5},
     {'label': '10 Pages', 'type': GoalType.pages, 'target': 10},
@@ -388,6 +409,27 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
     {'label': '50 Ayahs', 'type': GoalType.ayahs, 'target': 50},
     {'label': '100 Ayahs', 'type': GoalType.ayahs, 'target': 100},
   ];
+
+  // Weekly/monthly presets scale the daily page/ayah targets by roughly
+  // 7x/30x — still just a starting point, the custom field covers anything
+  // in between.
+  List<Map<String, dynamic>> get _presets {
+    final multiplier = switch (_selectedPeriod) {
+      GoalPeriod.daily => 1,
+      GoalPeriod.weekly => 7,
+      GoalPeriod.monthly => 30,
+    };
+    if (multiplier == 1) return _dailyPresets;
+    return _dailyPresets.map((preset) {
+      final scaledTarget = (preset['target'] as int) * multiplier;
+      final unit = preset['type'] == GoalType.pages ? 'Pages' : 'Ayahs';
+      return {
+        'label': '$scaledTarget $unit',
+        'type': preset['type'],
+        'target': scaledTarget,
+      };
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -414,18 +456,53 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 24),
           Text(
-            'Set Daily Goal',
+            'Set Reading Goal',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          SegmentedButton<GoalPeriod>(
+            segments: const [
+              ButtonSegment(value: GoalPeriod.daily, label: Text('Daily')),
+              ButtonSegment(value: GoalPeriod.weekly, label: Text('Weekly')),
+              ButtonSegment(value: GoalPeriod.monthly, label: Text('Monthly')),
+            ],
+            selected: {_selectedPeriod},
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return nurColors?.brandGoldSoft ??
+                      theme.colorScheme.primaryContainer;
+                }
+                return nurColors?.surfaceSunk ?? theme.colorScheme.surface;
+              }),
+              foregroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return nurColors?.brandGold ?? theme.colorScheme.primary;
+                }
+                return theme.colorScheme.onSurface;
+              }),
+            ),
+            onSelectionChanged: (set) {
+              setState(() {
+                _selectedPeriod = set.first;
+                // Land on a sensible default for the new period rather than
+                // carrying over a target that belonged to the old one.
+                final firstPreset = _presets.first;
+                _selectedType = firstPreset['type'] as GoalType;
+                _customTarget = firstPreset['target'] as int;
+                _customController.text = _customTarget.toString();
+              });
+            },
           ),
           const SizedBox(height: 24),
           Wrap(
@@ -535,7 +612,7 @@ class _SetGoalSheetState extends State<_SetGoalSheet> {
           FilledButton(
             onPressed: () {
               final controller = Get.find<GoalsController>();
-              controller.setGoal(_selectedType, _customTarget);
+              controller.setGoal(_selectedType, _customTarget, _selectedPeriod);
               Get.back();
             },
             style: FilledButton.styleFrom(

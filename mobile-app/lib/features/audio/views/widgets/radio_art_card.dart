@@ -106,12 +106,12 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                   shape: BoxShape.circle, // Circular shape for the "record"
                   boxShadow: [
                     BoxShadow(
-                      color: brandGold.withOpacity(glowOpacity),
+                      color: brandGold.withValues(alpha: glowOpacity),
                       blurRadius: 40,
                       spreadRadius: widget.isPlaying ? 8 : 2,
                     ),
                     BoxShadow(
-                      color: theme.shadowColor.withOpacity(isDark ? 0.4 : 0.1),
+                      color: theme.shadowColor.withValues(alpha: isDark ? 0.4 : 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     )
@@ -128,11 +128,11 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                           gradient: SweepGradient(
                             center: Alignment.center,
                             colors: [
-                              brandGoldSoft.withOpacity(0.1),
-                              brandGoldSoft.withOpacity(0.3),
+                              brandGoldSoft.withValues(alpha: 0.1),
+                              brandGoldSoft.withValues(alpha: 0.3),
                               cardColor,
-                              brandGoldSoft.withOpacity(0.3),
-                              brandGoldSoft.withOpacity(0.1),
+                              brandGoldSoft.withValues(alpha: 0.3),
+                              brandGoldSoft.withValues(alpha: 0.1),
                             ],
                             transform: GradientRotation(_rotationController.value * 2 * 3.14159),
                           ),
@@ -201,7 +201,7 @@ class _RadioArtCardState extends State<RadioArtCard> with TickerProviderStateMix
                                   height: 24 * scale,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: brandGold.withOpacity(0.5),
+                                    color: brandGold.withValues(alpha: 0.5),
                                   ),
                                 ),
                               ]

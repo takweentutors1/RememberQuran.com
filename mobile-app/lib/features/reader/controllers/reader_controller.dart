@@ -38,10 +38,23 @@ class ReaderController extends GetxController {
   final RxInt bulkMarkProgress = 0.obs;
   final RxBool isBulkMarking = false.obs;
 
+  /// Signals which sheet to auto-open after reader loads.
+  /// Values: 'tafsir', 'asbab', or null.
+  final RxnString pendingSheetToOpen = RxnString();
+
   final isLoading = true.obs;
   final hasError = false.obs;
 
   int? _lastChapterId;
+
+  // Guards against out-of-order responses: rapid next/prev taps can fire
+  // several loadChapter() calls before earlier ones finish, and network
+  // latency doesn't guarantee they resolve in request order. Without this,
+  // a slow older request can land last and overwrite the header/verses set
+  // by a newer, faster one — showing e.g. "Al-Ma'idah" in the title with
+  // Al-Fatihah's ayahs underneath, and leaving isLoading stuck true from
+  // whichever request's finally block ran last, freezing the nav buttons.
+  int _loadRequestId = 0;
 
   final ItemScrollController itemScrollController = ItemScrollController();
   final ItemPositionsListener itemPositionsListener =
@@ -71,6 +84,15 @@ class ReaderController extends GetxController {
       if (id != null) {
         loadChapter(id);
       }
+    }
+
+    // Check for auto-open sheet parameters from Study feature
+    final openTafsir = Get.parameters['openTafsir'];
+    final openAsbab = Get.parameters['openAsbab'];
+    if (openTafsir == 'true') {
+      pendingSheetToOpen.value = 'tafsir';
+    } else if (openAsbab == 'true') {
+      pendingSheetToOpen.value = 'asbab';
     }
 
     ever(verses, (List<Verse> updatedVerses) {
@@ -239,14 +261,14 @@ class ReaderController extends GetxController {
     if (user == null) return;
 
     try {
-      await _goalsRepository.recordProgressEvent(
-        user.uid,
-        chapter.value!.id,
-        from,
-        to,
-      );
+      // Timed out rather than left unbounded: flushPendingProgress() awaits
+      // this from the reader's back-button handler, so a stalled write on a
+      // poor connection must not freeze navigation indefinitely.
+      await _goalsRepository
+          .recordProgressEvent(user.uid, chapter.value!.id, from, to)
+          .timeout(const Duration(seconds: 5));
     } catch (e) {
-      // Silent
+      // Silent — best-effort progress tracking, never blocks navigation.
     }
   }
 
@@ -274,6 +296,7 @@ class ReaderController extends GetxController {
   }
 
   Future<void> loadChapter(int chapterId) async {
+    final requestId = ++_loadRequestId;
     _lastChapterId = chapterId;
     _hasScrolledToAyah = false;
     final recoveringFromError = hasError.value;
@@ -286,15 +309,19 @@ class ReaderController extends GetxController {
         settings.loadHifzRange(chapterId);
       }
 
-      chapter.value = await repository.getChapter(chapterId);
+      final fetchedChapter = await repository.getChapter(chapterId);
+      if (requestId != _loadRequestId) return; // superseded by a newer navigation
+      chapter.value = fetchedChapter;
+
       final fetchedVerses = await repository.getVerses(chapterId);
+      if (requestId != _loadRequestId) return;
       verses.value = fetchedVerses;
 
       resumeBannerMessage.value = null;
       final user = Get.find<AuthController>().firebaseUser.value;
       final requestedAyahStr = Get.parameters['ayahId'];
       if (requestedAyahStr == null && user != null && fetchedVerses.isNotEmpty) {
-        _checkAndResumeLastPosition(user.uid, chapterId, fetchedVerses);
+        _checkAndResumeLastPosition(user.uid, chapterId, fetchedVerses, requestId);
       }
 
       final Map<int, List<Word>> wMap = {};
@@ -304,6 +331,7 @@ class ReaderController extends GetxController {
         wMap[v.id] = await repository.getVerseWords(v.id);
         tMap[v.id] = await repository.getVerseTranslations(v.id);
       }
+      if (requestId != _loadRequestId) return;
 
       verseWords.assignAll(wMap);
       verseTranslations.assignAll(tMap);
@@ -314,12 +342,12 @@ class ReaderController extends GetxController {
           user.uid,
           surahPrefix: chapterId,
         );
-        bookmarkedVerses.assignAll(bList.map((e) => e.verseKey));
-
         final mList = await _hifzRepo.listMemorisedAyahs(
           user.uid,
           surahId: chapterId,
         );
+        if (requestId != _loadRequestId) return;
+        bookmarkedVerses.assignAll(bList.map((e) => e.verseKey));
         memorisedVerses.assignAll(mList.map((e) => e.verseKey));
       }
 
@@ -330,10 +358,11 @@ class ReaderController extends GetxController {
         );
       }
     } catch (e, st) {
+      if (requestId != _loadRequestId) return;
       hasError.value = true;
       FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
     } finally {
-      isLoading.value = false;
+      if (requestId == _loadRequestId) isLoading.value = false;
     }
   }
 
@@ -343,9 +372,14 @@ class ReaderController extends GetxController {
     String uid,
     int chapterId,
     List<Verse> fetchedVerses,
+    int requestId,
   ) async {
     try {
       final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      // Bail if a newer chapter navigation has since started — otherwise a
+      // slow read landing late could scroll/banner the wrong (now-current)
+      // surah using this stale request's ayah index.
+      if (requestId != _loadRequestId) return;
       if (!doc.exists) return;
       final data = doc.data();
       if (data == null) return;

@@ -65,6 +65,9 @@ dependencies:
   shimmer: ^3.0.0
   connectivity_plus: ^6.1.5
   google_fonts: ^6.2.1
+  # LGPL-only variant (libvpx + libopus, no GPL codecs like x264) — used to
+  # mux the Ayah Card image + recitation audio into a WebM video export.
+  ffmpeg_kit_flutter_new_full: ^2.5.2
 
 dev_dependencies:
   flutter_test:
@@ -114,6 +117,14 @@ flutter:
       fonts:
         - asset: assets/fonts/AmiriQuran-Regular.ttf
     - family: UthmanicHafs
+      fonts:
+        - asset: assets/fonts/UthmanicHafs.ttf
+    # King Fahd Glorious Quran Printing Complex's official Hafs font, served
+    # by quran.com at /fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.ttf
+    # (local name "KFGQPC HAFS Uthmanic Script") — byte-identical to the
+    # UthmanicHafs asset above, registered under its own family name so it
+    # can be offered as a distinct, correctly-labeled reader font choice.
+    - family: KingFahdComplex
       fonts:
         - asset: assets/fonts/UthmanicHafs.ttf
 

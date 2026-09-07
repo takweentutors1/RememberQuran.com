@@ -302,12 +302,12 @@ class HomeView extends GetView<HomeController> {
             onSelected: (_) => controller.setDirectoryFilter(filter),
             showCheckmark: false,
             backgroundColor: nurColors?.surfaceSunk,
-            selectedColor: jade.withOpacity(0.14),
+            selectedColor: jade.withValues(alpha: 0.14),
             labelStyle: TextStyle(
               color: selected == filter ? jade : theme.textTheme.bodyMedium?.color,
               fontWeight: FontWeight.w600,
             ),
-            side: BorderSide(color: selected == filter ? jade.withOpacity(0.4) : Colors.transparent),
+            side: BorderSide(color: selected == filter ? jade.withValues(alpha: 0.4) : Colors.transparent),
           ),
       ],
     );

@@ -1,3 +1,7 @@
+// ignore_for_file: constant_identifier_names
+// Route names intentionally use SCREAMING_CASE (matching the rest of the
+// GetX route table) rather than lowerCamelCase — renaming these would touch
+// every Get.toNamed/GetPage call site across the app for no functional gain.
 abstract class Routes {
   static const SPLASH = '/splash';
   static const ONBOARDING = '/onboarding';

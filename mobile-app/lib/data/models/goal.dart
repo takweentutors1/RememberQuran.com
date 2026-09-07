@@ -2,16 +2,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum GoalType { ayahs, pages }
 
+enum GoalPeriod { daily, weekly, monthly }
+
 class ActiveGoal {
   final GoalType type;
   final int target;
+  final GoalPeriod period;
 
-  ActiveGoal({required this.type, required this.target});
+  ActiveGoal({
+    required this.type,
+    required this.target,
+    this.period = GoalPeriod.daily,
+  });
 
   factory ActiveGoal.fromMap(Map<String, dynamic> map) {
     return ActiveGoal(
       type: map['type'] == 'pages' ? GoalType.pages : GoalType.ayahs,
       target: map['target'] as int? ?? 1,
+      period: switch (map['period']) {
+        'weekly' => GoalPeriod.weekly,
+        'monthly' => GoalPeriod.monthly,
+        _ => GoalPeriod.daily, // covers missing 'period' on goals set before this existed
+      },
     );
   }
 
@@ -19,6 +31,11 @@ class ActiveGoal {
     return {
       'type': type == GoalType.pages ? 'pages' : 'ayahs',
       'target': target,
+      'period': switch (period) {
+        GoalPeriod.weekly => 'weekly',
+        GoalPeriod.monthly => 'monthly',
+        GoalPeriod.daily => 'daily',
+      },
     };
   }
 }
@@ -53,17 +70,24 @@ class GoalStreak {
 
 class GoalSnapshot {
   final ActiveGoal? goal;
-  final int todayAyahs;
-  final int todayCount;
-  final bool metToday;
+
+  /// Progress accumulated (in the goal's unit) within the current period —
+  /// today for a daily goal, this calendar week (Mon-start) for weekly,
+  /// this calendar month for monthly.
+  final int periodCount;
+  final bool metPeriod;
   final GoalStreak streak;
+
+  /// Raw daily activity for the last 7 calendar days — used for the
+  /// "Last 7 Days" chart, which is only shown for daily goals since a
+  /// single day's reading isn't a meaningful checkpoint against a
+  /// weekly/monthly target.
   final List<DailyProgress> week;
 
   GoalSnapshot({
     required this.goal,
-    required this.todayAyahs,
-    required this.todayCount,
-    required this.metToday,
+    required this.periodCount,
+    required this.metPeriod,
     required this.streak,
     required this.week,
   });

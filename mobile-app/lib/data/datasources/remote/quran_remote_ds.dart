@@ -6,7 +6,7 @@ class QuranRemoteDataSource {
   static const String versesBaseUrl = 'https://api.qurancdn.com/api/qdc';
   static const String khattabCdnUrl = 'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba';
 
-  static const String wordFields = 'text_uthmani,qpc_uthmani_hafs,translation,audio_url,transliteration,text_uthmani_tajweed';
+  static const String wordFields = 'text_uthmani,qpc_uthmani_hafs,translation,audio_url,transliteration,text_uthmani_tajweed,line_number';
   static const String verseFields = 'text_uthmani,qpc_uthmani_hafs,verse_key,verse_number,page_number,juz_number,hizb_number';
   static const int versesPerPage = 50;
   static const int clearQuranId = TranslationIds.clearQuran;
@@ -96,6 +96,7 @@ class QuranRemoteDataSource {
       'position': word['position'],
       'audio_url': word['audio_url'],
       'char_type_name': word['char_type_name'],
+      'line_number': word['line_number'],
       'text_uthmani': hasQpc ? '' : (word['text_uthmani'] ?? ''),
       if (hasQpc) 'qpc_uthmani_hafs': word['qpc_uthmani_hafs'],
       if (word['text_uthmani_tajweed']?.toString().isNotEmpty == true) 
@@ -176,6 +177,33 @@ class QuranRemoteDataSource {
       return _slimVerse(verseMap);
     }).toList();
 
+    return data;
+  }
+
+  /// All verses on one physical Madani-mushaf page (King Fahd Complex
+  /// `page_number`), which can span more than one surah — short surahs
+  /// routinely share a page with their neighbour. Used to complete the
+  /// Mushaf reading mode's 15-line page at surah boundaries, since a
+  /// chapter-scoped fetch alone would be missing the neighbouring surah's
+  /// lines on that shared page.
+  Future<Map<String, dynamic>> getVersesByPage(int pageNumber) async {
+    final queryParams = <String, dynamic>{
+      'words': 'true',
+      'word_fields': wordFields,
+      'fields': verseFields,
+      'per_page': '50',
+    };
+
+    final response = await dio.get(
+      '$versesBaseUrl/verses/by_page/$pageNumber',
+      queryParameters: queryParams,
+    );
+
+    final data = response.data as Map<String, dynamic>;
+    final verses = data['verses'] as List<dynamic>;
+    data['verses'] = verses
+        .map((v) => _slimVerse(_sanitizeVerse(Map<String, dynamic>.from(v))))
+        .toList();
     return data;
   }
 

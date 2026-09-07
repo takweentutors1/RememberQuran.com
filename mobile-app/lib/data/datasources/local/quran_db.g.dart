@@ -1262,6 +1262,18 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _lineNumberMeta = const VerificationMeta(
+    'lineNumber',
+  );
+  @override
+  late final GeneratedColumn<int> lineNumber = GeneratedColumn<int>(
+    'line_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   static const VerificationMeta _textUthmaniMeta = const VerificationMeta(
     'textUthmani',
   );
@@ -1324,6 +1336,7 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     position,
     audioUrl,
     charTypeName,
+    lineNumber,
     textUthmani,
     qpcUthmaniHafs,
     textUthmaniTajweed,
@@ -1377,6 +1390,12 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
       );
     } else if (isInserting) {
       context.missing(_charTypeNameMeta);
+    }
+    if (data.containsKey('line_number')) {
+      context.handle(
+        _lineNumberMeta,
+        lineNumber.isAcceptableOrUnknown(data['line_number']!, _lineNumberMeta),
+      );
     }
     if (data.containsKey('text_uthmani')) {
       context.handle(
@@ -1456,6 +1475,10 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.string,
         data['${effectivePrefix}char_type_name'],
       )!,
+      lineNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}line_number'],
+      )!,
       textUthmani: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}text_uthmani'],
@@ -1491,6 +1514,7 @@ class Word extends DataClass implements Insertable<Word> {
   final int position;
   final String? audioUrl;
   final String charTypeName;
+  final int lineNumber;
   final String textUthmani;
   final String? qpcUthmaniHafs;
   final String? textUthmaniTajweed;
@@ -1502,6 +1526,7 @@ class Word extends DataClass implements Insertable<Word> {
     required this.position,
     this.audioUrl,
     required this.charTypeName,
+    required this.lineNumber,
     required this.textUthmani,
     this.qpcUthmaniHafs,
     this.textUthmaniTajweed,
@@ -1518,6 +1543,7 @@ class Word extends DataClass implements Insertable<Word> {
       map['audio_url'] = Variable<String>(audioUrl);
     }
     map['char_type_name'] = Variable<String>(charTypeName);
+    map['line_number'] = Variable<int>(lineNumber);
     map['text_uthmani'] = Variable<String>(textUthmani);
     if (!nullToAbsent || qpcUthmaniHafs != null) {
       map['qpc_uthmani_hafs'] = Variable<String>(qpcUthmaniHafs);
@@ -1541,6 +1567,7 @@ class Word extends DataClass implements Insertable<Word> {
           ? const Value.absent()
           : Value(audioUrl),
       charTypeName: Value(charTypeName),
+      lineNumber: Value(lineNumber),
       textUthmani: Value(textUthmani),
       qpcUthmaniHafs: qpcUthmaniHafs == null && nullToAbsent
           ? const Value.absent()
@@ -1566,6 +1593,7 @@ class Word extends DataClass implements Insertable<Word> {
       position: serializer.fromJson<int>(json['position']),
       audioUrl: serializer.fromJson<String?>(json['audioUrl']),
       charTypeName: serializer.fromJson<String>(json['charTypeName']),
+      lineNumber: serializer.fromJson<int>(json['lineNumber']),
       textUthmani: serializer.fromJson<String>(json['textUthmani']),
       qpcUthmaniHafs: serializer.fromJson<String?>(json['qpcUthmaniHafs']),
       textUthmaniTajweed: serializer.fromJson<String?>(
@@ -1584,6 +1612,7 @@ class Word extends DataClass implements Insertable<Word> {
       'position': serializer.toJson<int>(position),
       'audioUrl': serializer.toJson<String?>(audioUrl),
       'charTypeName': serializer.toJson<String>(charTypeName),
+      'lineNumber': serializer.toJson<int>(lineNumber),
       'textUthmani': serializer.toJson<String>(textUthmani),
       'qpcUthmaniHafs': serializer.toJson<String?>(qpcUthmaniHafs),
       'textUthmaniTajweed': serializer.toJson<String?>(textUthmaniTajweed),
@@ -1598,6 +1627,7 @@ class Word extends DataClass implements Insertable<Word> {
     int? position,
     Value<String?> audioUrl = const Value.absent(),
     String? charTypeName,
+    int? lineNumber,
     String? textUthmani,
     Value<String?> qpcUthmaniHafs = const Value.absent(),
     Value<String?> textUthmaniTajweed = const Value.absent(),
@@ -1609,6 +1639,7 @@ class Word extends DataClass implements Insertable<Word> {
     position: position ?? this.position,
     audioUrl: audioUrl.present ? audioUrl.value : this.audioUrl,
     charTypeName: charTypeName ?? this.charTypeName,
+    lineNumber: lineNumber ?? this.lineNumber,
     textUthmani: textUthmani ?? this.textUthmani,
     qpcUthmaniHafs: qpcUthmaniHafs.present
         ? qpcUthmaniHafs.value
@@ -1630,6 +1661,9 @@ class Word extends DataClass implements Insertable<Word> {
       charTypeName: data.charTypeName.present
           ? data.charTypeName.value
           : this.charTypeName,
+      lineNumber: data.lineNumber.present
+          ? data.lineNumber.value
+          : this.lineNumber,
       textUthmani: data.textUthmani.present
           ? data.textUthmani.value
           : this.textUthmani,
@@ -1656,6 +1690,7 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('position: $position, ')
           ..write('audioUrl: $audioUrl, ')
           ..write('charTypeName: $charTypeName, ')
+          ..write('lineNumber: $lineNumber, ')
           ..write('textUthmani: $textUthmani, ')
           ..write('qpcUthmaniHafs: $qpcUthmaniHafs, ')
           ..write('textUthmaniTajweed: $textUthmaniTajweed, ')
@@ -1672,6 +1707,7 @@ class Word extends DataClass implements Insertable<Word> {
     position,
     audioUrl,
     charTypeName,
+    lineNumber,
     textUthmani,
     qpcUthmaniHafs,
     textUthmaniTajweed,
@@ -1687,6 +1723,7 @@ class Word extends DataClass implements Insertable<Word> {
           other.position == this.position &&
           other.audioUrl == this.audioUrl &&
           other.charTypeName == this.charTypeName &&
+          other.lineNumber == this.lineNumber &&
           other.textUthmani == this.textUthmani &&
           other.qpcUthmaniHafs == this.qpcUthmaniHafs &&
           other.textUthmaniTajweed == this.textUthmaniTajweed &&
@@ -1700,6 +1737,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<int> position;
   final Value<String?> audioUrl;
   final Value<String> charTypeName;
+  final Value<int> lineNumber;
   final Value<String> textUthmani;
   final Value<String?> qpcUthmaniHafs;
   final Value<String?> textUthmaniTajweed;
@@ -1711,6 +1749,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.position = const Value.absent(),
     this.audioUrl = const Value.absent(),
     this.charTypeName = const Value.absent(),
+    this.lineNumber = const Value.absent(),
     this.textUthmani = const Value.absent(),
     this.qpcUthmaniHafs = const Value.absent(),
     this.textUthmaniTajweed = const Value.absent(),
@@ -1723,6 +1762,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     required int position,
     this.audioUrl = const Value.absent(),
     required String charTypeName,
+    this.lineNumber = const Value.absent(),
     required String textUthmani,
     this.qpcUthmaniHafs = const Value.absent(),
     this.textUthmaniTajweed = const Value.absent(),
@@ -1739,6 +1779,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Expression<int>? position,
     Expression<String>? audioUrl,
     Expression<String>? charTypeName,
+    Expression<int>? lineNumber,
     Expression<String>? textUthmani,
     Expression<String>? qpcUthmaniHafs,
     Expression<String>? textUthmaniTajweed,
@@ -1751,6 +1792,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (position != null) 'position': position,
       if (audioUrl != null) 'audio_url': audioUrl,
       if (charTypeName != null) 'char_type_name': charTypeName,
+      if (lineNumber != null) 'line_number': lineNumber,
       if (textUthmani != null) 'text_uthmani': textUthmani,
       if (qpcUthmaniHafs != null) 'qpc_uthmani_hafs': qpcUthmaniHafs,
       if (textUthmaniTajweed != null)
@@ -1766,6 +1808,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<int>? position,
     Value<String?>? audioUrl,
     Value<String>? charTypeName,
+    Value<int>? lineNumber,
     Value<String>? textUthmani,
     Value<String?>? qpcUthmaniHafs,
     Value<String?>? textUthmaniTajweed,
@@ -1778,6 +1821,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
       position: position ?? this.position,
       audioUrl: audioUrl ?? this.audioUrl,
       charTypeName: charTypeName ?? this.charTypeName,
+      lineNumber: lineNumber ?? this.lineNumber,
       textUthmani: textUthmani ?? this.textUthmani,
       qpcUthmaniHafs: qpcUthmaniHafs ?? this.qpcUthmaniHafs,
       textUthmaniTajweed: textUthmaniTajweed ?? this.textUthmaniTajweed,
@@ -1803,6 +1847,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
     }
     if (charTypeName.present) {
       map['char_type_name'] = Variable<String>(charTypeName.value);
+    }
+    if (lineNumber.present) {
+      map['line_number'] = Variable<int>(lineNumber.value);
     }
     if (textUthmani.present) {
       map['text_uthmani'] = Variable<String>(textUthmani.value);
@@ -1830,6 +1877,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('position: $position, ')
           ..write('audioUrl: $audioUrl, ')
           ..write('charTypeName: $charTypeName, ')
+          ..write('lineNumber: $lineNumber, ')
           ..write('textUthmani: $textUthmani, ')
           ..write('qpcUthmaniHafs: $qpcUthmaniHafs, ')
           ..write('textUthmaniTajweed: $textUthmaniTajweed, ')
@@ -3503,6 +3551,7 @@ typedef $$WordsTableCreateCompanionBuilder =
       required int position,
       Value<String?> audioUrl,
       required String charTypeName,
+      Value<int> lineNumber,
       required String textUthmani,
       Value<String?> qpcUthmaniHafs,
       Value<String?> textUthmaniTajweed,
@@ -3516,6 +3565,7 @@ typedef $$WordsTableUpdateCompanionBuilder =
       Value<int> position,
       Value<String?> audioUrl,
       Value<String> charTypeName,
+      Value<int> lineNumber,
       Value<String> textUthmani,
       Value<String?> qpcUthmaniHafs,
       Value<String?> textUthmaniTajweed,
@@ -3571,6 +3621,11 @@ class $$WordsTableFilterComposer
 
   ColumnFilters<String> get charTypeName => $composableBuilder(
     column: $table.charTypeName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lineNumber => $composableBuilder(
+    column: $table.lineNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3652,6 +3707,11 @@ class $$WordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get lineNumber => $composableBuilder(
+    column: $table.lineNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get textUthmani => $composableBuilder(
     column: $table.textUthmani,
     builder: (column) => ColumnOrderings(column),
@@ -3721,6 +3781,11 @@ class $$WordsTableAnnotationComposer
 
   GeneratedColumn<String> get charTypeName => $composableBuilder(
     column: $table.charTypeName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lineNumber => $composableBuilder(
+    column: $table.lineNumber,
     builder: (column) => column,
   );
 
@@ -3806,6 +3871,7 @@ class $$WordsTableTableManager
                 Value<int> position = const Value.absent(),
                 Value<String?> audioUrl = const Value.absent(),
                 Value<String> charTypeName = const Value.absent(),
+                Value<int> lineNumber = const Value.absent(),
                 Value<String> textUthmani = const Value.absent(),
                 Value<String?> qpcUthmaniHafs = const Value.absent(),
                 Value<String?> textUthmaniTajweed = const Value.absent(),
@@ -3817,6 +3883,7 @@ class $$WordsTableTableManager
                 position: position,
                 audioUrl: audioUrl,
                 charTypeName: charTypeName,
+                lineNumber: lineNumber,
                 textUthmani: textUthmani,
                 qpcUthmaniHafs: qpcUthmaniHafs,
                 textUthmaniTajweed: textUthmaniTajweed,
@@ -3830,6 +3897,7 @@ class $$WordsTableTableManager
                 required int position,
                 Value<String?> audioUrl = const Value.absent(),
                 required String charTypeName,
+                Value<int> lineNumber = const Value.absent(),
                 required String textUthmani,
                 Value<String?> qpcUthmaniHafs = const Value.absent(),
                 Value<String?> textUthmaniTajweed = const Value.absent(),
@@ -3841,6 +3909,7 @@ class $$WordsTableTableManager
                 position: position,
                 audioUrl: audioUrl,
                 charTypeName: charTypeName,
+                lineNumber: lineNumber,
                 textUthmani: textUthmani,
                 qpcUthmaniHafs: qpcUthmaniHafs,
                 textUthmaniTajweed: textUthmaniTajweed,

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
-import 'package:rememberquran/features/account/models/hifz_srs.dart';
 
 void main() {
   testWidgets('HifzReviewView grade evaluation buttons wrap and fit on compact 360dp width', (WidgetTester tester) async {

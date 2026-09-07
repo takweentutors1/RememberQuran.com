@@ -45,12 +45,12 @@ class GoalsController extends GetxController {
     }
   }
 
-  Future<void> setGoal(GoalType type, int target) async {
+  Future<void> setGoal(GoalType type, int target, GoalPeriod period) async {
     final userId = _auth.firebaseUser.value?.uid;
     if (userId == null) return;
 
     try {
-      final goal = ActiveGoal(type: type, target: target);
+      final goal = ActiveGoal(type: type, target: target, period: period);
       await _goalsRepo.setActiveGoal(userId, goal);
       await loadGoalData();
     } catch (e) {

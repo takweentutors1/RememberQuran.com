@@ -4,14 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/models/translation.dart';
 import '../../../shared/widgets/app_feedback.dart';
 
-enum DisplayMode { verseByVerse, continuous, mushaf }
+enum DisplayMode { verseByVerse, mushaf }
 
 class ReaderSettingsController extends GetxController {
   late final SharedPreferences _prefs;
 
   final RxString font = 'UthmanicHafs'.obs;
   final RxDouble fontSize = 32.0.obs;
-  final Rx<DisplayMode> displayMode = DisplayMode.verseByVerse.obs;
+  final Rx<DisplayMode> displayMode = DisplayMode.mushaf.obs;
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
 
   /// Whether to show translations at all ("Arabic only" when false).
@@ -50,10 +50,12 @@ class ReaderSettingsController extends GetxController {
     final dm = _prefs.getString('reader_display_mode');
     if (dm == 'mushaf') {
       displayMode.value = DisplayMode.mushaf;
-    } else if (dm == 'continuous') {
-      displayMode.value = DisplayMode.continuous;
-    } else {
+    } else if (dm == 'verseByVerse') {
       displayMode.value = DisplayMode.verseByVerse;
+    } else {
+      // No stored preference yet — default to the Madani-standard 15-line
+      // mushaf page, matching the web reader's default experience.
+      displayMode.value = DisplayMode.mushaf;
     }
     
     final storedIds = _prefs.getStringList('reader_translation_ids');
@@ -104,7 +106,6 @@ class ReaderSettingsController extends GetxController {
   void setDisplayMode(DisplayMode mode) {
     displayMode.value = mode;
     String modeStr = 'verseByVerse';
-    if (mode == DisplayMode.continuous) modeStr = 'continuous';
     if (mode == DisplayMode.mushaf) modeStr = 'mushaf';
     _prefs.setString('reader_display_mode', modeStr);
   }

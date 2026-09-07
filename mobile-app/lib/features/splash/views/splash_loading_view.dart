@@ -52,7 +52,7 @@ class SplashLoadingView extends GetView<SplashController> {
                             color:
                                 (nurColors?.brandGold ??
                                         theme.colorScheme.primary)
-                                    .withOpacity(0.2),
+                                    .withValues(alpha: 0.2),
                             blurRadius: 30,
                             spreadRadius: 5,
                           ),

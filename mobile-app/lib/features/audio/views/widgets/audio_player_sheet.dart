@@ -485,8 +485,8 @@ class _AudioPlayerSheetState extends State<AudioPlayerSheet> {
             const SizedBox(height: 24),
             _buildSectionTitle('Ayah Range'),
             Obx(() {
-              final totalVerses = _readerController != null && _readerController!.verses.isNotEmpty
-                  ? _readerController!.verses.length
+              final totalVerses = _readerController != null && _readerController.verses.isNotEmpty
+                  ? _readerController.verses.length
                   : _audioController.rxCurrentSurahVersesCount.value;
               final count = totalVerses > 0 ? totalVerses : 7;
               return Row(

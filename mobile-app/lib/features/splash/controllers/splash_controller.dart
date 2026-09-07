@@ -18,6 +18,7 @@ import '../../../data/repositories/quran_repository.dart';
 import '../../../data/repositories/audio_repository.dart';
 import '../../account/controllers/auth_controller.dart';
 import '../../account/controllers/notes_controller.dart';
+import '../../search/controllers/search_controller.dart' as search;
 import '../../notifications/controllers/notifications_controller.dart';
 import '../../shortcuts/controllers/shortcuts_controller.dart';
 import '../../reader/controllers/reader_settings_controller.dart';
@@ -83,6 +84,11 @@ class SplashController extends GetxController {
       Get.put<AudioController>(AudioController(), permanent: true);
       Get.put<AuthController>(AuthController(), permanent: true);
       Get.put<NotesController>(NotesController(), permanent: true);
+      // SearchView lives permanently in AppScaffold's IndexedStack (the
+      // bottom-nav Search tab), not behind the routed Routes.SEARCH page,
+      // so SearchBinding (only attached to that route) never runs for it —
+      // without this, opening the Search tab throws "controller not found".
+      Get.put<search.SearchController>(search.SearchController(), permanent: true);
       Get.put<NotificationsController>(NotificationsController(), permanent: true);
       Get.put<ShortcutsController>(ShortcutsController(), permanent: true);
       Get.put<ReaderSettingsController>(ReaderSettingsController(), permanent: true);

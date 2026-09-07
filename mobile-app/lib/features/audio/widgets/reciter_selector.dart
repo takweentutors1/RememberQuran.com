@@ -37,7 +37,7 @@ void showReciterPicker({
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -61,7 +61,7 @@ void showReciterPicker({
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundColor: isSelected
-                            ? brandGold.withOpacity(0.2)
+                            ? brandGold.withValues(alpha: 0.2)
                             : theme.cardColor,
                         // The active reciter gets a tiny live waveform
                         // (matching the playing/paused state) instead of a

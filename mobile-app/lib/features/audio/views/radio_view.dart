@@ -170,7 +170,7 @@ class _RadioViewState extends State<RadioView> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.outline.withOpacity(0.3),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -237,7 +237,7 @@ class _RadioViewState extends State<RadioView> {
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.textTheme.bodyMedium?.color
-                                      ?.withOpacity(0.7),
+                                      ?.withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -366,7 +366,7 @@ class _RadioViewState extends State<RadioView> {
                 Text(
                   "A blessed time for recitation",
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -485,7 +485,7 @@ class _RadioViewState extends State<RadioView> {
                   fontSize: 14,
                   color: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.color?.withOpacity(0.7),
+                  ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -499,7 +499,7 @@ class _RadioViewState extends State<RadioView> {
               style: TextStyle(
                 fontSize: 20,
                 fontFamily: 'UthmanicHafs',
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -566,8 +566,8 @@ class _RadioViewState extends State<RadioView> {
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 3,
-                      activeTrackColor: brandGold.withOpacity(0.55),
-                      inactiveTrackColor: brandGold.withOpacity(0.12),
+                      activeTrackColor: brandGold.withValues(alpha: 0.55),
+                      inactiveTrackColor: brandGold.withValues(alpha: 0.12),
                       thumbColor: brandGold,
                       thumbShape: const RoundSliderThumbShape(
                         enabledThumbRadius: 6,
@@ -605,14 +605,14 @@ class _RadioViewState extends State<RadioView> {
                           _formatDuration(Duration(milliseconds: clampedMs.toInt())),
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 11,
-                            color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                           ),
                         ),
                         Text(
                           _formatDuration(duration),
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 11,
-                            color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -664,9 +664,9 @@ class _RadioViewState extends State<RadioView> {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: brandGoldSoft.withOpacity(0.5),
+          color: brandGoldSoft.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: brandGold.withOpacity(0.2)),
+          border: Border.all(color: brandGold.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -714,7 +714,7 @@ class _RadioViewState extends State<RadioView> {
           icon: Icon(
             Icons.skip_previous_rounded,
             size: 40,
-            color: theme.iconTheme.color?.withOpacity(0.7),
+            color: theme.iconTheme.color?.withValues(alpha: 0.7),
           ),
           onPressed: () => _skipSurah(forward: false),
         ),
@@ -750,7 +750,7 @@ class _RadioViewState extends State<RadioView> {
                   color: brandGold,
                   boxShadow: [
                     BoxShadow(
-                      color: brandGold.withOpacity(isPlaying ? 0.4 : 0.2),
+                      color: brandGold.withValues(alpha: isPlaying ? 0.4 : 0.2),
                       blurRadius: isPlaying ? 20 : 12,
                       offset: const Offset(0, 8),
                     ),
@@ -790,7 +790,7 @@ class _RadioViewState extends State<RadioView> {
                                 width: 68,
                                 height: 68,
                                 child: CircularProgressIndicator(
-                                  color: theme.colorScheme.onPrimary.withOpacity(0.4),
+                                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.4),
                                   strokeWidth: 2.5,
                                 ),
                               ),
@@ -806,7 +806,7 @@ class _RadioViewState extends State<RadioView> {
           icon: Icon(
             Icons.skip_next_rounded,
             size: 40,
-            color: theme.iconTheme.color?.withOpacity(0.7),
+            color: theme.iconTheme.color?.withValues(alpha: 0.7),
           ),
           onPressed: () => _skipSurah(forward: true),
         ),
@@ -834,7 +834,7 @@ class _RadioViewState extends State<RadioView> {
                   color: theme.cardColor,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.5),
+                    color: theme.dividerColor.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Row(
@@ -874,7 +874,7 @@ class _RadioViewState extends State<RadioView> {
                   color: theme.cardColor,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.5),
+                    color: theme.dividerColor.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Row(
@@ -926,7 +926,7 @@ class _RadioViewState extends State<RadioView> {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor.withOpacity(0.6),
+        color: theme.cardColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -935,7 +935,7 @@ class _RadioViewState extends State<RadioView> {
           Icon(
             Icons.auto_awesome,
             size: 16,
-            color: theme.colorScheme.primary.withOpacity(0.7),
+            color: theme.colorScheme.primary.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -984,7 +984,7 @@ class _RadioViewState extends State<RadioView> {
                       if (isPlaying)
                         (nurColors?.brandGoldSoft ??
                                 theme.colorScheme.primaryContainer)
-                            .withOpacity(isDark ? 0.2 : 0.4)
+                            .withValues(alpha: isDark ? 0.2 : 0.4)
                       else
                         theme.scaffoldBackgroundColor,
                       theme.scaffoldBackgroundColor,

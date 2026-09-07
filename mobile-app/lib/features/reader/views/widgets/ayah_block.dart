@@ -78,16 +78,16 @@ class AyahBlock extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
         decoration: BoxDecoration(
           color: isPlayingThisVerse
-              ? jade.withOpacity(0.10)
+              ? jade.withValues(alpha: 0.10)
               : isVerseActive
                   ? (nurColors?.brandGoldSoft ??
-                        theme.colorScheme.primary.withOpacity(0.05))
+                        theme.colorScheme.primary.withValues(alpha: 0.05))
                   : null,
           border: Border(
             bottom: BorderSide(
               color: isPlayingThisVerse
-                  ? jade.withOpacity(0.3)
-                  : (nurColors?.borderStrong ?? theme.dividerColor.withOpacity(0.1)),
+                  ? jade.withValues(alpha: 0.3)
+                  : (nurColors?.borderStrong ?? theme.dividerColor.withValues(alpha: 0.1)),
             ),
           ),
         ),
@@ -187,7 +187,7 @@ class AyahBlock extends StatelessWidget {
                           onPressed: () async {
                             final text =
                                 '${verse.qpcUthmaniHafs ?? verse.textUthmani}\n\n$shareTranslationText\n\n— Quran ${verse.verseKey} (https://rememberquran.com/surah/${verse.chapterId}/${verse.verseNumber})';
-                            await Share.share(text);
+                            await SharePlus.instance.share(ShareParams(text: text));
                           },
                           iconSize: 20,
                           tooltip: 'Share text',
@@ -202,6 +202,8 @@ class AyahBlock extends StatelessWidget {
                                     verse.qpcUthmaniHafs ?? verse.textUthmani,
                                 'translation': shareTranslationText,
                                 'reference': 'Quran ${verse.verseKey}',
+                                'chapterId': verse.chapterId,
+                                'verseNumber': verse.verseNumber,
                               },
                             );
                           },
@@ -423,7 +425,7 @@ class AyahBlock extends StatelessWidget {
                   fontSize: context.responsiveBaseTextSize,
                   height: 1.6,
                   color: nurColors?.foregroundSubtle ??
-                      theme.textTheme.bodyLarge?.color?.withOpacity(0.9),
+                      theme.textTheme.bodyLarge?.color?.withValues(alpha: 0.9),
                 ),
               ),
               const SizedBox(height: 8),

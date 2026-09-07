@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
 import '../../account/controllers/auth_controller.dart';
+import '../../../data/models/goal.dart';
 import '../../../data/repositories/goals_repository.dart';
 
 class NotificationsController extends GetxController {
@@ -87,7 +88,13 @@ class NotificationsController extends GetxController {
 
     try {
       final snapshot = await _goalsRepository.evaluateGoalAndStreak(userId);
-      if (snapshot.goal == null || snapshot.metToday) return defaultCopy;
+      // "X-day streak" phrasing below only reads correctly for daily goals —
+      // weekly/monthly streak-holders just get the default nudge instead.
+      if (snapshot.goal == null ||
+          snapshot.metPeriod ||
+          snapshot.goal!.period != GoalPeriod.daily) {
+        return defaultCopy;
+      }
       if (snapshot.streak.currentStreak > 0) {
         return (
           "Don't lose your streak!",

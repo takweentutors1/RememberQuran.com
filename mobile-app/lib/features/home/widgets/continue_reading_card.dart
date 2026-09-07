@@ -18,10 +18,10 @@ class ContinueReadingCard extends GetView<AuthController> {
       return Card(
         margin: const EdgeInsets.only(bottom: 24),
         elevation: 0,
-        color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.2)),
+          side: BorderSide(color: theme.colorScheme.secondary.withValues(alpha: 0.2)),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
