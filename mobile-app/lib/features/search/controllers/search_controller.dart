@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/datasources/remote/search_remote_ds.dart';
 import '../../../data/repositories/quran_repository.dart';
+import '../../../data/datasources/local/quran_db.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../shared/widgets/app_feedback.dart';
 
@@ -174,24 +175,41 @@ class SearchController extends GetxController {
     );
   }
 
-  /// Navigates directly to [surahId]:[ayahId] without adding a fake result to
-  /// the list. Looks up the surah name from the local Drift DB (via the
-  /// already-registered [QuranRepository]) so the toast reads naturally,
-  /// e.g. "Jumping to Al-Baqarah, Ayah 255" instead of a raw number pair.
-  Future<void> _jumpToAyah(int surahId, int ayahId) async {
-    // Resolve surah name from the local DB — QuranRepository is a global
-    // singleton registered in main.dart, so Get.find is safe here.
-    String surahName = 'Surah $surahId';
+  Future<Chapter?> _tryGetChapter(int surahId) async {
     try {
-      final repo = Get.find<QuranRepository>();
-      final chapter = await repo.getChapter(surahId);
-      if (chapter != null) surahName = chapter.nameSimple;
+      return await Get.find<QuranRepository>().getChapter(surahId);
     } catch (_) {
-      // DB not ready yet — fall back to the numeric label above.
+      return null; // DB not ready yet.
+    }
+  }
+
+  /// Navigates directly to [surahId]:[ayahId] without adding a fake result to
+  /// the list. Looks up the surah from the local Drift DB (via the
+  /// already-registered [QuranRepository]) both for the toast's name — e.g.
+  /// "Jumping to Al-Baqarah, Ayah 255" instead of a raw number pair — and to
+  /// validate [ayahId] actually exists in that surah. Previously an
+  /// out-of-range ayah (e.g. "2:9999", Al-Baqarah only has 286) still showed
+  /// a false "Jumping to..." success toast and navigated anyway, landing
+  /// silently at the top of the surah with no indication the ayah it
+  /// claimed to jump to doesn't exist.
+  Future<void> _jumpToAyah(int surahId, int ayahId) async {
+    final chapter = await _tryGetChapter(surahId);
+
+    if (chapter == null) {
+      AppFeedback.showError('Unable to look up that ayah right now. Please try again.');
+      return;
+    }
+
+    if (ayahId > chapter.versesCount) {
+      AppFeedback.showError(
+        '${chapter.nameSimple} only has ${chapter.versesCount} ayahs.',
+        title: 'Ayah Not Found',
+      );
+      return;
     }
 
     AppFeedback.showSuccess(
-      'Jumping to $surahName, Ayah $ayahId',
+      'Jumping to ${chapter.nameSimple}, Ayah $ayahId',
       title: 'Direct Navigation',
     );
 
