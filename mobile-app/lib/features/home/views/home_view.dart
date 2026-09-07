@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/responsive_layout.dart';
+import '../../../core/utils/uthmani_text.dart';
 import '../../account/controllers/auth_controller.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -155,7 +156,7 @@ class HomeView extends GetView<HomeController> {
         children: [
           const EyebrowLabel('Ayah of the day'),
           const SizedBox(height: 16),
-          Text(
+          UthmaniText(
             ayah.arabic,
             textAlign: TextAlign.right,
             style: TextStyle(
