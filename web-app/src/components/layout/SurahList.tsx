@@ -35,7 +35,9 @@ export function SurahList({
 
   const activeSurahId = surahContent?.pendingSurahId ?? pathSurahId
 
-  const ayahMatch = AYAH_KEY_RE.exec(query.trim())
+  const trimmedQuery = query.trim()
+  const ayahMatch = AYAH_KEY_RE.exec(trimmedQuery)
+  const showQuranSearch = !ayahMatch && trimmedQuery.length >= 2
 
   const filtered = useMemo(() => {
     if (ayahMatch) return []
@@ -59,12 +61,23 @@ export function SurahList({
     onNavigate?.()
   }
 
+  function searchQuran(q: string) {
+    router.push(`/search?q=${encodeURIComponent(q)}`)
+    onNavigate?.()
+  }
+
   function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return
     const match = AYAH_KEY_RE.exec(query.trim())
-    if (!match) return
-    e.preventDefault()
-    jumpToAyah(Number(match[1]), Number(match[2]))
+    if (match) {
+      e.preventDefault()
+      jumpToAyah(Number(match[1]), Number(match[2]))
+      return
+    }
+    if (filtered.length === 0 && showQuranSearch) {
+      e.preventDefault()
+      searchQuran(trimmedQuery)
+    }
   }
 
   function handleAyahSubmit(e: FormEvent) {
@@ -86,8 +99,8 @@ export function SurahList({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Surah name, number, or 2:255"
-              aria-label="Filter surahs or jump to ayah"
+              placeholder="Surah, 2:255, or search a word…"
+              aria-label="Filter surahs, jump to ayah, or search the Quran"
               className="h-8 border-border/60 bg-background pl-8 text-xs"
             />
           </div>
@@ -116,6 +129,25 @@ export function SurahList({
           </form>
         ) : (
           <ul className="space-y-0.5 px-2 py-2">
+            {showQuranSearch && (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => searchQuran(trimmedQuery)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm",
+                    "text-foreground/80 transition-colors duration-[120ms] ease-out",
+                    "hover:bg-accent hover:text-foreground active:bg-secondary",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  )}
+                >
+                  <Search className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+                  <span className="min-w-0 flex-1 truncate text-left">
+                    Search Quran for <span className="font-medium text-foreground">&ldquo;{trimmedQuery}&rdquo;</span>
+                  </span>
+                </button>
+              </li>
+            )}
             {filtered.map((chapter) => {
               const isActive = activeSurahId === chapter.id
               return (
@@ -163,7 +195,7 @@ export function SurahList({
                 </li>
               )
             })}
-            {filtered.length === 0 && (
+            {filtered.length === 0 && !showQuranSearch && (
               <li className="px-3 py-6 text-center text-xs text-muted-foreground">
                 No surahs match “{query}”
               </li>
