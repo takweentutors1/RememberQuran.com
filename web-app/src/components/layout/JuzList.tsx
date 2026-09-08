@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { JUZ_RANGES, type JuzRange } from "@/lib/quran/juz"
+import { JUZ_RANGES, getHizbStart, type JuzRange } from "@/lib/quran/juz"
 import { useChapters } from "@/context/ChaptersContext"
 import { useSurahContentOptional } from "@/context/SurahContentContext"
 import { cn } from "@/lib/utils"
@@ -110,19 +110,17 @@ export function JuzList({ onNavigate }: JuzListProps) {
             {Array.from({ length: 60 }, (_, i) => {
               const hizbNumber = i + 1
               const correspondingJuz = Math.ceil(hizbNumber / 2)
-              const isFirstHalf = hizbNumber % 2 !== 0
-              const juzDef = JUZ_RANGES[correspondingJuz - 1]!
-              const startChap = chapterMap.get(juzDef.startSurah)
-              const targetAyah = isFirstHalf ? juzDef.startAyah : Math.ceil((juzDef.startAyah + juzDef.endAyah) / 2)
+              const hizbStart = getHizbStart(hizbNumber)!
+              const startChap = chapterMap.get(hizbStart.surahId)
 
               return (
                 <li key={hizbNumber}>
                   <Link
-                    href={`/${juzDef.startSurah}/${targetAyah}`}
+                    href={`/${hizbStart.surahId}/${hizbStart.ayahId}`}
                     scroll={false}
                     onClick={() => {
                       if (surahContent) {
-                        surahContent.loadSurah(juzDef.startSurah, targetAyah)
+                        surahContent.loadSurah(hizbStart.surahId, hizbStart.ayahId)
                       }
                       onNavigate?.()
                     }}

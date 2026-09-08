@@ -83,6 +83,40 @@ export function getJuzAyahCount(juz: number): number {
   )
 }
 
+/** Walk forward `steps` ayahs from a verse, crossing surah boundaries as needed */
+function advanceVerse(
+  surahId: number,
+  ayahId: number,
+  steps: number,
+): { surahId: number; ayahId: number } | null {
+  let s = surahId
+  let a = ayahId + steps
+  while (true) {
+    const count = getAyahCount(s)
+    if (count === null) return null
+    if (a <= count) return { surahId: s, ayahId: a }
+    a -= count
+    s += 1
+  }
+}
+
+/**
+ * Starting verse of a Hizb (half-juz), 1-indexed (60 total, 2 per juz).
+ * The second half's start is computed by walking forward from the juz start
+ * rather than averaging raw ayah numbers, since a juz's start and end ayah
+ * are frequently in different surahs (e.g. Juz 1 runs Al-Fatihah -> Al-Baqarah).
+ */
+export function getHizbStart(hizbNumber: number): { surahId: number; ayahId: number } | null {
+  const correspondingJuz = Math.ceil(hizbNumber / 2)
+  const range = getJuzRange(correspondingJuz)
+  if (!range) return null
+  if (hizbNumber % 2 !== 0) return { surahId: range.startSurah, ayahId: range.startAyah }
+
+  const total = countAyahsInRange(range.startSurah, range.startAyah, range.endSurah, range.endAyah)
+  const firstHalfCount = Math.ceil(total / 2)
+  return advanceVerse(range.startSurah, range.startAyah, firstHalfCount)
+}
+
 /** Which juz contains this ayah (1–30), or null if out of range */
 export function getJuzForVerse(surahId: number, ayahId: number): number | null {
   if (!getAyahCount(surahId) || ayahId < 1) return null
