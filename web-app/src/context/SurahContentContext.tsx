@@ -27,6 +27,8 @@ interface SurahContentContextValue {
   surahId: number | null
   pendingSurahId: number | null
   targetAyahId: number | undefined
+  /** Bumped on every jump request, including a repeat of the same ayah — see setTargetAyahId. */
+  targetAyahNonce: number
   isLoading: boolean
   loadSurah: (id: number, targetAyahId?: number) => void
   prefetchSurah: (id: number) => void
@@ -44,6 +46,16 @@ interface SurahContentContextValue {
   appendNextSurah: () => void
   /** Infinite scroll: true while an append fetch is in flight. */
   isAppending: boolean
+  /**
+   * Infinite scroll: whichever surah is currently prepended and lowest in
+   * the stack — the fetch cursor for "what comes before". Null once nothing
+   * has bootstrapped yet, 1 once Al-Fatihah has been reached.
+   */
+  earliestSurahId: number | null
+  /** Infinite scroll: fetch and prepend (surahId - 1)'s verses above the current stack. */
+  prependPreviousSurah: () => void
+  /** Infinite scroll: true while a prepend fetch is in flight. */
+  isPrepending: boolean
   /**
    * Infinite scroll: whichever surah is currently centered in the viewport
    * as the reader scrolls through appended content. Deliberately separate
@@ -76,10 +88,22 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
   const [verses, setVerses] = useState<Verse[]>([])
   const [surahId, setSurahId] = useState<number | null>(null)
   const [pendingSurahId, setPendingSurahId] = useState<number | null>(null)
-  const [targetAyahId, setTargetAyahId] = useState<number | undefined>(undefined)
+  const [targetAyahId, setTargetAyahIdState] = useState<number | undefined>(undefined)
+  // Bumped on every jump request, even a repeat of the same ayah — React
+  // bails out of a setState with an unchanged primitive, so re-selecting an
+  // ayah already at the top of the stack wouldn't otherwise change anything
+  // for consumers to react to. Threaded through purely as an effect
+  // dependency, not used for lookups.
+  const [targetAyahNonce, setTargetAyahNonce] = useState(0)
+  const setTargetAyahId = useCallback((id: number | undefined) => {
+    setTargetAyahIdState(id)
+    if (id !== undefined) setTargetAyahNonce((n) => n + 1)
+  }, [])
   const [isLoading, setIsLoading] = useState(false)
   const [latestSurahId, setLatestSurahIdState] = useState<number | null>(null)
   const [isAppending, setIsAppending] = useState(false)
+  const [earliestSurahId, setEarliestSurahIdState] = useState<number | null>(null)
+  const [isPrepending, setIsPrepending] = useState(false)
   const [activeSurahId, setActiveSurahIdState] = useState<number | null>(null)
 
   const cacheRef = useRef<Map<number, SurahPayload>>(new Map())
@@ -98,6 +122,14 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
   const appendedOrderRef = useRef<number[]>([])
   const latestSurahIdRef = useRef<number | null>(null)
   const isAppendingRef = useRef(false)
+  // Mirrors the appended-segment bookkeeping above, but for surahs fetched
+  // backwards past the base. `prependedOrderRef` is kept in ascending surah
+  // id order (oldest/lowest first) so recomputeVerses can flatten it
+  // straight through without needing to reverse anything.
+  const prependedSegmentsRef = useRef<Map<number, Verse[]>>(new Map())
+  const prependedOrderRef = useRef<number[]>([])
+  const earliestSurahIdRef = useRef<number | null>(null)
+  const isPrependingRef = useRef(false)
   const activeSurahIdRef = useRef<number | null>(null)
 
   const fetchPage = useCallback(
@@ -190,6 +222,11 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
     setLatestSurahIdState(id)
   }, [])
 
+  const setEarliestSurahId = useCallback((id: number | null) => {
+    earliestSurahIdRef.current = id
+    setEarliestSurahIdState(id)
+  }, [])
+
   /**
    * Flatten base + appended segments into the single `verses` array the
    * reader renders, deduping by verse_key. Dedup matters because mushaf
@@ -200,6 +237,15 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
   const recomputeVerses = useCallback(() => {
     const seen = new Set<string>()
     const all: Verse[] = []
+    for (const id of prependedOrderRef.current) {
+      const segment = prependedSegmentsRef.current.get(id)
+      if (!segment) continue
+      for (const v of segment) {
+        if (seen.has(v.verse_key)) continue
+        seen.add(v.verse_key)
+        all.push(v)
+      }
+    }
     for (const v of baseVersesRef.current) {
       if (seen.has(v.verse_key)) continue
       seen.add(v.verse_key)
@@ -239,11 +285,16 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
       appendedOrderRef.current = []
       isAppendingRef.current = false
       setIsAppending(false)
+      prependedSegmentsRef.current = new Map()
+      prependedOrderRef.current = []
+      isPrependingRef.current = false
+      setIsPrepending(false)
       activeSurahIdRef.current = null
       setActiveSurahIdState(null)
       setLatestSurahId(id)
+      setEarliestSurahId(id)
     },
-    [setLatestSurahId],
+    [setLatestSurahId, setEarliestSurahId],
   )
 
   const applyPayload = useCallback(
@@ -258,7 +309,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
       hydratedRef.current = true
       recomputeVerses()
     },
-    [recomputeVerses, resetAppendState],
+    [recomputeVerses, resetAppendState, setTargetAyahId],
   )
 
   const hydrate = useCallback(
@@ -316,7 +367,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
           setPendingSurahId(null)
         })
     },
-    [applyPayload, fetchSurahProgressive, resetAppendState],
+    [applyPayload, fetchSurahProgressive, resetAppendState, setTargetAyahId],
   )
 
   const prefetchSurah = useCallback(
@@ -371,6 +422,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
       fetchSurahProgressive,
       pendingSurahId,
       router,
+      setTargetAyahId,
       surahId,
       verses.length,
     ],
@@ -411,6 +463,42 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
         setIsAppending(false)
       })
   }, [fetchSurahProgressive, recomputeVerses, setLatestSurahId])
+
+  // Unlike appendNextSurah, this waits for the whole surah rather than
+  // painting page-by-page: prepending shifts everything below it down the
+  // page, and the reader compensates scrollTop to cancel that jump (see
+  // QuranReader) — doing that once per completed fetch is simple, doing it
+  // once per streamed-in page would mean repeatedly fighting the user's
+  // scroll position while a multi-page surah is still arriving.
+  const prependPreviousSurah = useCallback(() => {
+    if (isPrependingRef.current) return
+    const current = earliestSurahIdRef.current
+    if (current == null || current <= 1) return
+    const prevId = current - 1
+    if (prependedSegmentsRef.current.has(prevId)) return
+
+    const baseAtStart = baseSurahIdRef.current
+    isPrependingRef.current = true
+    setIsPrepending(true)
+
+    void fetchSurahProgressive(prevId)
+      .then((payload) => {
+        if (baseSurahIdRef.current !== baseAtStart) return
+        prependedOrderRef.current.unshift(prevId)
+        prependedSegmentsRef.current.set(prevId, payload.verses)
+        setEarliestSurahId(prevId)
+        recomputeVerses()
+      })
+      .catch(() => {
+        // Silent failure, nothing to roll back — the cursor was never
+        // advanced until success, so the sentinel just retries later.
+      })
+      .finally(() => {
+        if (baseSurahIdRef.current !== baseAtStart) return
+        isPrependingRef.current = false
+        setIsPrepending(false)
+      })
+  }, [fetchSurahProgressive, recomputeVerses, setEarliestSurahId])
 
   const setActiveSurah = useCallback((id: number) => {
     if (activeSurahIdRef.current === id) return
@@ -468,6 +556,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
         surahId,
         pendingSurahId,
         targetAyahId,
+        targetAyahNonce,
         isLoading,
         loadSurah,
         prefetchSurah,
@@ -476,6 +565,9 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
         latestSurahId,
         appendNextSurah,
         isAppending,
+        earliestSurahId,
+        prependPreviousSurah,
+        isPrepending,
         activeSurahId,
         setActiveSurah,
       }}

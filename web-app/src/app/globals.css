@@ -12,6 +12,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* The reader's backward infinite scroll (prepending an earlier surah above
+   the current one) manually compensates scrollTop so the page doesn't visibly
+   jump — see QuranReader's topSentinel effect. The browser's own automatic
+   scroll anchoring tries to do the same thing independently and races with
+   that manual compensation, landing scrollTop somewhere between the two.
+   Opting out here means only the manual compensation is in play. */
+html {
+  overflow-anchor: none;
+}
+
 /* KFGQPC Uthmanic Hafs — official Madani Unicode font (Quran Foundation CDN) */
 @font-face {
   font-family: "UthmanicHafs";

@@ -28,7 +28,7 @@ function SurahReaderSkeleton() {
 }
 
 export function SurahReaderViewport() {
-  const { chapter, verses, isLoading, targetAyahId } = useSurahContent()
+  const { chapter, verses, isLoading, targetAyahId, targetAyahNonce } = useSurahContent()
 
   if (!chapter || verses.length === 0) {
     return <SurahReaderSkeleton />
@@ -55,6 +55,7 @@ export function SurahReaderViewport() {
           chapter={chapter}
           verses={verses}
           targetAyahId={targetAyahId}
+          targetAyahNonce={targetAyahNonce}
         />
       </div>
     </div>
