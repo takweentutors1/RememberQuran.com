@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, type FormEvent } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -18,11 +18,27 @@ export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = safeNextPath(searchParams.get("next"), "/account")
+  // Set by the failure branch below via a real top-level navigation back to
+  // this same page (see its comment for why) — read once on load, then
+  // stripped from the URL so refreshing doesn't re-show a stale error.
+  const failedEmail = searchParams.get("loginFailed") ? searchParams.get("email") : null
 
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState(failedEmail ?? "")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    searchParams.get("loginFailed") ? "Invalid email or password." : null,
+  )
   const [pending, setPending] = useState(false)
+
+  useEffect(() => {
+    if (!searchParams.get("loginFailed")) return
+    const url = new URL(window.location.href)
+    url.searchParams.delete("loginFailed")
+    url.searchParams.delete("email")
+    router.replace(`${url.pathname}${url.search}`, { scroll: false })
+    // Only ever meant to run once, against the URL the page loaded with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -44,11 +60,20 @@ export function LoginForm() {
       })
 
       if (!result || result.error) {
-        // Keep the email, clear the password, and re-enable the form so the
-        // user can retry immediately.
-        setError("Invalid email or password.")
-        setPassword("")
-        setPending(false)
+        // A real top-level navigation, not a React state update: NextAuth's
+        // own callback fetch always resolves 200 here regardless of whether
+        // the credentials were valid — `redirect: false` only changes what
+        // *we* do with that response, not the request Chrome's password
+        // manager already saw. Redisplaying the error in place leaves Chrome
+        // with only a "form submitted, got a 200" signal, which reads as a
+        // successful login and triggers the Save Password prompt even on a
+        // wrong password. Landing back on this same URL with the form still
+        // present (via a genuine navigation, not client-side state) is the
+        // signal it actually needs to recognize the attempt failed.
+        const url = new URL(window.location.href)
+        url.searchParams.set("loginFailed", "1")
+        url.searchParams.set("email", parsed.data.email)
+        window.location.assign(url.toString())
         return
       }
 
