@@ -44,7 +44,7 @@ function ReadingVerse({ verse, isTarget, onWordClick, onAyahClick }: ReadingVers
         isTarget && "rounded-xs bg-primary/10",
       )}
     >
-      <span id={`ayah-${verse.verse_number}`} data-verse-key={verse.verse_key} className="inline">
+      <span id={`ayah-${verse.verse_key.replace(":", "-")}`} data-verse-key={verse.verse_key} className="inline">
         {words.map((word, i) => {
           if (word.char_type_name === "end") return null
           const isLast = i === words.length - 1
@@ -227,11 +227,11 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                 those are always single-surah. Every other page's surah-start
                 cartouche is rendered inline, right before its own line, since
                 a shared page can start a surah mid-page. */}
-            {isCenteredOpeningPage && page.hasSurahStart && chapter && (
+            {isCenteredOpeningPage && page.hasSurahStart && pageHeaderChapter && (
               <div className="w-full mb-3">
-                <SurahHeaderCartouche chapter={chapter} />
+                <SurahHeaderCartouche chapter={pageHeaderChapter} />
                 {/* For Surahs with bismillah_pre (Surahs 2-114 except 9) */}
-                {chapter.bismillah_pre && <BismillahHeader />}
+                {pageHeaderChapter.bismillah_pre && <BismillahHeader />}
               </div>
             )}
 
@@ -304,7 +304,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                           return (
                             <span
                               key={word.id}
-                              id={!isFirstWordOfAyah ? `ayah-marker-${verse.verse_number}` : undefined}
+                              id={!isFirstWordOfAyah ? `ayah-marker-${verse.verse_key.replace(":", "-")}` : undefined}
                               className="inline-flex"
                             >
                               <AyahEndMarker
@@ -319,7 +319,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                         return (
                           <span
                             key={word.id}
-                            id={isFirstWordOfAyah ? `ayah-${verse.verse_number}` : undefined}
+                            id={isFirstWordOfAyah ? `ayah-${verse.verse_key.replace(":", "-")}` : undefined}
                             data-verse-key={verse.verse_key}
                             className={cn(
                               "inline-flex",

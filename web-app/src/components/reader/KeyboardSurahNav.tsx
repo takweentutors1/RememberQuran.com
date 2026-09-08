@@ -14,10 +14,14 @@ function parseSurahId(pathname: string): number | null {
 
 export function KeyboardSurahNav() {
   const pathname = usePathname()
-  const { loadSurah } = useSurahContent()
+  const { loadSurah, activeSurahId } = useSurahContent()
   const player = useAudioPlayer()
 
-  const id = parseSurahId(pathname)
+  // Prefer the scroll-tracked active surah over the route pathname — once
+  // infinite scroll has carried the reader past the surah the page loaded,
+  // the URL only follows via history.replaceState, which usePathname() (and
+  // therefore this parse) never sees.
+  const id = activeSurahId ?? parseSurahId(pathname)
   const prevId = id && id > 1 ? id - 1 : null
   const nextId = id && id < 114 ? id + 1 : null
 

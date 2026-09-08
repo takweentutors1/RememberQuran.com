@@ -81,7 +81,7 @@ export function AyahBlock({
 
   return (
     <div
-      id={`ayah-${verse.verse_number}`}
+      id={`ayah-${verse.verse_key.replace(":", "-")}`}
       data-slot="study-panel"
       data-verse-key={verse.verse_key}
       className={cn(

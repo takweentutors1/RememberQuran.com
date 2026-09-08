@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input"
 import { normalizeHideRange } from "@/lib/quran/verse-key"
 import { cn } from "@/lib/utils"
 
-function scrollToAyah(ayahNum: number) {
-  const el = document.getElementById(`ayah-${ayahNum}`)
+function scrollToAyah(surahId: number, ayahNum: number) {
+  const el = document.getElementById(`ayah-${surahId}-${ayahNum}`)
   if (!el) return
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
   el.scrollIntoView({
@@ -102,7 +102,9 @@ export function HideArabicToggle({
     setScopeMode("range")
     onRequestClose?.()
     // Wait for sheet close animation before scrolling
-    window.setTimeout(() => scrollToAyah(next.start), 250)
+    if (surahId != null) {
+      window.setTimeout(() => scrollToAyah(surahId, next.start), 250)
+    }
   }
 
   const segBtn = (active: boolean) =>

@@ -34,6 +34,25 @@ interface SurahContentContextValue {
   hydrate: (payload: SurahPayload & { targetAyahId?: number }) => void
   /** SSR bootstrap: chapter only — verses load progressively on the client */
   bootstrap: (chapter: Chapter, targetAyahId?: number) => void
+  /**
+   * Infinite scroll: whichever surah is currently appended and highest in
+   * the stack — the fetch cursor for "what comes next". Null once nothing
+   * has bootstrapped yet, 114 once the Quran is fully appended.
+   */
+  latestSurahId: number | null
+  /** Infinite scroll: fetch and append (surahId + 1)'s verses below the current stack. */
+  appendNextSurah: () => void
+  /** Infinite scroll: true while an append fetch is in flight. */
+  isAppending: boolean
+  /**
+   * Infinite scroll: whichever surah is currently centered in the viewport
+   * as the reader scrolls through appended content. Deliberately separate
+   * from `surahId` (which stays pinned to the base/route surah) so features
+   * scoped to the base surah — like the hide-Arabic memorisation range —
+   * aren't disturbed by scroll drift.
+   */
+  activeSurahId: number | null
+  setActiveSurah: (id: number) => void
 }
 
 const SurahContentContext = createContext<SurahContentContextValue | null>(null)
@@ -59,12 +78,27 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
   const [pendingSurahId, setPendingSurahId] = useState<number | null>(null)
   const [targetAyahId, setTargetAyahId] = useState<number | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
+  const [latestSurahId, setLatestSurahIdState] = useState<number | null>(null)
+  const [isAppending, setIsAppending] = useState(false)
+  const [activeSurahId, setActiveSurahIdState] = useState<number | null>(null)
 
   const cacheRef = useRef<Map<number, SurahPayload>>(new Map())
   const inflightRef = useRef<Map<number, Promise<SurahPayload>>>(new Map())
   const hydratedRef = useRef(false)
   const loadingRef = useRef(false)
   const loadGenerationRef = useRef(0)
+
+  // Infinite-scroll append state — the base surah's own verses plus zero or
+  // more surahs appended below it, kept as separate segments and flattened
+  // on demand so a long appended surah's own progressive page-loads don't
+  // require re-merging earlier segments.
+  const baseSurahIdRef = useRef<number | null>(null)
+  const baseVersesRef = useRef<Verse[]>([])
+  const appendedSegmentsRef = useRef<Map<number, Verse[]>>(new Map())
+  const appendedOrderRef = useRef<number[]>([])
+  const latestSurahIdRef = useRef<number | null>(null)
+  const isAppendingRef = useRef(false)
+  const activeSurahIdRef = useRef<number | null>(null)
 
   const fetchPage = useCallback(
     async (id: number, page: number): Promise<SurahPagePayload> => {
@@ -151,15 +185,80 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
     [fetchPage],
   )
 
+  const setLatestSurahId = useCallback((id: number | null) => {
+    latestSurahIdRef.current = id
+    setLatestSurahIdState(id)
+  }, [])
+
+  /**
+   * Flatten base + appended segments into the single `verses` array the
+   * reader renders, deduping by verse_key. Dedup matters because mushaf
+   * page-boundary sharing (see withPageBoundaries in the API route) means a
+   * surah's own last page and the next surah's own first page can each
+   * independently pull in the same shared-page verses.
+   */
+  const recomputeVerses = useCallback(() => {
+    const seen = new Set<string>()
+    const all: Verse[] = []
+    for (const v of baseVersesRef.current) {
+      if (seen.has(v.verse_key)) continue
+      seen.add(v.verse_key)
+      all.push(v)
+    }
+    for (const id of appendedOrderRef.current) {
+      const segment = appendedSegmentsRef.current.get(id)
+      if (!segment) continue
+      for (const v of segment) {
+        if (seen.has(v.verse_key)) continue
+        seen.add(v.verse_key)
+        all.push(v)
+      }
+    }
+    // A surah's own segment can arrive after a neighboring surah's fetch
+    // has already pulled in a couple of its boundary verses (same
+    // withPageBoundaries sharing), so simple concatenation can leave a
+    // segment internally out of order (e.g. ayahs 3,4 landing before 1,2).
+    // Re-sort with the same comparator fetchSurahProgressive already uses,
+    // so cross-segment ordering is always consistent regardless of which
+    // segment a given verse happened to arrive through.
+    all.sort((a, b) => {
+      if (a.page_number !== b.page_number) return a.page_number - b.page_number
+      const [aSurah, aAyah] = a.verse_key.split(":").map(Number)
+      const [bSurah, bAyah] = b.verse_key.split(":").map(Number)
+      return aSurah !== bSurah ? aSurah - bSurah : aAyah - bAyah
+    })
+    setVerses(all)
+  }, [])
+
+  /** New base surah incoming — clear the append stack it replaces. */
+  const resetAppendState = useCallback(
+    (id: number) => {
+      baseSurahIdRef.current = id
+      baseVersesRef.current = []
+      appendedSegmentsRef.current = new Map()
+      appendedOrderRef.current = []
+      isAppendingRef.current = false
+      setIsAppending(false)
+      activeSurahIdRef.current = null
+      setActiveSurahIdState(null)
+      setLatestSurahId(id)
+    },
+    [setLatestSurahId],
+  )
+
   const applyPayload = useCallback(
     (payload: SurahPayload, nextTargetAyahId?: number) => {
+      if (baseSurahIdRef.current !== payload.chapter.id) {
+        resetAppendState(payload.chapter.id)
+      }
+      baseVersesRef.current = payload.verses
       setChapter(payload.chapter)
-      setVerses(payload.verses)
       setSurahId(payload.chapter.id)
       setTargetAyahId(nextTargetAyahId)
       hydratedRef.current = true
+      recomputeVerses()
     },
-    [],
+    [recomputeVerses, resetAppendState],
   )
 
   const hydrate = useCallback(
@@ -190,6 +289,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
       }
 
       // Show chapter chrome immediately; verses stream in
+      resetAppendState(nextChapter.id)
       setChapter(nextChapter)
       setSurahId(nextChapter.id)
       setVerses([])
@@ -201,9 +301,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
         targetAyahId: nextTargetAyahId,
         onPartial: (payload, readyForTarget) => {
           if (generation !== loadGenerationRef.current) return
-          setChapter(payload.chapter)
-          setVerses(payload.verses)
-          setSurahId(payload.chapter.id)
+          applyPayload(payload, nextTargetAyahId)
           if (readyForTarget) {
             loadingRef.current = false
             setIsLoading(false)
@@ -218,7 +316,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
           setPendingSurahId(null)
         })
     },
-    [applyPayload, fetchSurahProgressive],
+    [applyPayload, fetchSurahProgressive, resetAppendState],
   )
 
   const prefetchSurah = useCallback(
@@ -245,7 +343,7 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       setPendingSurahId(id)
       setTargetAyahId(nextTargetAyahId)
-      
+
       const href = nextTargetAyahId ? `/${id}/${nextTargetAyahId}` : `/${id}`
       router.push(href, { scroll: false })
 
@@ -278,9 +376,62 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
     ],
   )
 
+  const appendNextSurah = useCallback(() => {
+    if (isAppendingRef.current) return
+    const current = latestSurahIdRef.current
+    if (current == null || current >= 114) return
+    const nextId = current + 1
+    if (appendedSegmentsRef.current.has(nextId)) return
+
+    const baseAtStart = baseSurahIdRef.current
+    isAppendingRef.current = true
+    setIsAppending(true)
+    appendedOrderRef.current.push(nextId)
+    setLatestSurahId(nextId)
+
+    void fetchSurahProgressive(nextId, {
+      onPartial: (payload) => {
+        if (baseSurahIdRef.current !== baseAtStart) return
+        appendedSegmentsRef.current.set(nextId, payload.verses)
+        recomputeVerses()
+      },
+    })
+      .catch(() => {
+        if (baseSurahIdRef.current !== baseAtStart) return
+        // Silent failure — roll the cursor back so the sentinel can retry
+        // later, matching the reader's "never block reading" convention.
+        appendedOrderRef.current = appendedOrderRef.current.filter((id) => id !== nextId)
+        appendedSegmentsRef.current.delete(nextId)
+        setLatestSurahId(current)
+        recomputeVerses()
+      })
+      .finally(() => {
+        if (baseSurahIdRef.current !== baseAtStart) return
+        isAppendingRef.current = false
+        setIsAppending(false)
+      })
+  }, [fetchSurahProgressive, recomputeVerses, setLatestSurahId])
+
+  const setActiveSurah = useCallback((id: number) => {
+    if (activeSurahIdRef.current === id) return
+    activeSurahIdRef.current = id
+    setActiveSurahIdState(id)
+  }, [])
+
   useEffect(() => {
     const id = parseSurahId(pathname)
-    if (!id || !hydratedRef.current || id === surahId || loadingRef.current) {
+    // usePathname() also reacts to the plain window.history.replaceState
+    // calls infinite scroll makes as the active surah advances — id ===
+    // activeSurahIdRef.current means this pathname change is us reporting
+    // a surah whose content is already loaded via the append stack, not a
+    // real navigation, so there's nothing to (re)fetch.
+    if (
+      !id ||
+      !hydratedRef.current ||
+      id === surahId ||
+      id === activeSurahIdRef.current ||
+      loadingRef.current
+    ) {
       return
     }
 
@@ -322,6 +473,11 @@ export function SurahContentProvider({ children }: { children: ReactNode }) {
         prefetchSurah,
         hydrate,
         bootstrap,
+        latestSurahId,
+        appendNextSurah,
+        isAppending,
+        activeSurahId,
+        setActiveSurah,
       }}
     >
       {children}
