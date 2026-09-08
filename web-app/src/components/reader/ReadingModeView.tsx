@@ -76,6 +76,61 @@ function ReadingVerse({ verse, isTarget, onWordClick, onAyahClick }: ReadingVers
   )
 }
 
+/** One word within a standard 15-line page — its own component so the
+ * per-verse highlight hook can be called correctly even though neighbouring
+ * words on the same printed line can belong to different verses. */
+function LineWord({
+  word,
+  verse,
+  targetAyahId,
+  onWordClick,
+  onAyahClick,
+}: {
+  word: Word
+  verse: Verse
+  targetAyahId?: number
+  onWordClick: (word: Word, verseKey?: string) => void
+  onAyahClick: (verse: Verse) => void
+}) {
+  const highlightedPosition = useHighlightedWord(verse.verse_key)
+  const isFirstWordOfAyah =
+    word.position === 1 || (verse.words && verse.words[0]?.id === word.id)
+
+  if (word.char_type_name === "end") {
+    return (
+      <span
+        id={!isFirstWordOfAyah ? `ayah-marker-${verse.verse_key.replace(":", "-")}` : undefined}
+        className="inline-flex"
+      >
+        <AyahEndMarker
+          digits={word.qpc_uthmani_hafs || word.text_uthmani}
+          ariaLabel={`Ayah ${verse.verse_number}`}
+          onClick={() => onAyahClick(verse)}
+        />
+      </span>
+    )
+  }
+
+  return (
+    <span
+      id={isFirstWordOfAyah ? `ayah-${verse.verse_key.replace(":", "-")}` : undefined}
+      data-verse-key={verse.verse_key}
+      className={cn(
+        "inline-flex",
+        targetAyahId === verse.verse_number && "rounded-xs bg-primary/10",
+      )}
+    >
+      <ArabicWord
+        word={word}
+        verseKey={verse.verse_key}
+        isHighlighted={highlightedPosition === word.position}
+        disableTooltip={false}
+        onWordClick={onWordClick}
+      />
+    </span>
+  )
+}
+
 /** Juz/hizb marker breaking the flow at section boundaries */
 function SectionMarker({
   arabicLabel,
@@ -295,46 +350,16 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                           "text-[1.36rem] sm:text-[1.55rem] md:text-[1.75rem]",
                         )}
                       >
-                      {words.map(({ word, verse }) => {
-                        const isFirstWordOfAyah =
-                          word.position === 1 ||
-                          (verse.words && verse.words[0]?.id === word.id)
-
-                        if (word.char_type_name === "end") {
-                          return (
-                            <span
-                              key={word.id}
-                              id={!isFirstWordOfAyah ? `ayah-marker-${verse.verse_key.replace(":", "-")}` : undefined}
-                              className="inline-flex"
-                            >
-                              <AyahEndMarker
-                                digits={word.qpc_uthmani_hafs || word.text_uthmani}
-                                ariaLabel={`Ayah ${verse.verse_number}`}
-                                onClick={() => handleAyahClick(verse)}
-                              />
-                            </span>
-                          )
-                        }
-
-                        return (
-                          <span
-                            key={word.id}
-                            id={isFirstWordOfAyah ? `ayah-${verse.verse_key.replace(":", "-")}` : undefined}
-                            data-verse-key={verse.verse_key}
-                            className={cn(
-                              "inline-flex",
-                              targetAyahId === verse.verse_number && "rounded-xs bg-primary/10",
-                            )}
-                          >
-                            <ArabicWord
-                              word={word}
-                              verseKey={verse.verse_key}
-                              disableTooltip={false}
-                              onWordClick={handleWordClick}
-                            />
-                          </span>
-                        )
-                      })}
+                      {words.map(({ word, verse }) => (
+                        <LineWord
+                          key={word.id}
+                          word={word}
+                          verse={verse}
+                          targetAyahId={targetAyahId}
+                          onWordClick={handleWordClick}
+                          onAyahClick={handleAyahClick}
+                        />
+                      ))}
                       </div>
                     </Fragment>
                   )
