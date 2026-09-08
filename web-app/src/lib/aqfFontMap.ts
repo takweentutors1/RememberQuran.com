@@ -30,6 +30,9 @@ export function getSurahCalligraphyChar(surahId: number): string {
 
 /**
  * Calligraphic Bismillah Glyph in AQF_BSML:
- * U+FC20 is the classical King Fahd Complex ornate Bismillah header.
+ * U+FC21 is the classical King Fahd Complex ornate Bismillah ligature
+ * (the full phrase as one flowing Thuluth-style glyph). U+FC20 is a
+ * decorative divider bar, and U+FC22/U+FC23 are ornament dots — not text —
+ * so don't reuse those here even though they sit in the same block.
  */
-export const AQF_BISMILLAH_CHAR = String.fromCharCode(0xfc20)
+export const AQF_BISMILLAH_CHAR = String.fromCharCode(0xfc21)
