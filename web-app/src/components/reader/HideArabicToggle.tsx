@@ -32,7 +32,7 @@ export function HideArabicToggle({
     revealAllInHideScope,
     hideAllInHideScope,
   } = useReaderSettings()
-  const { chapter, surahId, targetAyahId } = useSurahContent()
+  const { chapter, surahId, targetAyahId, latestSurahId } = useSurahContent()
   const maxAyah = chapter?.verses_count ?? 0
   const rangeReady = maxAyah > 0 && surahId != null
 
@@ -222,7 +222,7 @@ export function HideArabicToggle({
             <div className="flex gap-1">
               <button
                 type="button"
-                onClick={() => revealAllInHideScope(surahId, maxAyah)}
+                onClick={() => revealAllInHideScope(surahId, maxAyah, latestSurahId)}
                 className={cn(
                   "flex-1 rounded-md border border-border px-2 py-1.5 text-[11px] font-medium",
                   "text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground",
@@ -233,7 +233,7 @@ export function HideArabicToggle({
               </button>
               <button
                 type="button"
-                onClick={() => hideAllInHideScope(surahId, maxAyah)}
+                onClick={() => hideAllInHideScope(surahId)}
                 className={cn(
                   "flex-1 rounded-md border border-border px-2 py-1.5 text-[11px] font-medium",
                   "text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground",

@@ -30,8 +30,8 @@ import {
 } from "@/lib/readerFonts"
 import {
   type HideArabicRange,
+  getAyahCount,
   isAyahInHideRange,
-  normalizeHideRange,
 } from "@/lib/quran/verse-key"
 
 /** verse = translation/verse-by-verse view; reading = continuous Arabic (mushaf-like); card = verse-card grid */
@@ -85,10 +85,13 @@ interface ReaderSettingsContextValue extends ReaderSettings {
   toggleVerseReveal: (verseKey: string) => void
   /** Whether this verse is inside the active hide scope (always true if no range). */
   isVerseInHideScope: (verseKey: string) => boolean
-  /** Reveal every ayah in the current hide scope for this surah. */
-  revealAllInHideScope: (surahId: number, maxAyah: number) => void
+  /**
+   * Reveal every ayah in the current hide scope. In "All ayahs" scope this
+   * spans every surah infinite scroll has appended, up to `latestSurahId`.
+   */
+  revealAllInHideScope: (surahId: number, maxAyah: number, latestSurahId?: number | null) => void
   /** Re-hide every ayah currently in the hide scope. */
-  hideAllInHideScope: (surahId: number, maxAyah: number) => void
+  hideAllInHideScope: (surahId: number) => void
   arabicFontSize: string
   translationFontSize: string
   arabicFontFamily: string
@@ -378,16 +381,28 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  // With infinite scroll, more than one surah can be on screen at once. A
+  // fixed ayah Range is always scoped to the base surah (ranges are
+  // surah-relative), but "All ayahs" scope means everything currently
+  // loaded — so it must span every appended surah, not just the base one.
   const revealAllInHideScope = useCallback(
-    (sid: number, maxAyah: number) => {
-      const range =
-        hideArabicRange ??
-        normalizeHideRange(1, maxAyah, maxAyah)
-      if (!range) return
+    (sid: number, maxAyah: number, latestSid?: number | null) => {
+      if (hideArabicRange) {
+        setRevealedVerseKeys((prev) => {
+          const next = new Set(prev)
+          for (let a = hideArabicRange.start; a <= hideArabicRange.end; a++) {
+            next.add(`${sid}:${a}`)
+          }
+          return next
+        })
+        return
+      }
+      const endSid = Math.max(sid, latestSid ?? sid)
       setRevealedVerseKeys((prev) => {
         const next = new Set(prev)
-        for (let a = range.start; a <= range.end; a++) {
-          next.add(`${sid}:${a}`)
+        for (let s = sid; s <= endSid; s++) {
+          const count = s === sid ? maxAyah : (getAyahCount(s) ?? 0)
+          for (let a = 1; a <= count; a++) next.add(`${s}:${a}`)
         }
         return next
       })
@@ -396,18 +411,21 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
   )
 
   const hideAllInHideScope = useCallback(
-    (sid: number, maxAyah: number) => {
-      const range =
-        hideArabicRange ??
-        normalizeHideRange(1, maxAyah, maxAyah)
-      if (!range) return
-      setRevealedVerseKeys((prev) => {
-        const next = new Set(prev)
-        for (let a = range.start; a <= range.end; a++) {
-          next.delete(`${sid}:${a}`)
-        }
-        return next
-      })
+    (sid: number) => {
+      if (hideArabicRange) {
+        setRevealedVerseKeys((prev) => {
+          const next = new Set(prev)
+          for (let a = hideArabicRange.start; a <= hideArabicRange.end; a++) {
+            next.delete(`${sid}:${a}`)
+          }
+          return next
+        })
+        return
+      }
+      // "All ayahs" scope covers the whole session, regardless of how many
+      // surahs infinite scroll has appended — clearing every revealed key
+      // hides all of them without needing to enumerate each surah.
+      setRevealedVerseKeys(new Set())
     },
     [hideArabicRange],
   )
