@@ -112,7 +112,7 @@ const DEFAULT_SETTINGS: ReaderSettings = {
   tafsirSlug: DEFAULT_TAFSIR_SLUG,
   tajweedEnabled: false,
   hideArabic: false,
-  infiniteScroll: false,
+  infiniteScroll: true,
 }
 
 function clampScale(n: number): FontScale {
