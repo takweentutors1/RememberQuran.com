@@ -451,7 +451,7 @@ export function QuranReader({ chapter, verses, targetAyahId, targetAyahNonce }: 
   // own transitions, never to an incidental re-run of the scroll effect.
   useEffect(() => {
     if (!highlightActive) return
-    const t = setTimeout(() => setHighlightActive(false), 1500)
+    const t = setTimeout(() => setHighlightActive(false), 30_000)
     return () => clearTimeout(t)
   }, [highlightActive])
 
