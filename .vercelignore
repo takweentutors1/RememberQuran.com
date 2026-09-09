@@ -2,3 +2,16 @@ mobile-app
 **/node_modules
 **/.next
 **/.git
+
+# Local dev env files — must never ship in a deploy. web-app/.env sets
+# FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 for local dev; if uploaded, Next.js
+# loads it at build time and it silently shadows the real Vercel dashboard
+# env vars at runtime, making every Firestore call try to reach a local
+# emulator that doesn't exist in production. web-app/.vercelignore already
+# has this rule, but it only applies when web-app itself is the deploy
+# root — a manual `vercel --prod` run from the repo root (needed because
+# the project's configured Root Directory is "web-app", so the CLI must
+# upload the full repo) uses *this* file instead.
+**/.env
+**/.env.local
+**/.env.*.local
