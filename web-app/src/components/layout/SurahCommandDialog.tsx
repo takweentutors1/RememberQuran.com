@@ -51,17 +51,21 @@ export function SurahCommandDialog() {
     <CommandDialog
       open={commandOpen}
       onOpenChange={handleOpenChange}
-      title="Navigate to surah or ayah"
-      description="Search by surah name, number, or type 2:255 for a specific ayah"
+      title="Search the Quran"
+      description="Search a word, or jump to a surah name, number, or 2:255"
     >
       <Command shouldFilter={!ayahMatch}>
         <CommandInput
-          placeholder="Surah name, number, or 2:255…"
+          placeholder="Search the Quran…"
           value={input}
           onValueChange={setInput}
         />
         <CommandList>
-          <CommandEmpty>No surah found.</CommandEmpty>
+          <CommandEmpty>
+            {trimmedInput.length === 0
+              ? "Search a word, or type a surah name, number, or 2:255."
+              : "No surah found."}
+          </CommandEmpty>
 
           {showSearch ? (
             <CommandGroup heading="Search Quran">
@@ -93,7 +97,7 @@ export function SurahCommandDialog() {
             </CommandGroup>
           ) : null}
 
-          {!ayahMatch ? (
+          {!ayahMatch && trimmedInput.length > 0 ? (
             <CommandGroup heading="Surahs">
               {chapters.map((chapter) => (
                 <CommandItem
