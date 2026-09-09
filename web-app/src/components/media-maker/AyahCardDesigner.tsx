@@ -378,10 +378,13 @@ export function AyahCardDesigner({
         const updateHighlight = async (nextIndex: number) => {
           if (snapshotInFlight || nextIndex === activeIndex) return
           snapshotInFlight = true
-          const previousIndex = activeIndex
           activeIndex = nextIndex
           try {
-            setWordHighlighted(wordRefs.current[previousIndex], false, colors.accent)
+            // Clear every span rather than just the tracked previous index —
+            // a captured frame is a single point-in-time snapshot, so any
+            // word left highlighted from an earlier cycle would show up as
+            // a second, stale highlight alongside the current one.
+            for (const el of wordRefs.current) setWordHighlighted(el, false, colors.accent)
             setWordHighlighted(wordRefs.current[nextIndex], true, colors.accent)
             latestImg = await loadImage(await renderVideoFramePng())
           } catch {
@@ -698,7 +701,7 @@ export function AyahCardDesigner({
                         wordRefs.current[i] = el
                       }}
                       data-word-idx={i}
-                      style={{ borderRadius: "0.2em", transition: "background-color 120ms ease, color 120ms ease" }}
+                      style={{ borderRadius: "0.2em" }}
                     >
                       {w.text}
                     </span>{" "}
