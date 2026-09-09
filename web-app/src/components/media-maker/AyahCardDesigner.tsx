@@ -668,62 +668,69 @@ export function AyahCardDesigner({
 
       {/* Off-screen render target for video export: full-bleed background (no
           card chrome) with per-word spans so exportVideo can highlight the
-          currently-recited word, matching the reader's listen-mode look. */}
+          currently-recited word, matching the reader's listen-mode look.
+          Hidden via a zero-size `overflow-hidden` ancestor rather than
+          `position: fixed` pushed thousands of pixels off-screen — html-to-image
+          clones computed styles into an SVG foreignObject, and that extreme
+          fixed offset was carrying through into the clone, rendering the
+          captured frame blank (which then encoded as a black video, since a
+          transparent canvas has no alpha channel in the output codec). */}
       {card && (
-        <div
-          ref={videoFrameRef}
-          aria-hidden
-          className="pointer-events-none fixed left-[-9999px] top-0 flex h-[630px] w-[1200px] flex-col justify-between p-[5cqw] @container"
-          style={{
-            background: colors.background,
-            color: colors.foreground,
-          }}
-        >
-          <div className="flex min-h-0 flex-1 flex-col justify-center gap-[2.2cqw]">
-            <p
-              dir="rtl"
-              lang="ar"
-              className={`font-uthmani text-center leading-[1.8] ${arabicSizeClass(card.arabic.length)}`}
-            >
-              {flatWords.map((w, i) => (
-                <span key={i}>
-                  <span
-                    ref={(el) => {
-                      wordRefs.current[i] = el
-                    }}
-                    data-word-idx={i}
-                    style={{ borderRadius: "0.2em", transition: "background-color 120ms ease, color 120ms ease" }}
-                  >
-                    {w.text}
-                  </span>{" "}
-                </span>
-              ))}
-            </p>
-            <p
-              className="mx-auto max-w-[88%] text-center font-serif text-[2.15cqw] leading-[1.45]"
-              style={{ color: colors.muted }}
-            >
-              {truncateText(card.translation, 300)}
-            </p>
-          </div>
-
+        <div aria-hidden className="pointer-events-none absolute left-0 top-0 h-0 w-0 overflow-hidden">
           <div
-            className="mt-[2cqw] flex items-end justify-between border-t pt-[2cqw]"
-            style={{ borderColor: `${colors.accent}55` }}
+            ref={videoFrameRef}
+            className="flex h-[630px] w-[1200px] flex-col justify-between p-[5cqw] @container"
+            style={{
+              background: colors.background,
+              color: colors.foreground,
+            }}
           >
-            <div className="flex flex-col gap-[0.2cqw]">
-              <p className="font-serif text-[1.9cqw]" style={{ color: colors.accent }}>
-                {card.surahName}
+            <div className="flex min-h-0 flex-1 flex-col justify-center gap-[2.2cqw]">
+              <p
+                dir="rtl"
+                lang="ar"
+                className={`font-uthmani text-center leading-[1.8] ${arabicSizeClass(card.arabic.length)}`}
+              >
+                {flatWords.map((w, i) => (
+                  <span key={i}>
+                    <span
+                      ref={(el) => {
+                        wordRefs.current[i] = el
+                      }}
+                      data-word-idx={i}
+                      style={{ borderRadius: "0.2em", transition: "background-color 120ms ease, color 120ms ease" }}
+                    >
+                      {w.text}
+                    </span>{" "}
+                  </span>
+                ))}
               </p>
-              <p className="text-[1.55cqw]" style={{ color: colors.muted }}>
-                Ayah {card.verseKey}
+              <p
+                className="mx-auto max-w-[88%] text-center font-serif text-[2.15cqw] leading-[1.45]"
+                style={{ color: colors.muted }}
+              >
+                {truncateText(card.translation, 300)}
               </p>
             </div>
-            <div className="flex items-center gap-[0.7cqw]">
-              <span className="size-[1.1cqw] rounded-full" style={{ backgroundColor: colors.accent }} />
-              <p className="font-serif text-[1.55cqw]" style={{ color: colors.muted }}>
-                Remember Quran
-              </p>
+
+            <div
+              className="mt-[2cqw] flex items-end justify-between border-t pt-[2cqw]"
+              style={{ borderColor: `${colors.accent}55` }}
+            >
+              <div className="flex flex-col gap-[0.2cqw]">
+                <p className="font-serif text-[1.9cqw]" style={{ color: colors.accent }}>
+                  {card.surahName}
+                </p>
+                <p className="text-[1.55cqw]" style={{ color: colors.muted }}>
+                  Ayah {card.verseKey}
+                </p>
+              </div>
+              <div className="flex items-center gap-[0.7cqw]">
+                <span className="size-[1.1cqw] rounded-full" style={{ backgroundColor: colors.accent }} />
+                <p className="font-serif text-[1.55cqw]" style={{ color: colors.muted }}>
+                  Remember Quran
+                </p>
+              </div>
             </div>
           </div>
         </div>
