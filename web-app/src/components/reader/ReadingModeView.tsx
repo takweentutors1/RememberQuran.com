@@ -364,7 +364,8 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                     }
                   }
 
-                  const isSparseLine = lineItems.length <= 7
+                  const isDenseLine = lineItems.length >= 10
+                  const isVeryDense = lineItems.length >= 12
 
                   return (
                     <Fragment key={lineNumber}>
@@ -378,6 +379,11 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                         data-line-number={lineNumber}
                         className={cn(
                           "w-full flex items-center leading-none flex-nowrap",
+                          isVeryDense
+                            ? "text-[0.88em]"
+                            : isDenseLine
+                              ? "text-[0.93em]"
+                              : "text-[1em]",
                           isShortLastLine
                             ? "justify-center gap-2 sm:gap-3.5 md:gap-5"
                             : "justify-between",

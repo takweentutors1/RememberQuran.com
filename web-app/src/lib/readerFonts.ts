@@ -42,12 +42,12 @@ export const ARABIC_FONT_SIZES: Record<FontScale, string> = {
  * Strict 15-line layouts cannot support 3.75rem without horizontal blowout;
  * this maps the 6 user scale steps cleanly within the authentic page frame. */
 export const READING_MODE_ARABIC_FONT_SIZES: Record<FontScale, string> = {
-  1: "1.18rem",
-  2: "1.28rem",
-  3: "1.40rem",
-  4: "1.52rem",
-  5: "1.64rem",
-  6: "1.74rem",
+  1: "1.15rem",
+  2: "1.22rem",
+  3: "1.30rem",
+  4: "1.40rem",
+  5: "1.50rem",
+  6: "1.58rem",
 }
 
 export const TRANSLATION_FONT_SIZES: Record<FontScale, string> = {
