@@ -8,6 +8,7 @@ import { BookOpenText, Headphones, ImagePlus, Search, Star } from "lucide-react"
 import { ArabesquePattern } from "@/components/layout/ArabesquePattern"
 import { AuthNav } from "@/components/auth/AuthNav"
 import { LogoWordmark } from "@/components/layout/Logo"
+import { NavbarResumeButton } from "@/components/layout/NavbarResumeButton"
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher"
 import { useUI } from "@/context/UIContext"
 import { cn } from "@/lib/utils"
@@ -68,7 +69,8 @@ function NavTabs({ pathname }: { pathname: string }) {
 function NavActions() {
   const { setCommandOpen } = useUI()
   return (
-    <div className="flex items-center gap-1 sm:gap-2">
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      <NavbarResumeButton />
       <button
         onClick={() => setCommandOpen(true)}
         aria-label="Search"
