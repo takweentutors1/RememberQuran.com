@@ -31,7 +31,8 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
     >
       <p
         aria-hidden="true"
-        className="aqf-bsml leading-none text-[#1E1B18] dark:text-[#ECE6DA] text-5xl"
+        className="aqf-bsml leading-none text-[#1E1B18] dark:text-[#ECE6DA]"
+        style={{ fontSize: "3rem" }}
       >
         {AQF_BISMILLAH_CHAR}
       </p>
