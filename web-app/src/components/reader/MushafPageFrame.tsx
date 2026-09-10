@@ -107,7 +107,7 @@ export function MushafPageFrame({
       {/* Main Mushaf Page Container - King Fahd Complex Madani Manuscript Geometry */}
       <div
         className={cn(
-          "relative overflow-hidden transition-all duration-300",
+          "relative transition-all duration-300",
           "bg-[#FAF7EE] dark:bg-[#161412] text-[#1E1B18] dark:text-[#ECE6DA]",
           "border border-[#D4C8B0] dark:border-[#3A3328] rounded-sm shadow-xl",
           "p-2 sm:p-3.5 md:p-4",
