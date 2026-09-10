@@ -538,8 +538,8 @@ export function QuranReader({ chapter, verses, targetAyahId, targetAyahNonce }: 
         className={cn(
           "mx-auto",
           isReading
-            ? "max-w-5xl px-3 py-6 sm:px-8 sm:py-8"
-            : "max-w-[820px] px-6 py-8 sm:px-10 sm:py-10",
+            ? "max-w-5xl px-1 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8"
+            : "max-w-[820px] px-4 py-6 sm:px-8 sm:py-8",
         )}
         style={
           {

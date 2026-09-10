@@ -300,8 +300,8 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                 isCenteredOpeningPage
                   ? "flex flex-col items-center justify-center space-y-2 py-1 text-center leading-[2.0]"
                   : page.hasSurahStart
-                    ? "flex flex-col gap-1.5 sm:gap-2.5 md:gap-3 py-0.5"
-                    : "flex flex-col justify-between min-h-[500px] sm:min-h-[580px] md:min-h-[660px] py-0.5",
+                    ? "flex flex-col gap-1 sm:gap-2 md:gap-2.5 py-0.5"
+                    : "flex flex-col justify-between min-h-[400px] sm:min-h-[500px] md:min-h-[600px] lg:min-h-[660px] py-0.5",
               )}
             >
               {isCenteredOpeningPage ? (
@@ -345,7 +345,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                         className={cn(
                           "w-full flex items-center leading-none",
                           isShortLastLine
-                            ? "justify-center gap-4 sm:gap-6"
+                            ? "justify-center gap-3 sm:gap-5 md:gap-6"
                             : "justify-between",
                         )}
                       >

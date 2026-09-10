@@ -189,7 +189,7 @@ export function Navbar() {
                 "flex h-full shrink-0 items-center px-3",
                 "transition-[width] duration-200 ease-out",
                 "w-auto",
-                sidebarEffectivelyOpen && "md:w-72",
+                sidebarEffectivelyOpen && "md:w-64 lg:md:w-72",
               )}
             >
               <LogoLink />

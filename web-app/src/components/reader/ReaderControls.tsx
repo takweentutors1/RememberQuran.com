@@ -108,7 +108,7 @@ export function ReaderControls() {
           focusMode ? "top-0" : "top-14",
         )}
       >
-        <div className="flex h-11 items-center justify-between gap-2 px-3 sm:px-4">
+        <div className="flex h-11 items-center justify-between gap-2 px-2 sm:px-4">
           <div className="flex min-w-0 items-center gap-0.5">
             <SurahPickerTrigger
               chapter={toolbarChapter}
