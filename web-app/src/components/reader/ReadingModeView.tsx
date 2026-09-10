@@ -377,12 +377,9 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                       <div
                         data-line-number={lineNumber}
                         className={cn(
-                          "w-full flex items-center leading-none",
                           isShortLastLine
-                            ? "justify-center gap-2 sm:gap-3.5 md:gap-5"
-                            : isSparseLine
-                              ? "justify-center gap-2 sm:gap-3 md:gap-4.5"
-                              : "justify-between",
+                            ? "mushaf-justified-line-end"
+                            : "mushaf-justified-line",
                         )}
                       >
                       {lineItems.map(({ word, verse, attachedEndMarker }) => (

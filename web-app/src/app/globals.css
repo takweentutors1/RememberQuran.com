@@ -1057,6 +1057,37 @@ h1, h2, h3, .font-serif {
     text-rendering: optimizeLegibility;
   }
 
+  /* Authentic 15-line Madani justified line: guarantees flush right and left calligraphy margins */
+  .mushaf-justified-line {
+    display: block;
+    width: 100%;
+    text-align: justify;
+    text-align-last: justify;
+    text-justify: inter-word;
+    direction: rtl;
+    line-height: 1.1;
+    white-space: normal;
+  }
+
+  /* Support fallback for browsers where inline-flex elements require an invisible break to justify */
+  .mushaf-justified-line::after {
+    content: "";
+    display: inline-block;
+    width: 100%;
+    height: 0;
+    visibility: hidden;
+  }
+
+  .mushaf-justified-line-end {
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-align-last: center;
+    direction: rtl;
+    line-height: 1.1;
+    white-space: normal;
+  }
+
   .aqf-bsml {
     font-family: 'aqf_bsml', -apple-system, BlinkMacSystemFont, sans-serif;
   }
