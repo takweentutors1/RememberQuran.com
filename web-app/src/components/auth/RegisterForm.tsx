@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { validateCredentials } from "@/lib/auth/credentials"
-import { navigateAfterAuth } from "@/lib/auth/navigate-after-auth"
 import { safeNextPath } from "@/lib/auth/safe-next"
 import { cn } from "@/lib/utils"
 
@@ -16,8 +15,16 @@ const fieldLabel =
 export function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
   // Prefer the intended page; default new accounts to their personal hub
   const next = safeNextPath(searchParams.get("next"), "/account")
+
+  // If the user is already authenticated on the client, immediately send them to destination
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      window.location.assign(next)
+    }
+  }, [status, session, next])
 
   const [displayName, setDisplayName] = useState("")
   const [email, setEmail] = useState("")
@@ -85,8 +92,8 @@ export function RegisterForm() {
         return
       }
 
-      // Soft App Router nav — keeps providers mounted; refresh picks up session.
-      await navigateAfterAuth(router, next)
+      // Hard navigation ensures fresh cookie headers are sent to the server/proxy
+      window.location.assign(next)
     } catch (err) {
       const aborted =
         err instanceof DOMException && err.name === "AbortError"

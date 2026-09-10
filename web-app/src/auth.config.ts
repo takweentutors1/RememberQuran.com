@@ -6,6 +6,7 @@ import type { NextAuthConfig } from "next-auth"
  * Full Credentials provider lives in `src/auth.ts`.
  */
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
@@ -62,5 +63,4 @@ export const authConfig = {
       return session
     },
   },
-  trustHost: true,
 } satisfies NextAuthConfig

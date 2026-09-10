@@ -3,11 +3,10 @@
 import Link from "next/link"
 import { useState, useEffect, type FormEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { validateCredentials } from "@/lib/auth/credentials"
-import { navigateAfterAuth } from "@/lib/auth/navigate-after-auth"
 import { safeNextPath } from "@/lib/auth/safe-next"
 import { cn } from "@/lib/utils"
 
@@ -17,7 +16,16 @@ const fieldLabel =
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
   const next = safeNextPath(searchParams.get("next"), "/account")
+
+  // If the user is already authenticated on the client, immediately send them to destination
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      window.location.assign(next)
+    }
+  }, [status, session, next])
+
   // Set by the failure branch below via a real top-level navigation back to
   // this same page (see its comment for why) — read once on load, then
   // stripped from the URL so refreshing doesn't re-show a stale error.
@@ -77,9 +85,9 @@ export function LoginForm() {
         return
       }
 
-      // Soft nav + refresh so the session cookie is picked up without
-      // remounting the whole app shell (providers, chapters, audio).
-      await navigateAfterAuth(router, next)
+      // Hard navigation ensures fresh cookie headers are sent to the server/proxy
+      // avoiding middleware caching issues and redirect loops.
+      window.location.assign(next)
     } catch {
       setError("Something went wrong. Please try again.")
       setPassword("")
