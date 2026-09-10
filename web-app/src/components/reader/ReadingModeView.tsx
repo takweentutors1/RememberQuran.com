@@ -295,7 +295,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
               dir="rtl"
               lang="ar"
               className={cn(
-                "quran-arabic font-uthmani select-text w-full",
+                "quran-arabic font-uthmani select-text w-full reading-mode-text",
                 "text-[#1E1B18] dark:text-[#E8E2D5]",
                 isCenteredOpeningPage
                   ? "flex flex-col items-center justify-center space-y-2 py-1 text-center leading-[2.0]"
