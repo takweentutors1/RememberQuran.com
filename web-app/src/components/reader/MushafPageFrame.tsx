@@ -119,12 +119,12 @@ export function MushafPageFrame({
             {/* Top Page Header: Dual Rectangular Boxes matching 2nd image (Surah on right/left per classical Mushaf) */}
             <header className="mb-2 sm:mb-2.5 grid grid-cols-2 gap-0 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] select-none text-center rounded-xs overflow-hidden">
               <div className="py-1 sm:py-1.5 px-2 sm:px-3 border-l border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center min-w-0">
-                <span className="font-uthmani text-[10px] sm:text-xs md:text-sm font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal">
+                <span className="font-uthmani text-xs font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal">
                   {cleanSurahName ? `سورة ${cleanSurahName}` : ""}
                 </span>
               </div>
               <div className="py-1 sm:py-1.5 px-2 sm:px-3 flex items-center justify-center min-w-0">
-                <span className="font-uthmani text-[10px] sm:text-xs md:text-sm font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal">
+                <span className="font-uthmani text-xs font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal">
                   {juzOrdinal ? `الجزء ${juzOrdinal}` : juzNumber ? `الجزء ${toArabicDigits(juzNumber)}` : ""}
                 </span>
               </div>
