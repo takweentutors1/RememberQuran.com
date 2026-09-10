@@ -1,0 +1,6 @@
+{
+  "name": "RememberQuran",
+  "description": "A free, public-benefit Quran platform to read, listen, and understand the Quran.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

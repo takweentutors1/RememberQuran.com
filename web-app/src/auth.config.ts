@@ -9,6 +9,10 @@ export const authConfig = {
   pages: {
     signIn: "/login",
   },
+  secret:
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    "rememberquran-dev-secret-key-32-chars-long-minimum",
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,

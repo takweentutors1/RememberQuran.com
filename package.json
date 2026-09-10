@@ -1,0 +1,16 @@
+{
+  "name": "rememberquran-root",
+  "private": true,
+  "workspaces": [
+    "web-app"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web-app",
+    "build": "npm run build --workspace=web-app",
+    "start": "npm run start --workspace=web-app",
+    "lint": "npm run lint --workspace=web-app"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
+  }
+}
