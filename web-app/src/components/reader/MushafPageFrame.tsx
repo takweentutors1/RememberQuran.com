@@ -73,7 +73,7 @@ export function MushafPageFrame({
   const cleanSurahName = surahNameArabic ? surahNameArabic.replace(/^سورة\s+/i, "") : ""
 
   return (
-    <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[738px] lg:max-w-[820px] px-1 sm:px-3 md:px-4", className)}>
+    <div className={cn("relative mx-auto my-6 sm:my-8 w-full max-w-[580px] sm:max-w-[620px] lg:max-w-[660px] px-1 sm:px-2 md:px-3", className)}>
       {/* Outer Margin Badges (Desktop) */}
       {marginBadges.length > 0 && (
         <div className="absolute right-0 top-12 hidden flex-col gap-3 lg:flex translate-x-[calc(100%+6px)]">
@@ -115,7 +115,7 @@ export function MushafPageFrame({
       >
         {/* Authentic Madani Double Gold Hairline Border Frame */}
         <div className="relative rounded-xs border-2 border-[#C2A676] dark:border-[#8E7348] p-1 sm:p-1.5">
-          <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2.5 md:py-3">
+          <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 px-2.5 sm:px-3.5 md:px-5 py-2 sm:py-2.5 md:py-3.5">
             {/* Top Page Header: Classical Manuscript Header Bar (Surah and Juz) */}
             <header className="mb-3 sm:mb-3.5 flex items-center justify-between border-b-2 border-[#C5A880]/60 dark:border-[#8E7348]/60 pb-1.5 px-2 select-none text-center">
               <div className="flex items-center gap-1.5">
