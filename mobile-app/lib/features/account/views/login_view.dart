@@ -11,6 +11,7 @@ class LoginView extends GetView<AuthController> {
   Widget build(BuildContext context) {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
+    final obscurePassword = true.obs;
     final theme = Theme.of(context);
     final nurColors = theme.extension<NurColorsExtension>();
 
@@ -54,6 +55,11 @@ class LoginView extends GetView<AuthController> {
                 ),
                 TextField(
                   controller: emailController,
+                  onChanged: (_) {
+                    if (controller.error.value.isNotEmpty) {
+                      controller.error.value = '';
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: 'Email',
                     prefixIcon: const Icon(Icons.email_outlined),
@@ -76,28 +82,47 @@ class LoginView extends GetView<AuthController> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
-                TextField(
-                  controller: passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.password_outlined),
-                    filled: true,
-                    fillColor:
-                        nurColors?.surfaceSunk ?? theme.colorScheme.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                Obx(
+                  () => TextField(
+                    controller: passwordController,
+                    onChanged: (_) {
+                      if (controller.error.value.isNotEmpty) {
+                        controller.error.value = '';
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: const Icon(Icons.password_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword.value
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        onPressed: () =>
+                            obscurePassword.value = !obscurePassword.value,
+                        tooltip: obscurePassword.value
+                            ? 'Show password'
+                            : 'Hide password',
+                      ),
+                      filled: true,
+                      fillColor:
+                          nurColors?.surfaceSunk ?? theme.colorScheme.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        ),
                       ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                      ),
-                    ),
+                    obscureText: obscurePassword.value,
                   ),
-                  obscureText: true,
                 ),
                 const SizedBox(height: 8),
                 Align(

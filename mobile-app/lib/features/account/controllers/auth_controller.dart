@@ -67,9 +67,34 @@ class AuthController extends GetxController {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       _navigateAfterAuth();
     } on FirebaseAuthException catch (e) {
-      error.value = e.message ?? 'Unable to sign in. Please check your credentials and try again.';
+      error.value = _mapFirebaseAuthError(e);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Maps technical Firebase Auth error codes to user-friendly error messages.
+  String _mapFirebaseAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-credential':
+      case 'wrong-password':
+        return 'Incorrect email or password. Please double-check your credentials.';
+      case 'user-not-found':
+        return 'No account found with this email. Please register first.';
+      case 'user-disabled':
+        return 'This account has been disabled. Please contact support.';
+      case 'too-many-requests':
+        return 'Too many failed login attempts. Please wait a moment or reset your password.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'email-already-in-use':
+        return 'An account already exists with this email address. Please log in.';
+      case 'weak-password':
+        return 'The password provided is too weak. Please use a stronger password.';
+      case 'network-request-failed':
+        return 'Network connection error. Please check your internet connection.';
+      default:
+        return e.message ?? 'Unable to sign in. Please check your credentials and try again.';
     }
   }
 
@@ -102,7 +127,7 @@ class AuthController extends GetxController {
 
       _navigateAfterAuth();
     } on FirebaseAuthException catch (e) {
-      error.value = e.message ?? 'Unable to create account. Please check your details or try a different email.';
+      error.value = _mapFirebaseAuthError(e);
     } finally {
       isLoading.value = false;
     }
