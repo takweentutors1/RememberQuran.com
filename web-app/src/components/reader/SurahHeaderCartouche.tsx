@@ -27,6 +27,7 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
         "relative mx-auto my-2 sm:my-2.5 w-full select-none",
         className,
       )}
+      style={{ fontSize: "16px" }}
     >
       {/* Outer Arabesque Illuminated Border Box */}
       <div className="relative w-full rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs flex items-stretch">
@@ -44,7 +45,8 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
         {/* ─── CENTER CARTOUCHE: Crisp Calligraphic Surah Title ─── */}
         <div className="flex-1 min-w-0 flex items-center justify-center px-2 sm:px-4 bg-[#FFFDF9] dark:bg-[#16130E]">
           <h2
-            className="surah-cartouche-name font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-normal text-center truncate w-full py-1"
+            className="font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-normal text-center truncate w-full py-1"
+            style={{ fontSize: "2.25rem" }}
           >
             سُورَةُ {surahNameClean}
           </h2>
