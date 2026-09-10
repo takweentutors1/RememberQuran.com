@@ -172,7 +172,7 @@ class AyahActionsSheet extends StatelessWidget {
                   final userId =
                       Get.find<AuthController>().firebaseUser.value?.uid;
                   if (userId == null) {
-                    AppFeedback.showError('Please sign in to save your notes.');
+                    AppFeedback.showAuthRequired('Sign in to save and view your notes.');
                     return;
                   }
                   NoteSheet.show(context, verse.chapterId, verse.verseNumber);

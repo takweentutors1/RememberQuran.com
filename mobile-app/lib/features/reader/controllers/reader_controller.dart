@@ -411,7 +411,7 @@ class ReaderController extends GetxController {
   Future<void> toggleBookmark(String verseKey, {String? collectionId}) async {
     final user = Get.find<AuthController>().firebaseUser.value;
     if (user == null) {
-      AppFeedback.showError('Please sign in to save your bookmarks.');
+      AppFeedback.showAuthRequired('Sign in to save and manage your bookmarks.');
       return;
     }
 
@@ -478,7 +478,7 @@ class ReaderController extends GetxController {
   ) async {
     final user = Get.find<AuthController>().firebaseUser.value;
     if (user == null) {
-      AppFeedback.showError('Please sign in to track memorised ayahs.');
+      AppFeedback.showAuthRequired('Sign in to track your memorised ayahs.');
       return;
     }
 
@@ -527,7 +527,7 @@ class ReaderController extends GetxController {
   Future<void> markRangeMemorised(int surahId, int from, int to) async {
     final user = Get.find<AuthController>().firebaseUser.value;
     if (user == null) {
-      AppFeedback.showError('Please sign in to track memorised ayahs.');
+      AppFeedback.showAuthRequired('Sign in to track your memorised ayahs.');
       return;
     }
 

@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_radius.dart';
+import '../../app/routes/app_routes.dart';
 import 'app_mascot.dart';
 
 /// Centralised success/error toast styling so every part of the app reports
@@ -46,6 +47,23 @@ class AppFeedback {
           ? AppColors.darkBrandGoldSoft.withValues(alpha: 0.2)
           : AppColors.lightBrandGoldSoft.withValues(alpha: 0.4),
       foreground: isDark ? AppColors.darkForeground : AppColors.lightForeground,
+    );
+  }
+
+  static void showAuthRequired(
+    String message, {
+    String title = 'Sign in required',
+    String actionLabel = 'Sign in',
+  }) {
+    showError(
+      message,
+      title: title,
+      retryLabel: actionLabel,
+      onRetry: () {
+        _entry?.remove();
+        _entry = null;
+        Get.toNamed(Routes.LOGIN);
+      },
     );
   }
 
@@ -284,9 +302,20 @@ class _CenteredToastState extends State<_CenteredToast>
                       ),
                     ),
                     if (widget.onRetry != null) ...[
-                      const SizedBox(height: 12),
-                      TextButton(
+                      const SizedBox(height: 14),
+                      FilledButton(
                         onPressed: widget.onRetry,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: widget.foreground,
+                          foregroundColor: widget.background.withValues(alpha: 1.0),
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          shape: const StadiumBorder(),
+                          textStyle: AppTypography.sans(
+                            fontSize: 13,
+                            weight: FontWeight.w600,
+                          ),
+                        ),
                         child: Text(widget.retryLabel),
                       ),
                     ],
