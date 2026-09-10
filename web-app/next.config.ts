@@ -1,7 +1,7 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: process.env.VERCEL ? undefined : "standalone",
   allowedDevOrigins: [
     "ais-dev-uqgyw5ngganzv2yxq6svjn-67937599322.asia-southeast1.run.app",
     "ais-pre-uqgyw5ngganzv2yxq6svjn-67937599322.asia-southeast1.run.app",
