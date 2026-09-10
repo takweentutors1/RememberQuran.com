@@ -67,5 +67,5 @@ export const QURAN_FONT_FAMILY: Record<QuranFont, string> = {
 
 export const MIN_FONT_SCALE = 1 as FontScale
 export const MAX_FONT_SCALE = 6 as FontScale
-export const DEFAULT_ARABIC_SCALE = 3 as FontScale
+export const DEFAULT_ARABIC_SCALE = 5 as FontScale
 export const DEFAULT_TRANSLATION_SCALE = 3 as FontScale
