@@ -25,7 +25,7 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
       role="region"
       aria-label={`سورة ${chapter.name_arabic}`}
       className={cn(
-        "relative mx-auto my-3 sm:my-3.5 w-full select-none",
+        "relative mx-auto mt-1 mb-2 sm:mb-2.5 w-full select-none",
         className,
       )}
       style={{ fontSize: "16px" }}
