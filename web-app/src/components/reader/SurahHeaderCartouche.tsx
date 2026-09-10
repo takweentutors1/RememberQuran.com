@@ -29,7 +29,7 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
       )}
     >
       {/* Outer Arabesque Illuminated Border Box */}
-      <div className="relative w-full rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs overflow-hidden flex items-stretch min-h-[52px] sm:min-h-[64px] md:min-h-[72px]">
+      <div className="relative w-full rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs flex items-stretch">
         
         {/* Right Arabesque Wing (RTL start) */}
         <div className="shrink-0 w-[22%] sm:w-[26%] border-l-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1 sm:p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
@@ -42,10 +42,10 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
         </div>
 
         {/* ─── CENTER CARTOUCHE: Crisp Calligraphic Surah Title ─── */}
-        <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 sm:px-4 bg-[#FFFDF9] dark:bg-[#16130E] relative overflow-hidden">
+        <div className="flex-1 min-w-0 flex items-center justify-center px-2 sm:px-4 bg-[#FFFDF9] dark:bg-[#16130E]">
           <h2
-            className="quran-arabic font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-none py-0.5 text-center truncate w-full"
-            style={{ fontSize: "min(calc(var(--arabic-font-size, 2.25rem) * 0.7), 2.5rem)" }}
+            className="quran-arabic font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-normal text-center truncate w-full py-1"
+            style={{ fontSize: "min(calc(var(--arabic-font-size, 2.25rem) * 0.65), 2.25rem)" }}
           >
             سُورَةُ {surahNameClean}
           </h2>

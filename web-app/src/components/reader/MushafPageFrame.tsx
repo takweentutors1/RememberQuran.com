@@ -118,13 +118,19 @@ export function MushafPageFrame({
           <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2.5 md:py-3">
             {/* Top Page Header: Dual Rectangular Boxes matching 2nd image (Surah on right/left per classical Mushaf) */}
             <header className="mb-2 sm:mb-2.5 grid grid-cols-2 gap-0 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] select-none text-center rounded-xs overflow-hidden">
-              <div className="py-0.5 sm:py-1 px-1.5 sm:px-2 border-l border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center min-w-0 overflow-hidden">
-                <span className="font-uthmani text-[10px] sm:text-xs md:text-sm font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate">
+              <div className="py-1 sm:py-1.5 px-2 sm:px-3 border-l border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center min-w-0">
+                <span
+                  className="font-uthmani font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal"
+                  style={{ fontSize: "min(calc(var(--arabic-font-size, 2.25rem) * 0.3), 0.9375rem)" }}
+                >
                   {cleanSurahName ? `سورة ${cleanSurahName}` : ""}
                 </span>
               </div>
-              <div className="py-0.5 sm:py-1 px-1.5 sm:px-2 flex items-center justify-center min-w-0 overflow-hidden">
-                <span className="font-uthmani text-[10px] sm:text-xs md:text-sm font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate">
+              <div className="py-1 sm:py-1.5 px-2 sm:px-3 flex items-center justify-center min-w-0">
+                <span
+                  className="font-uthmani font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal"
+                  style={{ fontSize: "min(calc(var(--arabic-font-size, 2.25rem) * 0.3), 0.9375rem)" }}
+                >
                   {juzOrdinal ? `الجزء ${juzOrdinal}` : juzNumber ? `الجزء ${toArabicDigits(juzNumber)}` : ""}
                 </span>
               </div>
