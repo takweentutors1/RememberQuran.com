@@ -44,7 +44,7 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
         {/* ─── CENTER CARTOUCHE: Crisp Calligraphic Surah Title ─── */}
         <div className="flex-1 min-w-0 flex items-center justify-center px-2 sm:px-4 bg-[#FFFDF9] dark:bg-[#16130E]">
           <h2
-            className="quran-arabic font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-normal text-center truncate w-full py-1 text-xl"
+            className="font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-normal text-center truncate w-full py-1 text-xl"
           >
             سُورَةُ {surahNameClean}
           </h2>
