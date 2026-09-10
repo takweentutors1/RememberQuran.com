@@ -1060,3 +1060,18 @@ h1, h2, h3, .font-serif {
     font-family: 'aqf_bsml', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 }
+
+/* Surah cartouche name — fixed size, never scales with --arabic-font-size */
+.surah-cartouche-name {
+  font-size: 2.25rem !important;
+}
+
+/* Mushaf page header — fixed size */
+.mushaf-header-text {
+  font-size: 0.75rem !important;
+}
+
+/* Bismillah header — fixed size */
+.bismillah-fixed {
+  font-size: 3rem !important;
+}
