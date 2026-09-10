@@ -39,7 +39,7 @@ const TABS = [
 
 function NavTabs({ pathname }: { pathname: string }) {
   return (
-    <nav className="flex h-full items-center gap-1 sm:gap-2">
+    <nav className="hidden md:flex h-full items-center gap-1 sm:gap-2">
       {TABS.map(({ href, label, icon: Icon, match }) => {
         const active = match(pathname)
         return (
@@ -92,10 +92,11 @@ function LogoLink({ className }: { className?: string }) {
     <Link
       href="/"
       aria-label="RememberQuran — home"
-      className={cn("rounded-sm", FOCUS, className)}
+      className={cn("rounded-sm shrink-0", FOCUS, className)}
     >
       <span className="inline-flex transition-opacity duration-(--dur-base) hover:opacity-80">
-        <LogoWordmark size="md" />
+        <LogoWordmark size="sm" className="sm:hidden" />
+        <LogoWordmark size="md" className="hidden sm:inline-flex" />
       </span>
     </Link>
   )
@@ -178,7 +179,7 @@ export function Navbar() {
         {floating && (
           <ArabesquePattern
             id="navbar"
-            className="text-gold-leaf/[0.05] [animation-duration:120s]"
+            className="hidden sm:block text-gold-leaf/[0.05] [animation-duration:120s]"
           />
         )}
         {isSurahRoute ? (

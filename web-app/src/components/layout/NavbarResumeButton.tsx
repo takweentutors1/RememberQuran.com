@@ -64,17 +64,17 @@ export function NavbarResumeButton() {
       href={targetHref}
       title={`Resume reading: ${surahLabel} Ayah ${position.ayahId}`}
       className={cn(
-        "group relative flex h-8 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 sm:px-3 text-xs font-medium text-primary",
+        "group relative flex h-8 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 sm:px-3 text-xs font-medium text-primary",
         "transition-all duration-200 ease-out hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-xs",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
       )}
     >
       <BookOpen className="size-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110" strokeWidth={2} />
       <span className="hidden sm:inline font-semibold">Resume:</span>
-      <span className="max-w-[110px] truncate sm:max-w-[140px]">
+      <span className="hidden xs:inline max-w-[100px] truncate sm:max-w-[140px]">
         {surahLabel} {position.ayahId}
       </span>
-      <ArrowRight className="size-3 shrink-0 opacity-70 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" strokeWidth={2} />
+      <ArrowRight className="hidden sm:inline size-3 shrink-0 opacity-70 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" strokeWidth={2} />
     </Link>
   )
 }
