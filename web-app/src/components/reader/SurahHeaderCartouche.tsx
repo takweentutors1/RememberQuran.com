@@ -16,12 +16,6 @@ interface SurahHeaderCartoucheProps {
  */
 export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartoucheProps) {
   const surahNameClean = chapter.name_arabic.replace(/^سورة\s+/i, "")
-  const pageSpan =
-    chapter.pages && chapter.pages.length === 2
-      ? chapter.pages[0] === chapter.pages[1]
-        ? `Page ${chapter.pages[0]}`
-        : `Pages ${chapter.pages[0]}–${chapter.pages[1]}`
-      : null
 
   return (
     <div
@@ -30,17 +24,16 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
       role="region"
       aria-label={`سورة ${chapter.name_arabic}`}
       className={cn(
-        "relative mx-auto my-2 sm:my-2.5 w-full select-none max-w-[680px]",
+        "relative mx-auto my-2 sm:my-2.5 w-full select-none",
         className,
       )}
     >
       {/* Outer Arabesque Illuminated Border Box */}
-      <div className="relative w-full rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs overflow-hidden flex items-stretch min-h-[60px] sm:min-h-[72px] md:min-h-[80px]">
+      <div className="relative w-full rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs overflow-hidden flex items-stretch min-h-[52px] sm:min-h-[64px] md:min-h-[72px]">
         
         {/* Right Arabesque Wing (RTL start) */}
-        <div className="w-[28%] sm:w-[30%] border-l-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
+        <div className="shrink-0 w-[22%] sm:w-[26%] border-l-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1 sm:p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
           <svg viewBox="0 0 160 60" className="w-full h-full text-[#8C6D38]/70 dark:text-[#B59152]/70" fill="none" preserveAspectRatio="none">
-            {/* Elegant double swirling ribbon arcs matching 2nd image */}
             <path d="M 10,30 C 35,5 65,55 90,30 C 115,5 140,45 155,30" stroke="currentColor" strokeWidth="1.8" />
             <path d="M 10,30 C 35,55 65,5 90,30 C 115,55 140,15 155,30" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3" />
             <circle cx="45" cy="22" r="3.5" fill="currentColor" opacity="0.6" />
@@ -49,19 +42,18 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
         </div>
 
         {/* ─── CENTER CARTOUCHE: Crisp Calligraphic Surah Title ─── */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 bg-[#FFFDF9] dark:bg-[#16130E] relative">
+        <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 sm:px-4 bg-[#FFFDF9] dark:bg-[#16130E] relative overflow-hidden">
           <h2
-            className="quran-arabic font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-none py-0.5 text-center"
-            style={{ fontSize: "calc(var(--arabic-font-size, 2.25rem) * 0.9)" }}
+            className="quran-arabic font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-none py-0.5 text-center truncate w-full"
+            style={{ fontSize: "min(calc(var(--arabic-font-size, 2.25rem) * 0.7), 2.5rem)" }}
           >
             سُورَةُ {surahNameClean}
           </h2>
         </div>
 
         {/* Left Arabesque Wing (RTL end) */}
-        <div className="w-[28%] sm:w-[30%] border-r-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
+        <div className="shrink-0 w-[22%] sm:w-[26%] border-r-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1 sm:p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
           <svg viewBox="0 0 160 60" className="w-full h-full text-[#8C6D38]/70 dark:text-[#B59152]/70" fill="none" preserveAspectRatio="none">
-            {/* Mirrored double swirling ribbon arcs matching 2nd image */}
             <path d="M 150,30 C 125,5 95,55 70,30 C 45,5 20,45 5,30" stroke="currentColor" strokeWidth="1.8" />
             <path d="M 150,30 C 125,55 95,5 70,30 C 45,55 20,15 5,30" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3" />
             <circle cx="115" cy="22" r="3.5" fill="currentColor" opacity="0.6" />
