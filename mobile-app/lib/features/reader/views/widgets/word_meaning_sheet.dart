@@ -5,14 +5,14 @@ import '../../../../data/datasources/local/quran_db.dart';
 import '../../../../data/datasources/remote/morphology_local_ds.dart';
 import '../../../../data/models/morphology_entry.dart';
 import '../../../../core/models/reciter.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/morphology_labels.dart';
 
 class WordMeaningSheet extends StatefulWidget {
   final Word word;
   final String verseKey;
 
-  const WordMeaningSheet({Key? key, required this.word, required this.verseKey})
-      : super(key: key);
+  const WordMeaningSheet({super.key, required this.word, required this.verseKey});
 
   @override
   State<WordMeaningSheet> createState() => _WordMeaningSheetState();
@@ -120,38 +120,40 @@ class _WordMeaningSheetState extends State<WordMeaningSheet> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'UthmanicHafs',
-                fontSize: 56,
-                height: 1.5,
+                fontSize: 52,
+                height: 1.35,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             // Transliteration
             if (transliterationText.isNotEmpty)
               Text(
                 transliterationText,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                ),
+                style: AppTypography.serif(
+                  fontSize: 17,
+                  weight: FontWeight.w400,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ).copyWith(fontStyle: FontStyle.italic),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             // Translation
             if (translationText.isNotEmpty)
               Text(
                 translationText,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: AppTypography.sans(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  weight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             if (_morphology != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               _buildMorphologySection(theme, _morphology!),
             ],
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             // Play Audio Button
             if (word.audioUrl != null && word.audioUrl!.isNotEmpty)
               ElevatedButton.icon(
