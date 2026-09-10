@@ -93,6 +93,7 @@ export function QuranReader({ chapter, verses, targetAyahId, targetAyahNonce }: 
     activeTranslations,
     showTranslation,
     arabicFontSize,
+    readingModeArabicFontSize,
     translationFontSize,
     arabicFontFamily,
     infiniteScroll,
@@ -544,6 +545,7 @@ export function QuranReader({ chapter, verses, targetAyahId, targetAyahNonce }: 
         style={
           {
             "--arabic-font-size": arabicFontSize,
+            "--reading-arabic-font-size": readingModeArabicFontSize,
             "--translation-font-size": translationFontSize,
             "--reader-arabic-font": arabicFontFamily,
           } as React.CSSProperties

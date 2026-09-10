@@ -450,38 +450,39 @@ h1, h2, h3, .font-serif {
 /* ── Reading Mode Fluid Typography ──
    Scales down the Arabic font size on smaller screens to prevent long lines
    from wrapping in the strict 15-line Mushaf layout, while still respecting
-   the relative differences between the xs-2xl font scale options. */
+   the relative differences between the xs-2xl font scale options. Uses
+   --reading-arabic-font-size (calibrated specifically for 15-line page geometry). */
 .reading-mode-text {
-  font-size: var(--arabic-font-size, 2.25rem);
+  font-size: var(--reading-arabic-font-size, 1.35rem);
 }
 
 @media (max-width: 1024px) {
   .reading-mode-text {
-    font-size: calc(var(--arabic-font-size, 2.25rem) * 0.9);
+    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.95);
   }
 }
 
 @media (max-width: 768px) {
   .reading-mode-text {
-    font-size: calc(var(--arabic-font-size, 2.25rem) * 0.75);
+    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.82);
   }
 }
 
 @media (max-width: 640px) {
   .reading-mode-text {
-    font-size: calc(var(--arabic-font-size, 2.25rem) * 0.6);
+    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.7);
   }
 }
 
 @media (max-width: 500px) {
   .reading-mode-text {
-    font-size: calc(var(--arabic-font-size, 2.25rem) * 0.5);
+    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.58);
   }
 }
 
 @media (max-width: 400px) {
   .reading-mode-text {
-    font-size: calc(var(--arabic-font-size, 2.25rem) * 0.4);
+    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.48);
   }
 }
 

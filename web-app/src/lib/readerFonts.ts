@@ -29,7 +29,6 @@ export const FONT_SCALE_LABELS: Record<FontScale, string> = {
   6: "2XL",
 }
 
-/** Arabic sizes in rem — generous leading handled in CSS */
 export const ARABIC_FONT_SIZES: Record<FontScale, string> = {
   1: "1.5rem",
   2: "1.875rem",
@@ -37,6 +36,18 @@ export const ARABIC_FONT_SIZES: Record<FontScale, string> = {
   4: "2.75rem",
   5: "3.25rem",
   6: "3.75rem",
+}
+
+/** Reading mode (15-line Mushaf manuscript) safe font sizes in rem.
+ * Strict 15-line layouts cannot support 3.75rem without horizontal blowout;
+ * this maps the 6 user scale steps cleanly within the authentic page frame. */
+export const READING_MODE_ARABIC_FONT_SIZES: Record<FontScale, string> = {
+  1: "1.15rem",
+  2: "1.25rem",
+  3: "1.35rem",
+  4: "1.45rem",
+  5: "1.55rem",
+  6: "1.65rem",
 }
 
 export const TRANSLATION_FONT_SIZES: Record<FontScale, string> = {

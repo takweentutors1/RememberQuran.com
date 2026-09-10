@@ -23,6 +23,7 @@ import {
   DEFAULT_ARABIC_SCALE,
   DEFAULT_TRANSLATION_SCALE,
   ARABIC_FONT_SIZES,
+  READING_MODE_ARABIC_FONT_SIZES,
   TRANSLATION_FONT_SIZES,
   QURAN_FONT_FAMILY,
   MIN_FONT_SCALE,
@@ -93,6 +94,7 @@ interface ReaderSettingsContextValue extends ReaderSettings {
   /** Re-hide every ayah currently in the hide scope. */
   hideAllInHideScope: (surahId: number) => void
   arabicFontSize: string
+  readingModeArabicFontSize: string
   translationFontSize: string
   arabicFontFamily: string
 }
@@ -457,6 +459,7 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
         revealAllInHideScope,
         hideAllInHideScope,
         arabicFontSize: ARABIC_FONT_SIZES[settings.arabicFontScale],
+        readingModeArabicFontSize: READING_MODE_ARABIC_FONT_SIZES[settings.arabicFontScale],
         translationFontSize: TRANSLATION_FONT_SIZES[settings.translationFontScale],
         arabicFontFamily: QURAN_FONT_FAMILY[settings.quranFont],
       }}
