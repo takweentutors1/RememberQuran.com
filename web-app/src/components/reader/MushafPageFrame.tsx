@@ -108,8 +108,8 @@ export function MushafPageFrame({
       <div
         className={cn(
           "relative transition-all duration-300",
-          "bg-[#FAF7EE] dark:bg-[#161412] text-[#1E1B18] dark:text-[#ECE6DA]",
-          "border border-[#D4C8B0] dark:border-[#3A3328] rounded-sm shadow-xl",
+          "bg-[#FAF7EE] dark:bg-[#111215] text-[#1E1B18] dark:text-[#F4F2EE]",
+          "border border-[#D4C8B0] dark:border-[#26282E] rounded-sm shadow-xl",
           "p-2 sm:p-3.5 md:p-4",
         )}
       >

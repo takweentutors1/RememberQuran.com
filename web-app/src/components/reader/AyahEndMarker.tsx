@@ -34,14 +34,13 @@ export function AyahEndMarker({ digits, ariaLabel, className, onClick }: AyahEnd
           : undefined
       }
       className={cn(
-        "inline-flex items-center justify-center align-middle select-none mx-1",
-        "font-uthmani text-[1.15em] leading-none text-[#1E1B18] dark:text-[#ECE6DA]",
+        "inline-flex items-center justify-center align-middle select-none mx-1 size-[1.3em] rounded-full border border-current text-center font-uthmani text-[0.9em] leading-none text-[#1E1B18] dark:text-[#F4F2EE] shrink-0",
         onClick && "cursor-pointer hover:opacity-80 active:scale-95 transition-transform duration-150 focus-visible:outline-none",
         className,
       )}
       aria-label={ariaLabel}
     >
-      {digits}
+      <span className="leading-none pt-0.5">{digits}</span>
     </span>
   )
 }
