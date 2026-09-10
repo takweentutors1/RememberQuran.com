@@ -85,22 +85,25 @@ function LineWord({
   targetAyahId,
   onWordClick,
   onAyahClick,
+  attachedEndMarker,
 }: {
   word: Word
   verse: Verse
   targetAyahId?: number
   onWordClick: (word: Word, verseKey?: string) => void
   onAyahClick: (verse: Verse) => void
+  attachedEndMarker?: Word | null
 }) {
   const highlightedPosition = useHighlightedWord(verse.verse_key)
   const isFirstWordOfAyah =
     word.position === 1 || (verse.words && verse.words[0]?.id === word.id)
 
   if (word.char_type_name === "end") {
+    // If rendered standalone (fallback)
     return (
       <span
         id={!isFirstWordOfAyah ? `ayah-marker-${verse.verse_key.replace(":", "-")}` : undefined}
-        className="inline-flex"
+        className="inline-flex shrink-0 items-center select-none"
       >
         <AyahEndMarker
           digits={word.qpc_uthmani_hafs || word.text_uthmani}
@@ -116,7 +119,7 @@ function LineWord({
       id={isFirstWordOfAyah ? `ayah-${verse.verse_key.replace(":", "-")}` : undefined}
       data-verse-key={verse.verse_key}
       className={cn(
-        "inline-flex",
+        "inline-flex items-center gap-0.5 sm:gap-1 shrink-0",
         targetAyahId === verse.verse_number && "rounded-xs bg-primary/10",
       )}
     >
@@ -127,6 +130,18 @@ function LineWord({
         disableTooltip={false}
         onWordClick={onWordClick}
       />
+      {attachedEndMarker && (
+        <span
+          id={`ayah-marker-${verse.verse_key.replace(":", "-")}`}
+          className="inline-flex shrink-0 items-center select-none"
+        >
+          <AyahEndMarker
+            digits={attachedEndMarker.qpc_uthmani_hafs || attachedEndMarker.text_uthmani}
+            ariaLabel={`Ayah ${verse.verse_number}`}
+            onClick={() => onAyahClick(verse)}
+          />
+        </span>
+      )}
     </span>
   )
 }
@@ -332,6 +347,25 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                     ? chaptersById.get(Number(surahStart.verse.verse_key.split(":")[0]))
                     : null
 
+                  // Pre-process words for this printed line: pair end-of-ayah marker with its preceding word
+                  const lineItems: { word: Word; verse: Verse; attachedEndMarker?: Word | null }[] = []
+                  for (let wIdx = 0; wIdx < words.length; wIdx++) {
+                    const current = words[wIdx]
+                    if (current.word.char_type_name === "end") {
+                      // If there is a preceding word, attach to it
+                      if (lineItems.length > 0 && !lineItems[lineItems.length - 1].attachedEndMarker) {
+                        lineItems[lineItems.length - 1].attachedEndMarker = current.word
+                      } else {
+                        // Edge-case: line opens directly with an end marker
+                        lineItems.push({ word: current.word, verse: current.verse })
+                      }
+                    } else {
+                      lineItems.push({ word: current.word, verse: current.verse })
+                    }
+                  }
+
+                  const isSparseLine = lineItems.length <= 6
+
                   return (
                     <Fragment key={lineNumber}>
                       {startingChapter && (
@@ -346,10 +380,12 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                           "w-full flex items-center leading-none",
                           isShortLastLine
                             ? "justify-center gap-3 sm:gap-5 md:gap-6"
-                            : "justify-between",
+                            : isSparseLine
+                              ? "justify-center gap-4 sm:gap-6 md:gap-8"
+                              : "justify-between",
                         )}
                       >
-                      {words.map(({ word, verse }) => (
+                      {lineItems.map(({ word, verse, attachedEndMarker }) => (
                         <LineWord
                           key={word.id}
                           word={word}
@@ -357,6 +393,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                           targetAyahId={targetAyahId}
                           onWordClick={handleWordClick}
                           onAyahClick={handleAyahClick}
+                          attachedEndMarker={attachedEndMarker}
                         />
                       ))}
                       </div>

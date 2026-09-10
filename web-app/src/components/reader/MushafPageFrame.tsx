@@ -116,40 +116,44 @@ export function MushafPageFrame({
         {/* Authentic Madani Double Gold Hairline Border Frame */}
         <div className="relative rounded-xs border-2 border-[#C2A676] dark:border-[#8E7348] p-1 sm:p-1.5">
           <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2.5 md:py-3">
-            {/* Top Page Header: Dual Rectangular Boxes matching 2nd image (Surah on right/left per classical Mushaf) */}
-            <header className="mb-2 sm:mb-2.5 grid grid-cols-2 gap-0 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] select-none text-center rounded-xs overflow-hidden">
-              <div className="py-1 sm:py-1.5 px-2 sm:px-3 border-l border-[#D1C7B7] dark:border-[#4A4235] flex items-center justify-center min-w-0">
+            {/* Top Page Header: Classical Manuscript Header Bar (Surah and Juz) */}
+            <header className="mb-3 sm:mb-3.5 flex items-center justify-between border-b-2 border-[#C5A880]/60 dark:border-[#8E7348]/60 pb-1.5 px-2 select-none text-center">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#A88448] dark:text-[#C5A059] text-xs">۞</span>
                 <span
-                  className="font-uthmani font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal"
-                  style={{ fontSize: "12px" }}
+                  className="font-uthmani font-semibold text-[#3D2F21] dark:text-[#E8DCCB] tracking-wide"
+                  style={{ fontSize: "13px" }}
                 >
                   {cleanSurahName ? `سورة ${cleanSurahName}` : ""}
                 </span>
               </div>
-              <div className="py-1 sm:py-1.5 px-2 sm:px-3 flex items-center justify-center min-w-0">
+              <div className="flex items-center gap-1.5">
                 <span
-                  className="font-uthmani font-normal text-[#4A3B2C] dark:text-[#E2D5C3] truncate leading-normal"
-                  style={{ fontSize: "12px" }}
+                  className="font-uthmani font-semibold text-[#3D2F21] dark:text-[#E8DCCB] tracking-wide"
+                  style={{ fontSize: "13px" }}
                 >
                   {juzOrdinal ? `الجزء ${juzOrdinal}` : juzNumber ? `الجزء ${toArabicDigits(juzNumber)}` : ""}
                 </span>
+                <span className="text-[#A88448] dark:text-[#C5A059] text-xs">۞</span>
               </div>
             </header>
 
             {/* Main Quranic Text Body (15-line flow) */}
-            <main className="relative z-10 min-h-[360px] py-0.5">
+            <main className="relative z-10 min-h-[360px] py-1">
               {children}
             </main>
 
-            {/* Bottom Page Footer: Simple clean Eastern Arabic page numeral */}
+            {/* Bottom Page Footer: Ornate Madani Octagonal / Rosette Page Medallion */}
             <footer
               aria-label={`Page ${pageNumber}`}
-              className="mt-2.5 sm:mt-4 pt-1.5 flex items-center justify-center select-none"
+              className="mt-3 sm:mt-4 pt-2 border-t border-[#C5A880]/40 dark:border-[#8E7348]/40 flex items-center justify-center select-none"
             >
-              <div className="inline-flex items-center justify-center px-3 py-0.5 border border-[#D1C7B7] dark:border-[#4A4235] bg-[#F5EFE1] dark:bg-[#1E1A14] rounded-xs shadow-2xs">
-                <span className="font-arabic-ui text-xs sm:text-sm font-medium text-[#4A3B2C] dark:text-[#E2D5C3] leading-none">
+              <div className="relative inline-flex items-center justify-center px-3.5 py-1 rounded-full border border-[#C5A880] dark:border-[#8E7348] bg-[#FAF6EE] dark:bg-[#1A1612] shadow-xs">
+                <span className="absolute -left-1 text-[10px] text-[#A88448] dark:text-[#C5A059]">‹</span>
+                <span className="font-uthmani text-sm font-bold text-[#3D2F21] dark:text-[#E8DCCB] leading-none px-1">
                   {toArabicDigits(pageNumber)}
                 </span>
+                <span className="absolute -right-1 text-[10px] text-[#A88448] dark:text-[#C5A059]">›</span>
               </div>
             </footer>
           </div>

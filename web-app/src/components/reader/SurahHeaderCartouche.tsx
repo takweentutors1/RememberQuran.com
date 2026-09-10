@@ -10,9 +10,10 @@ interface SurahHeaderCartoucheProps {
 
 /**
  * Authentic Madani Mushaf Surah Header Cartouche (عنوان السورة المذهب)
- * Exact replica of the King Fahd Complex woodblock arabesque manuscript cartouche:
- * - Intricate golden-brown woodblock arabesque border frame
- * - Crisp centered calligraphic title cartouche
+ * Rich illuminated Islamic manuscript aesthetic:
+ * - Double gold hairline Arabesque border with corner finials
+ * - Classical Islimi / Arabesque scrollwork medallion wings
+ * - Regal Uthmanic calligraphic title banner with ornate brackets
  */
 export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartoucheProps) {
   const surahNameClean = chapter.name_arabic.replace(/^سورة\s+/i, "")
@@ -24,41 +25,83 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
       role="region"
       aria-label={`سورة ${chapter.name_arabic}`}
       className={cn(
-        "relative mx-auto my-2 sm:my-2.5 w-full select-none",
+        "relative mx-auto my-3 sm:my-3.5 w-full select-none",
         className,
       )}
       style={{ fontSize: "16px" }}
     >
-      {/* Outer Arabesque Illuminated Border Box */}
-      <div className="relative w-full rounded-xs border-2 border-[#8C6D38] dark:border-[#B59152] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs flex items-stretch">
+      {/* Outer Illuminated Frame with Gold Foil Styling */}
+      <div className="relative w-full rounded-xs border-2 border-[#A88448] dark:border-[#C5A059] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs flex items-stretch overflow-hidden">
         
         {/* Right Arabesque Wing (RTL start) */}
-        <div className="shrink-0 w-[22%] sm:w-[26%] border-l-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1 sm:p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
-          <svg viewBox="0 0 160 60" className="w-full h-full text-[#8C6D38]/70 dark:text-[#B59152]/70" fill="none" preserveAspectRatio="none">
-            <path d="M 10,30 C 35,5 65,55 90,30 C 115,5 140,45 155,30" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M 10,30 C 35,55 65,5 90,30 C 115,55 140,15 155,30" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3" />
-            <circle cx="45" cy="22" r="3.5" fill="currentColor" opacity="0.6" />
-            <circle cx="105" cy="38" r="3.5" fill="currentColor" opacity="0.6" />
+        <div className="shrink-0 w-[20%] sm:w-[24%] md:w-[28%] border-l-2 border-[#A88448] dark:border-[#C5A059] flex items-center justify-center p-1 sm:p-2 relative bg-gradient-to-l from-[#F5EFE0] to-[#EFE5CD] dark:from-[#201C16] dark:to-[#171410]">
+          <svg viewBox="0 0 160 56" className="w-full h-full text-[#96743A] dark:text-[#C5A059]" fill="none">
+            {/* Outer Arabesque Flourish */}
+            <path
+              d="M 5,28 C 25,10 40,46 65,28 C 90,10 105,46 130,28 C 142,20 152,28 158,28"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            {/* Mirrored interlaced wave */}
+            <path
+              d="M 5,28 C 25,46 40,10 65,28 C 90,46 105,10 130,28 C 142,36 152,28 158,28"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeDasharray="2 3"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+            {/* Center rosette jewels */}
+            <circle cx="28" cy="28" r="3" fill="currentColor" opacity="0.85" />
+            <circle cx="65" cy="28" r="4" fill="currentColor" opacity="0.9" />
+            <circle cx="102" cy="28" r="3" fill="currentColor" opacity="0.85" />
+            <circle cx="138" cy="28" r="2.5" fill="currentColor" opacity="0.75" />
           </svg>
         </div>
 
         {/* ─── CENTER CARTOUCHE: Crisp Calligraphic Surah Title ─── */}
-        <div className="flex-1 min-w-0 flex items-center justify-center px-2 sm:px-4 bg-[#FFFDF9] dark:bg-[#16130E]">
-          <h2
-            className="font-uthmani font-bold text-[#1E1B18] dark:text-[#F6EBD9] tracking-wide leading-normal text-center truncate w-full py-1"
-            style={{ fontSize: "2.25rem" }}
-          >
-            سُورَةُ {surahNameClean}
-          </h2>
+        <div className="flex-1 min-w-0 flex items-center justify-center px-3 sm:px-6 py-1 sm:py-1.5 bg-gradient-to-r from-[#FFFDF9] via-[#FAF6EE] to-[#FFFDF9] dark:from-[#181510] dark:via-[#1D1914] dark:to-[#181510]">
+          <div className="flex items-center justify-center gap-2 w-full">
+            <span className="text-[#A88448] dark:text-[#C5A059] font-uthmani text-lg select-none" aria-hidden="true">
+              ۞
+            </span>
+            <h2
+              className="font-uthmani font-bold text-[#1E1B18] dark:text-[#F8F1E3] tracking-wide leading-normal text-center truncate py-0.5"
+              style={{ fontSize: "2rem" }}
+            >
+              سُورَةُ {surahNameClean}
+            </h2>
+            <span className="text-[#A88448] dark:text-[#C5A059] font-uthmani text-lg select-none" aria-hidden="true">
+              ۞
+            </span>
+          </div>
         </div>
 
         {/* Left Arabesque Wing (RTL end) */}
-        <div className="shrink-0 w-[22%] sm:w-[26%] border-r-2 border-[#8C6D38] dark:border-[#B59152] flex items-center justify-center p-1 sm:p-1.5 relative overflow-hidden bg-[#FAF6EE] dark:bg-[#1C1813]">
-          <svg viewBox="0 0 160 60" className="w-full h-full text-[#8C6D38]/70 dark:text-[#B59152]/70" fill="none" preserveAspectRatio="none">
-            <path d="M 150,30 C 125,5 95,55 70,30 C 45,5 20,45 5,30" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M 150,30 C 125,55 95,5 70,30 C 45,55 20,15 5,30" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3" />
-            <circle cx="115" cy="22" r="3.5" fill="currentColor" opacity="0.6" />
-            <circle cx="55" cy="38" r="3.5" fill="currentColor" opacity="0.6" />
+        <div className="shrink-0 w-[20%] sm:w-[24%] md:w-[28%] border-r-2 border-[#A88448] dark:border-[#C5A059] flex items-center justify-center p-1 sm:p-2 relative bg-gradient-to-r from-[#F5EFE0] to-[#EFE5CD] dark:from-[#201C16] dark:to-[#171410]">
+          <svg viewBox="0 0 160 56" className="w-full h-full text-[#96743A] dark:text-[#C5A059]" fill="none">
+            {/* Outer Arabesque Flourish */}
+            <path
+              d="M 155,28 C 135,10 120,46 95,28 C 70,10 55,46 30,28 C 18,20 8,28 2,28"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            {/* Mirrored interlaced wave */}
+            <path
+              d="M 155,28 C 135,46 120,10 95,28 C 70,46 55,10 30,28 C 18,36 8,28 2,28"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeDasharray="2 3"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+            {/* Center rosette jewels */}
+            <circle cx="132" cy="28" r="3" fill="currentColor" opacity="0.85" />
+            <circle cx="95" cy="28" r="4" fill="currentColor" opacity="0.9" />
+            <circle cx="58" cy="28" r="3" fill="currentColor" opacity="0.85" />
+            <circle cx="22" cy="28" r="2.5" fill="currentColor" opacity="0.75" />
           </svg>
         </div>
 
