@@ -364,7 +364,7 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                     }
                   }
 
-                  const isSparseLine = lineItems.length <= 6
+                  const isSparseLine = lineItems.length <= 7
 
                   return (
                     <Fragment key={lineNumber}>
@@ -379,9 +379,9 @@ export function ReadingModeView({ verses, targetAyahId, chapter }: ReadingModeVi
                         className={cn(
                           "w-full flex items-center leading-none",
                           isShortLastLine
-                            ? "justify-center gap-3 sm:gap-5 md:gap-6"
+                            ? "justify-center gap-2 sm:gap-3.5 md:gap-5"
                             : isSparseLine
-                              ? "justify-center gap-4 sm:gap-6 md:gap-8"
+                              ? "justify-center gap-2 sm:gap-3 md:gap-4.5"
                               : "justify-between",
                         )}
                       >
