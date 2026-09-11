@@ -32,7 +32,7 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
       <p
         aria-hidden="true"
         className={cn(
-          "aqf-bsml inline-block text-center text-[#1E1B18] dark:text-[#ECE6DA]",
+          "aqf-bsml inline-block text-center text-reader-ink",
           "text-[2.5rem] xs:text-[2.8rem] sm:text-[3rem] md:text-[3.2rem]",
           "leading-normal",
           "transform-gpu translate-x-[3px] sm:translate-x-[5px]",

@@ -100,7 +100,7 @@ export function FullScreenPlayer({ onClose }: { onClose: () => void }) {
           type="button"
           onClick={onClose}
           aria-label="Minimize"
-          className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           <ChevronDown className="size-5" strokeWidth={2} />
         </button>
@@ -173,7 +173,7 @@ export function FullScreenPlayer({ onClose }: { onClose: () => void }) {
             title="Previous ayah"
             aria-label="Previous ayah"
             onClick={player.prevAyah}
-            className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
           >
             <SkipBack className="size-6" strokeWidth={1.75} />
           </button>
@@ -182,7 +182,7 @@ export function FullScreenPlayer({ onClose }: { onClose: () => void }) {
             title={isPlaying ? "Pause" : "Play"}
             aria-label={isPlaying ? "Pause" : "Play"}
             onClick={player.togglePlayPause}
-            className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-(--dur-base) ease-(--ease-out) hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-(--dur-base) ease-(--ease-out) hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {isBusy ? (
               <Loader2 className="size-7 animate-spin" strokeWidth={1.75} />
@@ -197,7 +197,7 @@ export function FullScreenPlayer({ onClose }: { onClose: () => void }) {
             title="Next ayah"
             aria-label="Next ayah"
             onClick={player.nextAyah}
-            className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
           >
             <SkipForward className="size-6" strokeWidth={1.75} />
           </button>

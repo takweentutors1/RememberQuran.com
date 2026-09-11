@@ -23,9 +23,9 @@ export default function SurahLayout({ children }: Props) {
           <Suspense fallback={null}>{children}</Suspense>
           <SurahReaderViewport />
           <AudioDockSpacer />
-          <StudyPanel />
         </div>
       </div>
+      <StudyPanel />
     </SurahLayoutShell>
   )
 }

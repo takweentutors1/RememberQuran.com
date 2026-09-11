@@ -90,7 +90,7 @@ export function ReadingAyahToolbar({ verse, onClose }: ReadingAyahToolbarProps) 
     >
       <div className="flex items-center justify-between border-b border-border/40 pb-2.5 mb-2.5">
         <div className="flex items-center gap-2">
-          <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+          <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
             {verse.verse_number}
           </span>
           <span className="text-sm font-medium text-foreground">

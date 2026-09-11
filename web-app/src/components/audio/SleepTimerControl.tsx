@@ -57,7 +57,7 @@ export function SleepTimerControl({ className }: { className?: string }) {
             aria-label={isActive ? `Sleep timer: ${timeLeft ?? "Active"}` : "Sleep timer"}
             className={cn(
               "flex size-8 items-center justify-center rounded-md text-xs font-medium transition-colors duration-[120ms]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
               isActive
                 ? "bg-primary/10 text-primary hover:bg-primary/20"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -97,7 +97,7 @@ export function SleepTimerControl({ className }: { className?: string }) {
                 className={cn(
                   "flex items-center justify-between rounded-md px-2.5 py-1.5 text-xs font-medium",
                   "transition-colors duration-[120ms]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
                   isSelected
                     ? "bg-primary/10 text-primary"
                     : "text-foreground hover:bg-accent",

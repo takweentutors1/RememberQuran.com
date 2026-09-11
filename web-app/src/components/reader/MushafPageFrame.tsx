@@ -25,7 +25,7 @@ interface MushafPageFrameProps {
  * Authentic Printed Mushaf Page Frame (إطار المصحف الشريف)
  * Clean, plain, high-contrast manuscript canvas:
  * - Minimalist double gold hairline framing with subtle corner finials
- * - Crisp plain warm background (#FDFBF7 in light, #141311 in dark)
+ * - Crisp plain warm background (--reader-paper)
  * - Clear, readable header and footer cartouches
  */
 const JUZ_NAMES_ARABIC: Record<number, string> = {
@@ -82,15 +82,15 @@ export function MushafPageFrame({
               key={badge.id}
               dir="rtl"
               className={cn(
-                "flex flex-col items-center justify-center rounded-sm border border-[#C2A676]/60 bg-[#FAF7EE] dark:bg-[#201C17] px-3 py-1.5 text-center shadow-xs",
+                "flex flex-col items-center justify-center rounded-sm border border-reader-paper-gilt/60 bg-reader-paper px-3 py-1.5 text-center shadow-xs",
                 "transition-transform hover:scale-105",
               )}
             >
-              <div className="flex items-center gap-1.5 text-[#1A1612] dark:text-[#EDE6DA]">
+              <div className="flex items-center gap-1.5 text-reader-ink">
                 <span className="font-uthmani text-base font-medium leading-none">
                   {badge.title}
                 </span>
-                <span className="font-uthmani text-xs font-bold leading-none">
+                <span className="font-uthmani text-xs font-medium leading-none">
                   {toArabicDigits(badge.number)}
                 </span>
               </div>
@@ -107,21 +107,21 @@ export function MushafPageFrame({
       {/* Main Mushaf Page Container - King Fahd Complex Madani Manuscript Geometry */}
       <div
         className={cn(
-          "relative transition-all duration-300",
-          "bg-[#FAF7EE] dark:bg-[#111215] text-[#1E1B18] dark:text-[#F4F2EE]",
-          "border border-[#D4C8B0] dark:border-[#26282E] rounded-sm shadow-xl",
+          "relative transition-all duration-(--dur-slow)",
+          "bg-reader-paper text-reader-ink",
+          "border border-reader-paper-edge rounded-sm shadow-[var(--reader-paper-shadow)]",
           "p-1 sm:p-2.5 md:p-3.5",
         )}
       >
         {/* Authentic Madani Double Gold Hairline Border Frame */}
-        <div className="relative rounded-xs border-2 border-[#C2A676] dark:border-[#8E7348] p-0.5 sm:p-1 md:p-1.5">
-          <div className="relative rounded-xs border border-[#C2A676]/60 dark:border-[#8E7348]/60 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5">
+        <div className="relative rounded-xs border-2 border-reader-paper-gilt p-0.5 sm:p-1 md:p-1.5">
+          <div className="relative rounded-xs border border-reader-paper-gilt/60 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5">
             {/* Top Page Header: Classical Manuscript Header Bar (Surah and Juz) */}
-            <header className="mb-2 sm:mb-3 flex items-center justify-between border-b-2 border-[#C5A880]/60 dark:border-[#8E7348]/60 pb-1 px-1.5 select-none text-center">
+            <header className="mb-2 sm:mb-3 flex items-center justify-between border-b-2 border-reader-paper-gilt/60 pb-1 px-1.5 select-none text-center">
               <div className="flex items-center gap-1.5">
-                <span className="text-[#A88448] dark:text-[#C5A059] text-xs">۞</span>
+                <span className="text-reader-paper-gilt-strong text-xs">۞</span>
                 <span
-                  className="font-uthmani font-semibold text-[#3D2F21] dark:text-[#E8DCCB] tracking-wide"
+                  className="font-uthmani font-medium text-reader-paper-ink-soft tracking-wide"
                   style={{ fontSize: "13px" }}
                 >
                   {cleanSurahName ? `سورة ${cleanSurahName}` : ""}
@@ -129,12 +129,12 @@ export function MushafPageFrame({
               </div>
               <div className="flex items-center gap-1.5">
                 <span
-                  className="font-uthmani font-semibold text-[#3D2F21] dark:text-[#E8DCCB] tracking-wide"
+                  className="font-uthmani font-medium text-reader-paper-ink-soft tracking-wide"
                   style={{ fontSize: "13px" }}
                 >
                   {juzOrdinal ? `الجزء ${juzOrdinal}` : juzNumber ? `الجزء ${toArabicDigits(juzNumber)}` : ""}
                 </span>
-                <span className="text-[#A88448] dark:text-[#C5A059] text-xs">۞</span>
+                <span className="text-reader-paper-gilt-strong text-xs">۞</span>
               </div>
             </header>
 
@@ -146,14 +146,14 @@ export function MushafPageFrame({
             {/* Bottom Page Footer: Ornate Madani Octagonal / Rosette Page Medallion */}
             <footer
               aria-label={`Page ${pageNumber}`}
-              className="mt-3 sm:mt-4 pt-2 border-t border-[#C5A880]/40 dark:border-[#8E7348]/40 flex items-center justify-center select-none"
+              className="mt-3 sm:mt-4 pt-2 border-t border-reader-paper-gilt/40 flex items-center justify-center select-none"
             >
-              <div className="relative inline-flex items-center justify-center px-3.5 py-1 rounded-full border border-[#C5A880] dark:border-[#8E7348] bg-[#FAF6EE] dark:bg-[#1A1612] shadow-xs">
-                <span className="absolute -left-1 text-[10px] text-[#A88448] dark:text-[#C5A059]">‹</span>
-                <span className="font-uthmani text-sm font-bold text-[#3D2F21] dark:text-[#E8DCCB] leading-none px-1">
+              <div className="relative inline-flex items-center justify-center px-3.5 py-1 rounded-full border border-reader-paper-gilt bg-reader-paper shadow-xs">
+                <span className="absolute -left-1 text-[10px] text-reader-paper-gilt-strong">‹</span>
+                <span className="font-uthmani text-sm font-medium text-reader-paper-ink-soft leading-none px-1">
                   {toArabicDigits(pageNumber)}
                 </span>
-                <span className="absolute -right-1 text-[10px] text-[#A88448] dark:text-[#C5A059]">›</span>
+                <span className="absolute -right-1 text-[10px] text-reader-paper-gilt-strong">›</span>
               </div>
             </footer>
           </div>
@@ -162,5 +162,3 @@ export function MushafPageFrame({
     </div>
   )
 }
-
-

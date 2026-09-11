@@ -70,7 +70,7 @@ export function AyahSelector({ surahId, versesCount }: AyahSelectorProps) {
               "flex h-8 items-center gap-1 rounded-md px-2",
               "text-xs text-muted-foreground transition-colors duration-[120ms]",
               "hover:bg-accent hover:text-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2",
             )}
           >
             <span className="tabular-nums">
@@ -110,7 +110,7 @@ export function AyahSelector({ surahId, versesCount }: AyahSelectorProps) {
                 className={cn(
                   "flex h-8 items-center justify-center rounded-md text-xs tabular-nums",
                   "transition-colors duration-[120ms]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
                   active
                     ? "bg-primary/10 font-medium text-primary"
                     : "text-foreground/70 hover:bg-accent hover:text-foreground",

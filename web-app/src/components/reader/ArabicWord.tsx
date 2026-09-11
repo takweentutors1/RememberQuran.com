@@ -18,6 +18,10 @@ interface ArabicWordProps {
   isPlaying?: boolean
   verseKey?: string
   disableTooltip?: boolean
+  /** Page-specific QCF v2 glyph font-family, when its font has finished
+   * loading — renders `word.code_v2` as a pre-shaped Mushaf glyph instead of
+   * the Unicode fallback. Reading mode only; see useQcfPageFont. */
+  qcfFontFamily?: string | null
 }
 
 export function ArabicWord({
@@ -26,6 +30,7 @@ export function ArabicWord({
   isHighlighted = false,
   verseKey,
   disableTooltip = false,
+  qcfFontFamily = null,
 }: ArabicWordProps) {
   const isTouch = useIsTouch()
   // Stable actions context — never re-renders words on playback state changes
@@ -35,7 +40,22 @@ export function ArabicWord({
   // When tajweed is off this is the plain fallback (identical to pre-M3 behaviour)
   const plainText = word.qpc_uthmani_hafs || word.text_uthmani
 
+  // QCF v2 has no per-letter tajweed colouring (that's QCF v4/COLRv1) — only
+  // take the glyph path when tajweed is off and the page's font is ready.
+  const useQcfGlyph = !tajweedEnabled && !!qcfFontFamily && !!word.code_v2
+
   function wordContent() {
+    if (useQcfGlyph) {
+      // QCF codes must go through innerHTML, not a text child — see
+      // docs/DESIGN-SYSTEM.md's font-rendering notes; this is trusted API
+      // data (a single private-use-area codepoint), not user input.
+      return (
+        <span
+          style={{ fontFamily: qcfFontFamily! }}
+          dangerouslySetInnerHTML={{ __html: word.code_v2! }}
+        />
+      )
+    }
     if (tajweedEnabled && word.text_uthmani_tajweed) {
       return buildTajweedSpans(plainText, word.text_uthmani_tajweed).map(
         ({ text, rule }, i) =>
@@ -58,8 +78,8 @@ export function ArabicWord({
     "touch-manipulation select-text",
     "transition-colors duration-(--dur-fast) ease-(--ease-out)",
     "hover:bg-gold/20 hover:text-gold",
-    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-    isHighlighted && "bg-primary/20 text-primary font-bold rounded-xs",
+    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+    isHighlighted && "bg-primary/20 text-primary font-medium rounded-xs",
   )
 
   function handleClick() {

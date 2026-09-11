@@ -505,6 +505,22 @@ export function QuranReader({ chapter, verses, targetAyahId, targetAyahNonce }: 
     return index === -1 ? 0 : index
   }, [surahGroups, chapter.id])
 
+  const infiniteScrollSkeleton = (
+    <div
+      role="status"
+      aria-live="polite"
+      className="w-full max-w-2xl animate-pulse space-y-3 px-2"
+    >
+      <span className="sr-only">Loading more of the Qur&apos;an…</span>
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div key={i} aria-hidden="true" className="space-y-2 py-3">
+          <div className="h-7 rounded-md bg-muted" style={{ width: `${68 + i * 14}%` }} />
+          <div className="h-3.5 rounded bg-muted/70" style={{ width: `${50 + i * 8}%` }} />
+        </div>
+      ))}
+    </div>
+  )
+
   const playButton = (
     <button
       type="button"
@@ -561,12 +577,7 @@ export function QuranReader({ chapter, verses, targetAyahId, targetAyahNonce }: 
           <div className="mb-8 flex flex-col items-center gap-2 py-4">
             {earliestSurahId > 1 ? (
               <>
-                {isPrepending && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="size-3.5 animate-spin" />
-                    Loading previous surah…
-                  </div>
-                )}
+                {isPrepending && infiniteScrollSkeleton}
                 <div ref={topSentinelRef} aria-hidden className="h-px w-full" />
               </>
             ) : (
@@ -612,12 +623,7 @@ export function QuranReader({ chapter, verses, targetAyahId, targetAyahNonce }: 
             {latestSurahId < 114 ? (
               <>
                 <div ref={sentinelRef} aria-hidden className="h-px w-full" />
-                {isAppending && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="size-3.5 animate-spin" />
-                    Loading next surah…
-                  </div>
-                )}
+                {isAppending && infiniteScrollSkeleton}
               </>
             ) : (
               <p className="text-xs text-muted-foreground/70">

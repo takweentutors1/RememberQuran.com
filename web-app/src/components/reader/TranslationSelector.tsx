@@ -58,7 +58,7 @@ export function TranslationSelector() {
         className={cn(
           "flex w-full items-start gap-3 rounded-md px-2.5 py-2.5 text-left",
           "transition-colors duration-[120ms]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
           arabicOnly
             ? "bg-primary/10 text-primary"
             : "text-foreground hover:bg-accent",
@@ -118,7 +118,7 @@ export function TranslationSelector() {
                   className={cn(
                     "flex w-full items-start gap-3 rounded-md px-2.5 py-2 text-left",
                     "transition-colors duration-[120ms]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
                     active
                       ? "bg-primary/10 text-primary"
                       : "text-foreground hover:bg-accent",

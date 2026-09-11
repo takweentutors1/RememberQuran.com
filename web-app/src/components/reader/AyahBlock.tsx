@@ -25,9 +25,9 @@ interface AyahBlockProps {
 }
 
 const metaBtn = cn(
-  "icon-press flex size-7 items-center justify-center rounded-md",
+  "icon-press flex min-h-11 min-w-11 items-center justify-center rounded-md lg:size-8 lg:min-h-0 lg:min-w-0",
   "text-muted-foreground/70 hover:bg-accent hover:text-foreground",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-1",
   "disabled:opacity-30 disabled:pointer-events-none",
 )
 

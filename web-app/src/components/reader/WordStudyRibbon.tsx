@@ -79,7 +79,7 @@ export function WordStudyRibbon({ word, verseKey, onClose }: WordStudyRibbonProp
 
           {/* Meaning & Transliteration */}
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold text-foreground truncate">
+            <span className="text-sm font-medium text-foreground truncate">
               {word.translation?.text || "—"}
             </span>
             {word.transliteration?.text && (
@@ -98,7 +98,7 @@ export function WordStudyRibbon({ word, verseKey, onClose }: WordStudyRibbonProp
               title="Pronounce word"
               aria-label="Pronounce word"
               onClick={() => actions.playWord(word)}
-              className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform hover:scale-105 hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform hover:scale-105 hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-gold"
             >
               <Volume2 className="size-4" />
             </button>
@@ -110,7 +110,7 @@ export function WordStudyRibbon({ word, verseKey, onClose }: WordStudyRibbonProp
               title="Grammar & Morphology"
               aria-label="Show word grammar"
               onClick={() => openWord(verseKey, word.position)}
-              className="flex h-9 items-center gap-1.5 rounded-xl border border-border/80 bg-secondary/60 px-3 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-border/80 bg-secondary/60 px-3 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-gold"
             >
               <GraduationCap className="size-4 text-gold" />
               <span className="hidden sm:inline">Grammar</span>
@@ -122,7 +122,7 @@ export function WordStudyRibbon({ word, verseKey, onClose }: WordStudyRibbonProp
             title="Close"
             aria-label="Close word study ribbon"
             onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-gold"
           >
             <X className="size-4" />
           </button>

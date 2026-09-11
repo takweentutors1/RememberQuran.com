@@ -31,11 +31,11 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
       style={{ fontSize: "16px" }}
     >
       {/* Outer Illuminated Frame with Gold Foil Styling */}
-      <div className="relative w-full rounded-xs border-2 border-[#A88448] dark:border-[#C5A059] bg-[#FAF6EE] dark:bg-[#1C1813] shadow-xs flex items-stretch overflow-hidden">
-        
+      <div className="relative w-full rounded-xs border-2 border-reader-paper-gilt-strong bg-reader-paper shadow-xs flex items-stretch overflow-hidden">
+
         {/* Right Arabesque Wing (RTL start) */}
-        <div className="shrink-0 w-[20%] sm:w-[24%] md:w-[28%] border-l-2 border-[#A88448] dark:border-[#C5A059] flex items-center justify-center p-1 sm:p-2 relative bg-gradient-to-l from-[#F5EFE0] to-[#EFE5CD] dark:from-[#201C16] dark:to-[#171410]">
-          <svg viewBox="0 0 160 56" className="w-full h-full text-[#96743A] dark:text-[#C5A059]" fill="none">
+        <div className="shrink-0 w-[20%] sm:w-[24%] md:w-[28%] border-l-2 border-reader-paper-gilt-strong flex items-center justify-center p-1 sm:p-2 relative bg-gradient-to-l from-reader-paper to-reader-paper-shade">
+          <svg viewBox="0 0 160 56" className="w-full h-full text-reader-paper-gilt-strong" fill="none">
             {/* Outer Arabesque Flourish */}
             <path
               d="M 5,28 C 25,10 40,46 65,28 C 90,10 105,46 130,28 C 142,20 152,28 158,28"
@@ -61,26 +61,25 @@ export function SurahHeaderCartouche({ chapter, className }: SurahHeaderCartouch
         </div>
 
         {/* ─── CENTER CARTOUCHE: Crisp Calligraphic Surah Title ─── */}
-        <div className="flex-1 min-w-0 flex items-center justify-center px-3 sm:px-6 py-1 sm:py-1.5 bg-gradient-to-r from-[#FFFDF9] via-[#FAF6EE] to-[#FFFDF9] dark:from-[#181510] dark:via-[#1D1914] dark:to-[#181510]">
+        <div className="flex-1 min-w-0 flex items-center justify-center px-3 sm:px-6 py-1 sm:py-1.5 bg-reader-paper">
           <div className="flex items-center justify-center gap-2 w-full">
-            <span className="text-[#A88448] dark:text-[#C5A059] font-uthmani text-lg select-none" aria-hidden="true">
+            <span className="text-reader-paper-gilt-strong font-uthmani text-lg select-none" aria-hidden="true">
               ۞
             </span>
             <h2
-              className="font-uthmani font-bold text-[#1E1B18] dark:text-[#F8F1E3] tracking-wide leading-normal text-center truncate py-0.5"
-              style={{ fontSize: "2rem" }}
+              className="font-uthmani font-medium text-reader-ink tracking-wide leading-snug text-center py-0.5 text-base xs:text-lg sm:text-2xl md:text-3xl"
             >
               سُورَةُ {surahNameClean}
             </h2>
-            <span className="text-[#A88448] dark:text-[#C5A059] font-uthmani text-lg select-none" aria-hidden="true">
+            <span className="text-reader-paper-gilt-strong font-uthmani text-lg select-none" aria-hidden="true">
               ۞
             </span>
           </div>
         </div>
 
         {/* Left Arabesque Wing (RTL end) */}
-        <div className="shrink-0 w-[20%] sm:w-[24%] md:w-[28%] border-r-2 border-[#A88448] dark:border-[#C5A059] flex items-center justify-center p-1 sm:p-2 relative bg-gradient-to-r from-[#F5EFE0] to-[#EFE5CD] dark:from-[#201C16] dark:to-[#171410]">
-          <svg viewBox="0 0 160 56" className="w-full h-full text-[#96743A] dark:text-[#C5A059]" fill="none">
+        <div className="shrink-0 w-[20%] sm:w-[24%] md:w-[28%] border-r-2 border-reader-paper-gilt-strong flex items-center justify-center p-1 sm:p-2 relative bg-gradient-to-r from-reader-paper to-reader-paper-shade">
+          <svg viewBox="0 0 160 56" className="w-full h-full text-reader-paper-gilt-strong" fill="none">
             {/* Outer Arabesque Flourish */}
             <path
               d="M 155,28 C 135,10 120,46 95,28 C 70,10 55,46 30,28 C 18,20 8,28 2,28"

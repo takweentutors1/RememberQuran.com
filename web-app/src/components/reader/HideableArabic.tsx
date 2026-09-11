@@ -55,7 +55,7 @@ export function HideableArabic({
           title="Tap to reveal"
           className={cn(
             "inline rounded-sm text-start align-baseline",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
             className,
           )}
         >
@@ -81,7 +81,7 @@ export function HideableArabic({
             "ms-1 inline-flex size-5 translate-y-[-0.15em] items-center justify-center rounded-sm align-middle",
             "text-muted-foreground/45 transition-colors duration-[120ms]",
             "hover:bg-accent hover:text-foreground",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
           )}
         >
           <Eye className="size-3" strokeWidth={1.75} />
@@ -101,7 +101,7 @@ export function HideableArabic({
           className={cn(
             "w-full cursor-pointer rounded-md text-start",
             "transition-colors duration-[120ms]",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2",
           )}
         >
           <div
@@ -131,7 +131,7 @@ export function HideableArabic({
           "absolute end-0 top-0 flex size-7 items-center justify-center rounded-md",
           "text-muted-foreground/50 transition-colors duration-[120ms]",
           "hover:bg-accent hover:text-foreground",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
         )}
       >
         <Eye className="size-3.5" strokeWidth={1.75} />

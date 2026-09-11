@@ -65,7 +65,7 @@ export function AsbabView({ verseKey }: AsbabViewProps) {
         <button
           type="button"
           onClick={retry}
-          className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors duration-[120ms] hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors duration-[120ms] hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           <RotateCcw className="size-3" strokeWidth={2} />
           Retry

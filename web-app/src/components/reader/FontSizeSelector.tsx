@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils"
 
 const FOCUS =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
 
 const SCALE_POSITIONS = [1, 2, 3, 4, 5, 6] as const
 
@@ -33,7 +33,7 @@ function ScaleTrack({
         disabled={value <= MIN_FONT_SCALE}
         onClick={() => onChange(Math.max(MIN_FONT_SCALE, value - 1) as FontScale)}
         className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background",
+          "flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background lg:size-8 lg:min-h-0 lg:min-w-0",
           "text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
           "disabled:pointer-events-none disabled:opacity-30",
           FOCUS,
@@ -83,7 +83,7 @@ function ScaleTrack({
         disabled={value >= MAX_FONT_SCALE}
         onClick={() => onChange(Math.min(MAX_FONT_SCALE, value + 1) as FontScale)}
         className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background",
+          "flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background lg:size-8 lg:min-h-0 lg:min-w-0",
           "text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
           "disabled:pointer-events-none disabled:opacity-30",
           FOCUS,
@@ -119,7 +119,7 @@ function ScaleControl({
           <p className="text-sm font-medium text-foreground">{label}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{hint}</p>
         </div>
-        <span className="shrink-0 rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-primary">
+        <span className="shrink-0 rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-medium tabular-nums text-primary">
           {FONT_SCALE_LABELS[value]}
         </span>
       </div>

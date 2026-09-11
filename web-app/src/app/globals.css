@@ -103,6 +103,12 @@ html {
   --color-gold-soft: var(--brand-gold-soft);
   --color-gold-leaf: var(--gold-leaf);
   --color-reader-ink: var(--reader-ink);
+  --color-reader-paper: var(--reader-paper);
+  --color-reader-paper-edge: var(--reader-paper-edge);
+  --color-reader-paper-gilt: var(--reader-paper-gilt);
+  --color-reader-paper-gilt-strong: var(--reader-paper-gilt-strong);
+  --color-reader-paper-ink-soft: var(--reader-paper-ink-soft);
+  --color-reader-paper-shade: var(--reader-paper-shade);
 
   --shadow-sm: var(--elev-sm);
   --shadow-md: var(--elev-md);
@@ -128,6 +134,7 @@ html {
   --quran-sm:      1.5rem;   /* 24px */
   --quran-md:      2rem;     /* 32px */
   --quran-lg:      2.5rem;   /* 40px */
+  --quran-xl:      3rem;     /* 48px */
   --quran-display: 4.5rem;   /* 72px — media card only */
   --quran-leading: 2.15;
 
@@ -183,18 +190,20 @@ html {
   --shadow-paper-lg: 0 4px 8px rgba(43,41,37,0.06), 0 24px 56px -16px rgba(43,41,37,0.22);
   --shadow-player:   0 -2px 12px rgba(43,41,37,0.1), 0 -1px 3px rgba(43,41,37,0.06);
 
-  /* ── Motion (strict ceiling) ── */
-  --dur-fast: 140ms;
-  --dur-base: 220ms;
-  --dur-slow: 360ms;
-  --dur-ambient: 1200ms;
+  /* ── Motion (strict ceiling, docs/DESIGN-SYSTEM.md §4) ── */
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 260ms;
+  --dur-glacial: 1400ms;
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-overshoot: cubic-bezier(0.3, 1.5, 0.5, 1);
 
   /* ── Interaction ── */
   --press-scale: 0.985;
   --hover-lift: -1px;
-  --focus-ring: 2px solid var(--jade-600);
+  --focus-ring: 2px solid var(--brand-gold);
   --focus-ring-offset: 2px;
 }
 
@@ -254,6 +263,14 @@ html {
   --reader-paper-edge: #e8d9ac;
   --reader-paper-shadow: 0 1px 2px rgba(93, 71, 20, 0.07), 0 24px 48px -26px rgba(93, 71, 20, 0.4);
 
+  /* Mushaf illuminated-manuscript ornament — the gold-leaf framing on
+     MushafPageFrame/SurahHeaderCartouche. Distinct from --brand-gold (the
+     one interactive accent): this is decorative-only, never clickable. */
+  --reader-paper-gilt: #c2a676;
+  --reader-paper-gilt-strong: #a88448;
+  --reader-paper-ink-soft: #3d2f21;
+  --reader-paper-shade: #efe5cd;
+
   --elev-sm: var(--shadow-paper-sm);
   --elev-md: var(--shadow-paper-md);
   --elev-lg: var(--shadow-paper-lg);
@@ -307,6 +324,11 @@ html {
   --reader-paper: var(--card);
   --reader-paper-edge: var(--border);
   --reader-paper-shadow: var(--elev-md);
+
+  --reader-paper-gilt: #8e7348;
+  --reader-paper-gilt-strong: #c5a059;
+  --reader-paper-ink-soft: #e8dccb;
+  --reader-paper-shade: #171410;
 
   --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
@@ -367,6 +389,11 @@ html {
   --reader-paper: var(--card);
   --reader-paper-edge: var(--border);
   --reader-paper-shadow: var(--elev-md);
+
+  --reader-paper-gilt: var(--brand-gold);
+  --reader-paper-gilt-strong: var(--brand-gold-strong);
+  --reader-paper-ink-soft: var(--foreground-subtle);
+  --reader-paper-shade: var(--surface-sunk);
 
   --elev-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --elev-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -14px rgb(0 0 0 / 0.7);
@@ -874,7 +901,7 @@ h1, h2, h3, .font-serif {
 }
 
 @utility animate-pulse-ambient {
-  animation: rqPulse var(--dur-ambient) var(--ease-standard) infinite;
+  animation: rqPulse var(--dur-glacial) var(--ease-standard) infinite;
 }
 
 @utility shimmer {

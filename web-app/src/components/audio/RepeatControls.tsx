@@ -13,7 +13,7 @@ const barBtn = cn(
   "flex size-8 items-center justify-center rounded-md",
   "text-muted-foreground transition-colors duration-[120ms]",
   "hover:bg-accent hover:text-foreground",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
 )
 
 const COUNT_OPTIONS: { label: string; value: number }[] = [
@@ -99,7 +99,7 @@ export function RepeatControls() {
     cn(
       "flex-1 rounded-md px-2 py-1.5 text-xs font-medium",
       "transition-colors duration-[120ms]",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
       active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent",
     )
 
@@ -141,7 +141,7 @@ export function RepeatControls() {
               <button
                 type="button"
                 onClick={turnOff}
-                className="rounded-sm font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="rounded-sm font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
               >
                 Stop
               </button>
@@ -166,7 +166,7 @@ export function RepeatControls() {
                   className={cn(
                     "flex-1 rounded-md border border-border px-1.5 py-1.5 text-[11px] font-medium",
                     "transition-colors duration-[120ms] hover:bg-accent",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
                     "disabled:pointer-events-none disabled:opacity-40",
                   )}
                 >
@@ -239,7 +239,7 @@ export function RepeatControls() {
                 className={cn(
                   "flex-1 rounded-md border px-1.5 py-1 text-xs tabular-nums",
                   "transition-colors duration-[120ms]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
                   draftCount === value
                     ? "border-primary/25 bg-primary/10 text-primary"
                     : "border-border text-muted-foreground hover:bg-accent",
@@ -269,7 +269,7 @@ export function RepeatControls() {
                   className={cn(
                     "flex-1 rounded-md border px-1 py-1 text-[11px] tabular-nums",
                     "transition-colors duration-[120ms]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
                     draftPauseMs === ms
                       ? "border-primary/25 bg-primary/10 text-primary"
                       : "border-border text-muted-foreground hover:bg-accent",
@@ -288,7 +288,7 @@ export function RepeatControls() {
             className={cn(
               "w-full rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground",
               "transition-colors duration-[120ms] hover:bg-primary/90",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
               "disabled:pointer-events-none disabled:opacity-40",
             )}
           >

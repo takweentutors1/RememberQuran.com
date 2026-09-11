@@ -30,7 +30,7 @@ export function SurahPickerTrigger({
       className={cn(
         "flex min-w-0 items-center gap-1 rounded-md px-1.5 py-1",
         "text-foreground transition-colors duration-[120ms] hover:bg-accent",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2",
         isLoading && "opacity-80",
         className,
       )}

@@ -78,7 +78,7 @@ export function SurahNavigationPanel({
             onClick={() => setTab("surah")}
             className={cn(
               "flex-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-[120ms]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
               tab === "surah"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -93,7 +93,7 @@ export function SurahNavigationPanel({
             onClick={() => setTab("juz")}
             className={cn(
               "flex-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-[120ms]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
               tab === "juz"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -109,7 +109,7 @@ export function SurahNavigationPanel({
             disabled={!chapter}
             className={cn(
               "flex-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-[120ms]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
               tab === "verse"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -129,7 +129,7 @@ export function SurahNavigationPanel({
             "flex size-8 shrink-0 items-center justify-center rounded-md",
             "text-muted-foreground transition-colors duration-[120ms]",
             "hover:bg-accent hover:text-foreground",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2",
           )}
         >
           <X className="size-4" strokeWidth={1.75} />

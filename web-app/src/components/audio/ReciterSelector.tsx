@@ -11,7 +11,7 @@ const barBtn = cn(
   "flex size-8 items-center justify-center rounded-md",
   "text-muted-foreground transition-colors duration-[120ms]",
   "hover:bg-accent hover:text-foreground",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
 )
 
 function matchesQuery(query: string, name: string, arabic: string, style?: string) {
@@ -71,7 +71,7 @@ export function ReciterSelector() {
             className={cn(
               "h-12 w-full rounded-xl border border-input bg-transparent px-4 text-base",
               "outline-none placeholder:text-muted-foreground",
-              "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
+              "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-gold/50",
             )}
           />
         </div>
@@ -102,7 +102,7 @@ export function ReciterSelector() {
                   className={cn(
                     "flex w-full items-center gap-4 rounded-xl px-4 py-3 text-left",
                     "transition-colors duration-[120ms]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
                     active ? "bg-primary/10 text-primary" : "hover:bg-accent",
                   )}
                 >

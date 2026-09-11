@@ -34,7 +34,7 @@ export function AyahEndMarker({ digits, ariaLabel, className, onClick }: AyahEnd
           : undefined
       }
       className={cn(
-        "inline-flex items-center justify-center align-baseline select-none mx-0.5 font-uthmani leading-none text-[#1E1B18] dark:text-[#F4F2EE] shrink-0",
+        "inline-flex items-center justify-center align-baseline select-none mx-1.5 font-uthmani leading-none text-reader-ink shrink-0",
         onClick && "cursor-pointer hover:opacity-80 active:scale-95 transition-transform duration-150 focus-visible:outline-none",
         className,
       )}

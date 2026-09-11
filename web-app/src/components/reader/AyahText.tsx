@@ -5,7 +5,7 @@ const SIZES = {
   sm: "text-[length:var(--quran-sm)]",
   md: "text-[length:var(--quran-md)]",
   lg: "text-[length:var(--quran-lg)]",
-  xl: "text-[length:var(--quran-xl,3rem)]",
+  xl: "text-[length:var(--quran-xl)]",
   display: "text-[length:var(--quran-display)]",
 }
 

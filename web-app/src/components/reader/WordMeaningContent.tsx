@@ -20,7 +20,7 @@ export function WordMeaningContent({ word, verseKey }: WordMeaningContentProps) 
     <div className="flex min-w-[70px] max-w-[150px] flex-col items-center text-center select-none py-0.5 px-0.5">
       {/* Arabic Word Glyph */}
       <span
-        className="font-arabic text-base sm:text-lg font-bold leading-tight text-gold"
+        className="font-arabic text-base sm:text-lg font-medium leading-tight text-gold"
         dir="rtl"
         lang="ar"
       >
@@ -67,7 +67,7 @@ export function WordMeaningContent({ word, verseKey }: WordMeaningContentProps) 
             className="flex h-5 items-center justify-center gap-1 rounded-full px-1.5 text-muted-foreground transition-all duration-150 hover:bg-gold/15 hover:text-gold focus-visible:outline-none"
           >
             <GraduationCap className="size-3" strokeWidth={2} />
-            <span className="text-[9px] font-semibold uppercase tracking-wider">Grammar</span>
+            <span className="text-[9px] font-medium uppercase tracking-wider">Grammar</span>
           </button>
         )}
       </div>
