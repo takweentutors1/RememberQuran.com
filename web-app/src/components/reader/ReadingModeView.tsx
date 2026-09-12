@@ -318,7 +318,13 @@ function ReadingPage({
                   // rotated phone, a foldable's inner screen, a short laptop
                   // window) never gets forced into a taller "page" than it
                   // can usefully show, whatever the width happens to be.
-                  "flex flex-col justify-between min-h-[min(78cqw,68dvh,41.25rem)] py-0.5",
+                  //
+                  // gap is a hard floor — tashkeel marks need real clearance
+                  // from the line above/below, or they visually collide.
+                  // justify-between only adds *extra* space beyond gap+content
+                  // when there's leftover room in min-h, so short pages still
+                  // spread out nicely without ever squeezing below the floor.
+                  "flex flex-col justify-between gap-[0.4em] min-h-[min(78cqw,68dvh,41.25rem)] py-0.5",
           )}
         >
           {isCenteredOpeningPage ? (
@@ -386,7 +392,7 @@ function ReadingPage({
                     // clipping a single glyph.
                     <QcfLine
                       data-line-number={lineNumber}
-                      className="w-full leading-none"
+                      className="w-full leading-[1.25]"
                       justify={!isShortLastLine}
                     >
                       {lineItems.map(({ word, verse, attachedEndMarker }) => (
