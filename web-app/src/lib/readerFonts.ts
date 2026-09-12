@@ -43,12 +43,12 @@ export const ARABIC_FONT_SIZES: Record<FontScale, string> = {
  * QcfLine.tsx), so these can stay large and bold — the line is compressed
  * to fit rather than needing to be pre-shrunk to avoid wrapping. */
 export const READING_MODE_ARABIC_FONT_SIZES: Record<FontScale, string> = {
-  1: "1.28rem",
-  2: "1.43rem",
-  3: "1.58rem",
-  4: "1.73rem",
-  5: "1.88rem",
-  6: "2.03rem",
+  1: "0.96rem",
+  2: "1.07rem",
+  3: "1.19rem",
+  4: "1.30rem",
+  5: "1.41rem",
+  6: "1.52rem",
 }
 
 export const TRANSLATION_FONT_SIZES: Record<FontScale, string> = {
