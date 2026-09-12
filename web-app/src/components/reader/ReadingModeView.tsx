@@ -378,7 +378,11 @@ function ReadingPage({
                     // the natural width and scales it to fit the page exactly
                     // — flush both edges, at any container width, without
                     // clipping a single glyph.
-                    <QcfLine data-line-number={lineNumber} className="w-full leading-none">
+                    <QcfLine
+                      data-line-number={lineNumber}
+                      className="w-full leading-none"
+                      justify={!isShortLastLine}
+                    >
                       {lineItems.map(({ word, verse, attachedEndMarker }) => (
                         <LineWord
                           key={word.id}
