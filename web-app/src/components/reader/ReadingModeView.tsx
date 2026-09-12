@@ -126,7 +126,13 @@ function LineWord({
       data-verse-key={verse.verse_key}
       className={cn(
         qcfFontFamily
-          ? "inline shrink-0"
+          // QCF renders one glyph per whole word with no space character
+          // between them — the font's own side-bearing is the only gap
+          // unless we add one. me-[0.22em] (margin-inline-end — the visual
+          // left side in this RTL flow, i.e. the gap toward the next word)
+          // gives every word clear, even breathing room without touching
+          // the letter-spacing inside any single word.
+          ? "inline shrink-0 me-[0.22em]"
           : "inline-flex items-center gap-0.5 sm:gap-1 shrink-0",
         targetAyahId === verse.verse_number && "rounded-xs bg-primary/10",
       )}

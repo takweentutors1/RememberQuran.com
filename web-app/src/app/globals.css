@@ -479,6 +479,11 @@ h1, h2, h3, .font-serif {
   line-height: 2;
   word-spacing: 0.05em;
   color: var(--reader-ink);
+  /* Crisper ligature/kerning shaping — the QCF glyphs are dense pre-shaped
+     ligatures, not simple letterforms, and benefit from the browser's
+     higher-quality (slower) text layout path more than plain UI text does. */
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
 }
 
 /* ── Reading Mode Fluid Typography ──
