@@ -38,16 +38,17 @@ export const ARABIC_FONT_SIZES: Record<FontScale, string> = {
   6: "3.75rem",
 }
 
-/** Reading mode (15-line Mushaf manuscript) safe font sizes in rem.
- * Strict 15-line layouts cannot support 3.75rem without horizontal blowout;
- * this maps the 6 user scale steps cleanly within the authentic page frame. */
+/** Reading mode (15-line Mushaf manuscript) font sizes in rem. QcfLine fits
+ * every line to its container by measuring and scaling it (see
+ * QcfLine.tsx), so these can stay large and bold — the line is compressed
+ * to fit rather than needing to be pre-shrunk to avoid wrapping. */
 export const READING_MODE_ARABIC_FONT_SIZES: Record<FontScale, string> = {
-  1: "1.15rem",
-  2: "1.22rem",
-  3: "1.30rem",
-  4: "1.40rem",
-  5: "1.50rem",
-  6: "1.58rem",
+  1: "1.7rem",
+  2: "1.9rem",
+  3: "2.1rem",
+  4: "2.3rem",
+  5: "2.5rem",
+  6: "2.7rem",
 }
 
 export const TRANSLATION_FONT_SIZES: Record<FontScale, string> = {
@@ -67,5 +68,5 @@ export const QURAN_FONT_FAMILY: Record<QuranFont, string> = {
 
 export const MIN_FONT_SCALE = 1 as FontScale
 export const MAX_FONT_SCALE = 6 as FontScale
-export const DEFAULT_ARABIC_SCALE = 6 as FontScale
+export const DEFAULT_ARABIC_SCALE = 1 as FontScale
 export const DEFAULT_TRANSLATION_SCALE = 3 as FontScale

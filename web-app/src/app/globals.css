@@ -12,6 +12,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Touch-target sizing should follow input capability, not screen width — a
+ * touch-screen laptop and a small phone can report similar viewport widths
+ * but need opposite treatment. Base classes stay at the 44px touch floor;
+ * `pointer-fine:` opts into the tighter 32px dense-desktop sizing only when
+ * a precise pointer with real hover is actually present. */
+@custom-variant pointer-fine (@media (hover: hover) and (pointer: fine));
+
 /* The reader's backward infinite scroll (prepending an earlier surah above
    the current one) manually compensates scrollTop so the page doesn't visibly
    jump — see QuranReader's topSentinel effect. The browser's own automatic
@@ -475,42 +482,16 @@ h1, h2, h3, .font-serif {
 }
 
 /* ── Reading Mode Fluid Typography ──
-   Scales down the Arabic font size on smaller screens to prevent long lines
-   from wrapping in the strict 15-line Mushaf layout, while still respecting
-   the relative differences between the xs-2xl font scale options. Uses
-   --reading-arabic-font-size (calibrated specifically for 15-line page geometry). */
+   This used to shrink font-size in steps down to the smallest phones, to
+   keep long lines from wrapping in the strict 15-line Mushaf layout before
+   QcfLine existed. Now every QCF-rendered line is measured and scaled
+   (see QcfLine.tsx) to fit its container exactly, at any width — so this
+   base size is free to stay large and bold everywhere; the fit is handled
+   by *compressing* an oversized line via scaleX, not by pre-shrinking the
+   font and then stretching it back out, which is what was quietly thinning
+   the script on smaller screens. */
 .reading-mode-text {
   font-size: var(--reading-arabic-font-size, 1.35rem);
-}
-
-@media (max-width: 1024px) {
-  .reading-mode-text {
-    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.95);
-  }
-}
-
-@media (max-width: 768px) {
-  .reading-mode-text {
-    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.82);
-  }
-}
-
-@media (max-width: 640px) {
-  .reading-mode-text {
-    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.7);
-  }
-}
-
-@media (max-width: 500px) {
-  .reading-mode-text {
-    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.58);
-  }
-}
-
-@media (max-width: 400px) {
-  .reading-mode-text {
-    font-size: calc(var(--reading-arabic-font-size, 1.35rem) * 0.48);
-  }
 }
 
 .quran-translation {

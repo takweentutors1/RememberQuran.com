@@ -73,10 +73,20 @@ export function MushafPageFrame({
   const cleanSurahName = surahNameArabic ? surahNameArabic.replace(/^سورة\s+/i, "") : ""
 
   return (
-    <div className={cn("relative mx-auto my-3 sm:my-5 md:my-6 w-full max-w-[410px] xs:max-w-[450px] sm:max-w-[510px] md:max-w-[550px] lg:max-w-[580px] px-1 sm:px-2 md:px-3", className)}>
+    <div
+      className={cn(
+        // Fluid against the reader column's actual available width (see the
+        // @container on its wrapper in [surahId]/layout.tsx) — scales
+        // continuously with whatever space nav/Study-Panel state leaves,
+        // instead of jumping between a handful of viewport breakpoints, and
+        // still caps at the same 580px reading-comfort ceiling as before.
+        "relative mx-auto my-3 sm:my-5 md:my-6 w-[min(100cqw,36.25rem)] px-1 sm:px-2 md:px-3",
+        className,
+      )}
+    >
       {/* Outer Margin Badges (Desktop) */}
       {marginBadges.length > 0 && (
-        <div className="absolute right-0 top-12 hidden flex-col gap-3 lg:flex translate-x-[calc(100%+6px)]">
+        <div className="absolute right-0 top-12 hidden flex-col gap-3 @[45rem]:flex translate-x-[calc(100%+6px)]">
           {marginBadges.map((badge) => (
             <div
               key={badge.id}

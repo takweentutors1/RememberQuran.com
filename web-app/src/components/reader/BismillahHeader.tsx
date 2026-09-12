@@ -25,7 +25,7 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
       role="banner"
       aria-label="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
       className={cn(
-        "w-full flex items-center justify-center text-center select-none pt-2 sm:pt-2.5 pb-2.5 sm:pb-3",
+        "w-full flex items-center justify-center text-center select-none pt-1 pb-1.5",
         className,
       )}
     >
@@ -34,7 +34,7 @@ export function BismillahHeader({ className }: BismillahHeaderProps) {
         className={cn(
           "aqf-bsml inline-block text-center text-reader-ink",
           "text-[2.5rem] xs:text-[2.8rem] sm:text-[3rem] md:text-[3.2rem]",
-          "leading-normal",
+          "leading-[1.15]",
           "transform-gpu translate-x-[3px] sm:translate-x-[5px]",
         )}
       >

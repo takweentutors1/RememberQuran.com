@@ -306,7 +306,13 @@ function ReadingPage({
               ? "flex flex-col items-center justify-center space-y-2 py-1 text-center leading-[2.0]"
               : page.hasSurahStart
                 ? "flex flex-col gap-1 sm:gap-2 md:gap-2.5 py-0.5"
-                : "flex flex-col justify-between min-h-[400px] sm:min-h-[500px] md:min-h-[600px] lg:min-h-[660px] py-0.5",
+                : // Scales with the page's own (container-query) width like a
+                  // real page's aspect ratio, but caps at 68% of the actual
+                  // viewport height — so a short/landscape viewport (a
+                  // rotated phone, a foldable's inner screen, a short laptop
+                  // window) never gets forced into a taller "page" than it
+                  // can usefully show, whatever the width happens to be.
+                  "flex flex-col justify-between min-h-[min(78cqw,68dvh,41.25rem)] py-0.5",
           )}
         >
           {isCenteredOpeningPage ? (

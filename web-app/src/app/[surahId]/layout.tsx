@@ -17,7 +17,7 @@ export default function SurahLayout({ children }: Props) {
       <SurahSidebar />
 
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <div className="w-full px-3 sm:px-6 md:px-8">
+        <div className="w-full px-3 sm:px-6 md:px-8 @container">
           <ReaderControls />
           <KeyboardSurahNav />
           <Suspense fallback={null}>{children}</Suspense>

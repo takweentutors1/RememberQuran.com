@@ -33,7 +33,7 @@ function ScaleTrack({
         disabled={value <= MIN_FONT_SCALE}
         onClick={() => onChange(Math.max(MIN_FONT_SCALE, value - 1) as FontScale)}
         className={cn(
-          "flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background lg:size-8 lg:min-h-0 lg:min-w-0",
+          "flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background pointer-fine:size-8 pointer-fine:min-h-0 pointer-fine:min-w-0",
           "text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
           "disabled:pointer-events-none disabled:opacity-30",
           FOCUS,
@@ -83,7 +83,7 @@ function ScaleTrack({
         disabled={value >= MAX_FONT_SCALE}
         onClick={() => onChange(Math.min(MAX_FONT_SCALE, value + 1) as FontScale)}
         className={cn(
-          "flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background lg:size-8 lg:min-h-0 lg:min-w-0",
+          "flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background pointer-fine:size-8 pointer-fine:min-h-0 pointer-fine:min-w-0",
           "text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
           "disabled:pointer-events-none disabled:opacity-30",
           FOCUS,

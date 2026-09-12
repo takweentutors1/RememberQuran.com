@@ -63,3 +63,6 @@ next-env.d.ts
 # local Claude Code reference (personal, not committed)
 CLAUDE.md
 .claude/
+
+# responsive-check.mjs output — regenerate locally, not part of the repo
+/scripts/.responsive-shots/

@@ -19,6 +19,29 @@ export function qcfFontFamily(pageNumber: number): string {
   return `qcf-${QCF_VERSION}-p${pageNumber}`
 }
 
+// Network Information API — Chromium/Android only, absent in Firefox/Safari.
+// Feature-detected, not relied on: everything here degrades to "just load
+// it" when the API isn't available, which is the correct default.
+interface NetworkInformation {
+  saveData?: boolean
+  effectiveType?: "slow-2g" | "2g" | "3g" | "4g"
+}
+
+/**
+ * True when the user has Data Saver on, or is on a connection slow enough
+ * that a ~15-40KB font-per-page fetch isn't worth it — the Unicode fallback
+ * (already downloaded as part of the app shell) reads perfectly well, just
+ * without the pixel-exact printed-Mushaf justification.
+ */
+function shouldSkipForNetwork(): boolean {
+  const connection = (
+    navigator as Navigator & { connection?: NetworkInformation; mozConnection?: NetworkInformation; webkitConnection?: NetworkInformation }
+  ).connection
+  if (!connection) return false
+  if (connection.saveData) return true
+  return connection.effectiveType === "slow-2g" || connection.effectiveType === "2g"
+}
+
 const loadPromises = new Map<number, Promise<boolean>>()
 
 /**
@@ -35,6 +58,12 @@ export function loadQcfPageFont(pageNumber: number): Promise<boolean> {
 
   const cached = loadPromises.get(pageNumber)
   if (cached) return cached
+
+  if (shouldSkipForNetwork()) {
+    const skipped = Promise.resolve(false)
+    loadPromises.set(pageNumber, skipped)
+    return skipped
+  }
 
   const family = qcfFontFamily(pageNumber)
   const promise = (async () => {
